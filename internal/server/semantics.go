@@ -1,10 +1,10 @@
-package server
+﻿package server
 
 import (
 	"context"
 
-	quantramv1 "quantram/gen/quantram/v1"
-	"quantram/internal/semantics"
+	finfeedsatv1 "fin_feedsat_1/gen/fin_feedsat/v1"
+	"fin_feedsat_1/internal/semantics"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,7 +14,7 @@ func (s *Server) SetSemantics(dict *semantics.Dictionary) {
 	s.semantics = dict
 }
 
-func (s *Server) GetTerm(_ context.Context, req *quantramv1.GetSemanticTermRequest) (*quantramv1.SemanticTerm, error) {
+func (s *Server) GetTerm(_ context.Context, req *finfeedsatv1.GetSemanticTermRequest) (*finfeedsatv1.SemanticTerm, error) {
 	dict, err := s.requireSemantics()
 	if err != nil {
 		return nil, err
@@ -27,23 +27,23 @@ func (s *Server) GetTerm(_ context.Context, req *quantramv1.GetSemanticTermReque
 	return toProtoSemanticTerm(term, dict.Version()), nil
 }
 
-func (s *Server) ListTerms(_ context.Context, req *quantramv1.ListSemanticTermsRequest) (*quantramv1.ListSemanticTermsResponse, error) {
+func (s *Server) ListTerms(_ context.Context, req *finfeedsatv1.ListSemanticTermsRequest) (*finfeedsatv1.ListSemanticTermsResponse, error) {
 	dict, err := s.requireSemantics()
 	if err != nil {
 		return nil, err
 	}
 	terms := dict.List(req.GetComponent(), req.GetType())
-	out := make([]*quantramv1.SemanticTerm, 0, len(terms))
+	out := make([]*finfeedsatv1.SemanticTerm, 0, len(terms))
 	for _, term := range terms {
 		out = append(out, toProtoSemanticTerm(term, dict.Version()))
 	}
-	return &quantramv1.ListSemanticTermsResponse{
+	return &finfeedsatv1.ListSemanticTermsResponse{
 		Contract: toProtoSemanticContract(dict),
 		Terms:    out,
 	}, nil
 }
 
-func (s *Server) GetSemanticContract(context.Context, *quantramv1.GetSemanticContractRequest) (*quantramv1.SemanticContractInfo, error) {
+func (s *Server) GetSemanticContract(context.Context, *finfeedsatv1.GetSemanticContractRequest) (*finfeedsatv1.SemanticContractInfo, error) {
 	dict, err := s.requireSemantics()
 	if err != nil {
 		return nil, err
@@ -58,9 +58,9 @@ func (s *Server) requireSemantics() (*semantics.Dictionary, error) {
 	return s.semantics, nil
 }
 
-func toProtoSemanticContract(dict *semantics.Dictionary) *quantramv1.SemanticContractInfo {
+func toProtoSemanticContract(dict *semantics.Dictionary) *finfeedsatv1.SemanticContractInfo {
 	c := dict.Contract()
-	return &quantramv1.SemanticContractInfo{
+	return &finfeedsatv1.SemanticContractInfo{
 		Name:              c.Name,
 		Version:           c.Version,
 		Date:              c.Date,
@@ -70,8 +70,8 @@ func toProtoSemanticContract(dict *semantics.Dictionary) *quantramv1.SemanticCon
 	}
 }
 
-func toProtoSemanticTerm(term semantics.Term, version string) *quantramv1.SemanticTerm {
-	return &quantramv1.SemanticTerm{
+func toProtoSemanticTerm(term semantics.Term, version string) *finfeedsatv1.SemanticTerm {
+	return &finfeedsatv1.SemanticTerm{
 		Id:                      term.ID,
 		Term:                    term.Term,
 		Display:                 term.Display,

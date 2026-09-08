@@ -1,11 +1,11 @@
-package stagetransition
+﻿package stagetransition
 
 import (
 	"strings"
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 func TestFirstStateThenSameThenChange(t *testing.T) {

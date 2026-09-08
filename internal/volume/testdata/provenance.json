@@ -1,4 +1,4 @@
-{
+﻿{
   "phase": "F",
   "date": "2026-09-05",
   "aptf_commit": "ae0dacb2e02c5b80c82f6662d1a3c6863f4b989a",
@@ -60,6 +60,6 @@
       "sha256": "7cd38ab82d3116dd1a6c73e248c2cd1a294feae23c56fafbb7f1afc930c29e58"
     }
   },
-  "full_corpus": "go test ./internal/volume -run TestFFull with QUANTRAM_P04V_FROZEN_DIR pointing at hash-verified APTF pre08242026_docs (or sibling ../APTF/pre08242026_docs). Not vendored (86MB+). Production Engine does not read these files.",
+  "full_corpus": "go test ./internal/volume -run TestFFull with Fin_FeedSat_1_P04V_FROZEN_DIR pointing at hash-verified APTF pre08242026_docs (or sibling ../APTF/pre08242026_docs). Not vendored (86MB+). Production Engine does not read these files.",
   "phase_f_note": "Feature/derivative Engine replay matches frozen 010. Production confirmColor keeps last confirmed color; frozen APTF observe writes cockpit into state.color. Indicator mismatch is documented, not patched."
 }

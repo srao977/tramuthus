@@ -1,4 +1,4 @@
-package stagetransition
+﻿package stagetransition
 
 import (
 	"os"
@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 func TestDiagnosticWritesHumanBlockAndLifecycle(t *testing.T) {

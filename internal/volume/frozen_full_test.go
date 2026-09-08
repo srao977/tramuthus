@@ -1,4 +1,4 @@
-package volume
+﻿package volume
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 
 func discoverFrozenDir(t *testing.T) string {
 	t.Helper()
-	if d := os.Getenv("QUANTRAM_P04V_FROZEN_DIR"); d != "" {
+	if d := os.Getenv("Fin_FeedSat_1_P04V_FROZEN_DIR"); d != "" {
 		return d
 	}
 	candidates := []string{
@@ -40,7 +40,7 @@ func requireFrozenDir(t *testing.T) string {
 	t.Helper()
 	dir := discoverFrozenDir(t)
 	if dir == "" {
-		t.Skip("full frozen corpus not present; set QUANTRAM_P04V_FROZEN_DIR")
+		t.Skip("full frozen corpus not present; set Fin_FeedSat_1_P04V_FROZEN_DIR")
 	}
 	return dir
 }

@@ -1,0 +1,519 @@
+﻿syntax = "proto3";
+
+package finfeedsat.v1;
+
+option go_package = "fin_feedsat_1/gen/fin_feedsat/v1;finfeedsatv1";
+
+// Increment 1 ingestion plus P-03 ModelService. Later increments append to this file.
+
+enum InstrumentType {
+  INSTRUMENT_TYPE_UNSPECIFIED = 0;
+  INSTRUMENT_TYPE_STOCK = 1;
+  INSTRUMENT_TYPE_ETF = 2;
+  INSTRUMENT_TYPE_INDEX = 3;
+}
+
+enum QualityStatus {
+  QUALITY_STATUS_UNSPECIFIED = 0;
+  QUALITY_STATUS_COMPLETE = 1;
+  QUALITY_STATUS_DEGRADED = 2;
+  QUALITY_STATUS_STALE = 3;
+  QUALITY_STATUS_PARTIAL = 4;
+  QUALITY_STATUS_RECONSTRUCTED = 5;
+  QUALITY_STATUS_INVALID = 6;
+}
+
+enum FeedState {
+  FEED_STATE_UNSPECIFIED = 0;
+  FEED_STATE_HEALTHY = 1;
+  FEED_STATE_DEGRADED = 2;
+  FEED_STATE_FAILED = 3;
+  FEED_STATE_RECOVERING = 4;
+}
+
+enum ComponentState {
+  COMPONENT_STATE_UNSPECIFIED = 0;
+  COMPONENT_STATE_HEALTHY = 1;
+  COMPONENT_STATE_DEGRADED = 2;
+  COMPONENT_STATE_UNAVAILABLE = 3;
+}
+
+message Bar {
+  string symbol = 1;
+  string instrument_id = 2;
+  InstrumentType instrument_type = 3;
+  bool tradable = 4;
+  string interval = 5;
+  int64 interval_start_unix_ms = 6;
+  int64 interval_end_unix_ms = 7;
+  double open = 8;
+  double high = 9;
+  double low = 10;
+  double close = 11;
+  uint64 volume = 12;
+  uint32 event_count = 13;
+  // Exact provider timestamp text; Fin_FeedSat_1 assigns no timing semantics.
+  string source_timestamp = 14;
+  int64 receipt_unix_ms = 15;
+  string source = 16;
+  QualityStatus quality_status = 17;
+  bool is_final = 18;
+  bool is_backfilled = 19;
+  bool source_transition = 20;
+  int64 data_age_ms = 21;
+  string market_snapshot_id = 22;
+}
+
+message GetFeedHealthRequest {}
+
+message FeedHealth {
+  string source_id = 1;
+  FeedState state = 2;
+  int64 last_message_unix_ms = 3;
+  int64 last_pong_rtt_ms = 4;
+  uint32 consecutive_heartbeat_failures = 5;
+  string last_error = 6;
+  repeated string subscribed_symbols = 7;
+}
+
+message GetActiveSourceRequest {}
+
+message ActiveSource {
+  string source_id = 1;
+  FeedState state = 2;
+}
+
+message StreamBarsRequest {
+  repeated string symbols = 1;
+  // Zero means stream until the client cancels.
+  uint32 max_bars = 2;
+  // When true, only finalized bars are streamed. Partial updates remain
+  // on the default observe path.
+  bool finalized_only = 3;
+}
+
+message GetBarWindowRequest {
+  string symbol = 1;
+  uint32 limit = 2;
+}
+
+message BarWindow {
+  string symbol = 1;
+  repeated Bar bars = 2;
+}
+
+message TriggerGapFillRequest {
+  string symbol = 1;
+  int64 from_unix_ms = 2;
+  int64 to_unix_ms = 3;
+}
+
+message GapFillResult {
+  string symbol = 1;
+  uint32 bars_fetched = 2;
+  uint32 bars_injected = 3;
+  uint32 bars_deduplicated = 4;
+  string message = 5;
+}
+
+message GetHealthRequest {}
+
+message ComponentHealth {
+  string name = 1;
+  ComponentState state = 2;
+  string detail = 3;
+}
+
+message HealthReport {
+  ComponentState state = 1;
+  repeated ComponentHealth components = 2;
+}
+
+message GetReadinessRequest {}
+
+message ReadinessReport {
+  bool ready = 1;
+  bool observe = 2;
+  bool infer = 3;
+  string message = 4;
+}
+
+service MarketFeedService {
+  rpc GetFeedHealth(GetFeedHealthRequest) returns (FeedHealth);
+  rpc GetActiveSource(GetActiveSourceRequest) returns (ActiveSource);
+}
+
+service IngestionService {
+  rpc StreamBars(StreamBarsRequest) returns (stream Bar);
+  rpc GetBarWindow(GetBarWindowRequest) returns (BarWindow);
+  rpc TriggerGapFill(TriggerGapFillRequest) returns (GapFillResult);
+}
+
+service OperationsService {
+  rpc GetHealth(GetHealthRequest) returns (HealthReport);
+  rpc GetReadiness(GetReadinessRequest) returns (ReadinessReport);
+}
+
+// P-03 adaptive DecisionEvent. HOLD is a decision. Skip never carries a side.
+// Evaluate / ModelInferenceService wait for the PriceEngine increment.
+
+enum Side {
+  SIDE_UNSPECIFIED = 0;
+  SIDE_BUY = 1;
+  SIDE_SELL = 2;
+  SIDE_HOLD = 3;
+}
+
+enum PathDirection {
+  PATH_DIRECTION_UNSPECIFIED = 0;
+  PATH_DIRECTION_UPWARD = 1;
+  PATH_DIRECTION_DOWNWARD = 2;
+  PATH_DIRECTION_FLAT = 3;
+}
+
+enum EmitterPosition {
+  EMITTER_POSITION_UNSPECIFIED = 0;
+  EMITTER_POSITION_FLAT = 1;
+  EMITTER_POSITION_LONG = 2;
+  EMITTER_POSITION_SHORT = 3;
+}
+
+enum ModelStatus {
+  MODEL_STATUS_UNSPECIFIED = 0;
+  MODEL_STATUS_INITIALIZING = 1;
+  MODEL_STATUS_ACTIONABLE = 2;
+}
+
+enum SkipReason {
+  SKIP_REASON_UNSPECIFIED = 0;
+  SKIP_REASON_INFER_OFF = 1;
+  SKIP_REASON_NOT_MODEL_ELIGIBLE = 2;
+  SKIP_REASON_INITIALIZING = 3;
+  SKIP_REASON_DUPLICATE_OR_REGRESSION = 4;
+  SKIP_REASON_INPUT_GAP = 5;
+  SKIP_REASON_QUEUE_OVERFLOW = 6;
+  SKIP_REASON_TIMEOUT = 7;
+  SKIP_REASON_INVALID_INPUT = 8;
+  SKIP_REASON_ENGINE_ERROR = 9;
+  SKIP_REASON_ENGINE_PANIC = 10;
+  SKIP_REASON_STATE_DISCONTINUOUS = 11;
+}
+
+message Decision {
+  Side side = 1;
+  double confidence = 2;
+  int32 h = 3;
+  double q_g = 4;
+  double q_s = 5;
+  double q_r = 6;
+  PathDirection path_direction = 7;
+  ModelStatus model_status = 8;
+  EmitterPosition emitter_position_state = 9;
+  string rule_path = 10;
+  double strength = 11;
+  double coherence = 12;
+  double persistence = 13;
+  double uncertainty = 14;
+  double reversal = 15;
+  double terminal_displacement = 16;
+}
+
+message Skip {
+  SkipReason reason = 1;
+  string detail = 2;
+  ModelStatus model_status = 3;
+}
+
+message DecisionEvent {
+  string event_id = 1;
+  string signal_id = 2;
+  string decision_id = 3;
+  string symbol = 4;
+  int64 interval_start_unix_ms = 5;
+  string market_snapshot_id = 6;
+  string source_timestamp = 7;
+  uint64 accepted_sequence = 8;
+  int64 received_at_unix_ms = 9;
+  int64 completed_at_unix_ms = 10;
+  int64 latency_ms = 11;
+  string model_version = 12;
+  string schema_version = 13;
+  string pre_state_hash = 14;
+  string post_state_hash = 15;
+  oneof outcome {
+    Decision decision = 16;
+    Skip skip = 17;
+  }
+}
+
+message StreamDecisionsRequest {
+  repeated string symbols = 1;
+  // Zero means stream until the client cancels.
+  uint32 max_events = 2;
+}
+
+// P-04 PriceEngine. Color is not BUY/SELL/HOLD. Warm-up skips are not errors.
+enum PricingStatus {
+  PRICING_STATUS_UNSPECIFIED = 0;
+  PRICING_STATUS_WARMUP_DERIVATIVE = 1;
+  PRICING_STATUS_WARMUP_F4 = 2;
+  PRICING_STATUS_F4_UNAVAILABLE = 3;
+  PRICING_STATUS_EMITTED = 4;
+  // Canonical current status. Historical SADE CSV used the string RK45_FAILURE.
+  PRICING_STATUS_PROJECTION_FAILURE = 5;
+}
+
+enum PricingSkipReason {
+  PRICING_SKIP_REASON_UNSPECIFIED = 0;
+  PRICING_SKIP_REASON_WARMUP_DERIVATIVE = 1;
+  PRICING_SKIP_REASON_WARMUP_F4 = 2;
+  PRICING_SKIP_REASON_F4_UNAVAILABLE = 3;
+  PRICING_SKIP_REASON_PROJECTION_FAILURE = 4;
+  PRICING_SKIP_REASON_NUMERICALLY_UNSTABLE = 5;
+  PRICING_SKIP_REASON_INVALID_INPUT = 6;
+  PRICING_SKIP_REASON_TIMEOUT = 7;
+  PRICING_SKIP_REASON_ENGINE_ERROR = 8;
+  PRICING_SKIP_REASON_ENGINE_PANIC = 9;
+  PRICING_SKIP_REASON_TIME_TERM = 10;
+}
+
+message PriceEmission {
+  string color = 1;
+  string trajectory_phase = 2;
+  string turning_tendency = 3;
+  string confidence_state = 4;
+  string domain_state = 5;
+  string stability_state = 6;
+  string current_direction = 7;
+  string projected_direction = 8;
+  repeated string reason_codes = 9;
+  // SADE/CSV boolean “projection succeeded”. Go production solver is EXPM, not RK45.
+  bool rk_success = 10;
+  double condition_number = 11;
+  double max_real_eigenvalue = 12;
+  double perturbation_amplification = 13;
+}
+
+message PriceCockpit {
+  string cockpit_color = 1;
+  string refined_internal_state = 2;
+  string persistence_state = 3;
+  string turn_candidate = 4;
+  string domain_state = 5;
+  string confidence_state = 6;
+}
+
+message PricingSkip {
+  PricingSkipReason reason = 1;
+  string detail = 2;
+}
+
+message PriceEvent {
+  string event_id = 1;
+  string symbol = 2;
+  int64 interval_start_unix_ms = 3;
+  string market_snapshot_id = 4;
+  string source_timestamp = 5;
+  uint64 accepted_sequence = 6;
+  int64 latency_ms = 7;
+  PricingStatus status = 8;
+  bool emitted = 9;
+  bool domain_exit = 10;
+  // SADE/CSV boolean “projection succeeded”. Go production solver is EXPM, not RK45.
+  bool rk_success = 11;
+  PriceEmission emission = 12;
+  PricingSkip skip = 13;
+  PriceCockpit cockpit = 14;
+}
+
+message StreamPriceEventsRequest {
+  repeated string symbols = 1;
+  // Zero means stream until the client cancels.
+  uint32 max_events = 2;
+}
+
+// P-04V VolumeEngine.
+// Volume is scientifically independent of Price. G_V is a discrete observer
+// state update (predicted_next_v_n = v_n), not an ODE, RK, or EXPM path.
+// Indicator is not BUY/SELL/HOLD. Maturation is not an error.
+// Raw color is the activity classification; Indicator is confirmation-controlled.
+// Lineage identifies the initiating Bar (market_snapshot_id + interval_start).
+// Volume has no independent EffectiveTime.
+
+enum VolumeStatus {
+  VOLUME_STATUS_UNSPECIFIED = 0;
+  // Windows are not yet due. Not an error.
+  VOLUME_STATUS_MATURING = 1;
+  VOLUME_STATUS_AVAILABLE = 2;
+  // A due calculation is scientifically undefined. Not ENGINE_ERROR.
+  VOLUME_STATUS_INVALID = 3;
+  VOLUME_STATUS_ENGINE_ERROR = 4;
+}
+
+enum VolumeQuantityStatus {
+  VOLUME_QUANTITY_STATUS_UNSPECIFIED = 0;
+  VOLUME_QUANTITY_STATUS_INSUFFICIENT = 1;
+  VOLUME_QUANTITY_STATUS_AVAILABLE = 2;
+  VOLUME_QUANTITY_STATUS_UNDEFINED = 3;
+}
+
+// GREEN/AMBER/RED are scientific interpretation labels, not BUY/SELL/HOLD.
+enum VolumeIndicator {
+  VOLUME_INDICATOR_UNSPECIFIED = 0;
+  VOLUME_INDICATOR_GREEN = 1;
+  VOLUME_INDICATOR_AMBER = 2;
+  VOLUME_INDICATOR_RED = 3;
+}
+
+enum VolumeTransition {
+  VOLUME_TRANSITION_UNSPECIFIED = 0;
+  VOLUME_TRANSITION_STABLE = 1;
+  VOLUME_TRANSITION_PENDING_GREEN = 2;
+  VOLUME_TRANSITION_PENDING_AMBER = 3;
+  VOLUME_TRANSITION_PENDING_RED = 4;
+  VOLUME_TRANSITION_CONFIRMED_GREEN = 5;
+  VOLUME_TRANSITION_CONFIRMED_AMBER = 6;
+  VOLUME_TRANSITION_CONFIRMED_RED = 7;
+}
+
+enum VolumePhase {
+  VOLUME_PHASE_UNSPECIFIED = 0;
+  VOLUME_PHASE_ACTIVITY_STATIONARY = 1;
+  VOLUME_PHASE_ACTIVITY_INCREASING_ACCELERATING = 2;
+  VOLUME_PHASE_ACTIVITY_INCREASING_DECELERATING = 3;
+  VOLUME_PHASE_ACTIVITY_DECREASING_ACCELERATING = 4;
+  VOLUME_PHASE_ACTIVITY_DECREASING_DECELERATING = 5;
+}
+
+enum VolumeConfidence {
+  VOLUME_CONFIDENCE_UNSPECIFIED = 0;
+  VOLUME_CONFIDENCE_HIGH = 1;
+}
+
+enum VolumeDomainState {
+  VOLUME_DOMAIN_STATE_UNSPECIFIED = 0;
+  VOLUME_DOMAIN_STATE_CAUSAL_LOCAL_VOLUME = 1;
+}
+
+enum VolumeSkipReason {
+  VOLUME_SKIP_REASON_UNSPECIFIED = 0;
+  VOLUME_SKIP_REASON_MATURING = 1;
+  VOLUME_SKIP_REASON_INVALID = 2;
+  VOLUME_SKIP_REASON_ENGINE_ERROR = 3;
+}
+
+// One scientific scalar. Presence of value is required when status is
+// AVAILABLE so V_N = 0 is distinguishable from an unavailable V_N.
+message VolumeQuantity {
+  optional double value = 1;
+  VolumeQuantityStatus status = 2;
+}
+
+message VolumeEmission {
+  VolumeQuantity v_raw = 1;
+  VolumeQuantity v_n = 2;
+  VolumeQuantity v1 = 3;
+  VolumeQuantity v2 = 4;
+  VolumeQuantity interval_mean_vn = 5;
+  VolumeQuantity predicted_next_v_n = 6;
+  VolumeIndicator raw_color = 7;
+  VolumeIndicator indicator = 8;
+  VolumeTransition transition = 9;
+  VolumePhase phase = 10;
+  VolumeConfidence confidence = 11;
+  VolumeDomainState domain_state = 12;
+}
+
+message VolumeSkip {
+  VolumeSkipReason reason = 1;
+  string detail = 2;
+}
+
+message VolumeEvent {
+  string event_id = 1;
+  string symbol = 2;
+  int64 interval_start_unix_ms = 3;
+  int64 interval_end_unix_ms = 4;
+  string market_snapshot_id = 5;
+  // Provider/source provenance only. Not model, receipt, or effective time.
+  string source_timestamp = 6;
+  uint64 accepted_sequence = 7;
+  int64 latency_ms = 8;
+  VolumeStatus status = 9;
+  bool emitted = 10;
+  string reason = 11;
+  VolumeEmission emission = 12;
+  VolumeSkip skip = 13;
+}
+
+message StreamVolumeEventsRequest {
+  repeated string symbols = 1;
+  // Zero means stream until the client cancels.
+  uint32 max_events = 2;
+}
+
+service ModelService {
+  rpc StreamDecisions(StreamDecisionsRequest) returns (stream DecisionEvent);
+  rpc StreamPriceEvents(StreamPriceEventsRequest) returns (stream PriceEvent);
+  rpc StreamVolumeEvents(StreamVolumeEventsRequest) returns (stream VolumeEvent);
+}
+
+// SemanticService is read-only. It explains vocabulary; it does not drive science.
+service SemanticService {
+  rpc GetTerm(GetSemanticTermRequest) returns (SemanticTerm);
+  rpc ListTerms(ListSemanticTermsRequest) returns (ListSemanticTermsResponse);
+  rpc GetSemanticContract(GetSemanticContractRequest) returns (SemanticContractInfo);
+}
+
+message GetSemanticTermRequest {
+  string id = 1;
+}
+
+message ListSemanticTermsRequest {
+  string component = 1;
+  string type = 2;
+}
+
+message GetSemanticContractRequest {}
+
+message SemanticContractInfo {
+  string name = 1;
+  string version = 2;
+  string date = 3;
+  string status = 4;
+  uint32 term_count = 5;
+  // Persist canonical domain values; render presentation aliases in the viewer.
+  string persistence_policy = 6;
+}
+
+message SemanticTerm {
+  string id = 1;
+  string term = 2;
+  string display = 3;
+  string type = 4;
+  string component = 5;
+  string plain_meaning = 6;
+  string scientific_meaning = 7;
+  string interpretation = 8;
+  repeated string does_not_mean = 9;
+  repeated string related_terms = 10;
+  string tooltip = 11;
+  string popover_title = 12;
+  string popover_body = 13;
+  bool show_scientific_detail = 14;
+  string semantic_contract_version = 15;
+  // Safe source metadata only. Filesystem paths are not exposed.
+  string go_symbol = 16;
+  string proto_enum_or_field = 17;
+  bool presentation_only = 18;
+  string lifecycle_status = 19;
+  repeated string canonical_source_ids = 20;
+  repeated string compatibility_aliases = 21;
+  bool live_path_proven = 22;
+  string persistence_policy = 23;
+}
+
+message ListSemanticTermsResponse {
+  SemanticContractInfo contract = 1;
+  repeated SemanticTerm terms = 2;
+}

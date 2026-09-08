@@ -1,5 +1,5 @@
-Origin: C:\Users\chino\SADE\output\unit_runs\pricing_001\observations.csv
-OHLCV join: C:\Users\chino\QuanTRAM\internal\adaptive\testdata\unit_run_001_observations.csv
+﻿Origin: C:\Users\chino\SADE\output\unit_runs\pricing_001\observations.csv
+OHLCV join: C:\Users\chino\Fin_FeedSat_1\internal\adaptive\testdata\unit_run_001_observations.csv
 Entity: AAPL
 Vectors: 100
 SADE unit_run_id: SADE_PRICING_UNIT_RUN_001

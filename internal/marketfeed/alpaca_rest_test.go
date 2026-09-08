@@ -1,4 +1,4 @@
-package marketfeed
+﻿package marketfeed
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 func TestAlpacaRESTBars(t *testing.T) {

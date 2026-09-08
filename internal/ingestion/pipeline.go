@@ -1,4 +1,4 @@
-// Package ingestion owns P-02 bar finalization, quality gating, and the
+﻿// Package ingestion owns P-02 bar finalization, quality gating, and the
 // model-eligible path.
 //
 // Optional StageTransition publication reports P-01 feed adapter health and
@@ -14,10 +14,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"quantram/internal/config"
-	"quantram/internal/domain"
-	"quantram/internal/marketfeed"
-	"quantram/internal/stagetransition"
+	"fin_feedsat_1/internal/config"
+	"fin_feedsat_1/internal/domain"
+	"fin_feedsat_1/internal/marketfeed"
+	"fin_feedsat_1/internal/stagetransition"
 )
 
 type subscriber struct {

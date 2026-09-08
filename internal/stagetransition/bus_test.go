@@ -1,11 +1,11 @@
-package stagetransition
+﻿package stagetransition
 
 import (
 	"sync"
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 func TestZeroSubscribersSafe(t *testing.T) {

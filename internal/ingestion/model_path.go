@@ -1,12 +1,12 @@
-package ingestion
+﻿package ingestion
 
 import (
 	"log"
 	"sync/atomic"
 	"time"
 
-	"quantram/internal/config"
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/config"
+	"fin_feedsat_1/internal/domain"
 )
 
 // FinalizedBarConsumer is the P-03 model path. Observe Subscribe/SubscribeFinalized stay lossy.

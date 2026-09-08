@@ -1,4 +1,4 @@
-// Package modelhost owns the collocated P-03/P-04/P-04V symbol workers.
+﻿// Package modelhost owns the collocated P-03/P-04/P-04V symbol workers.
 //
 // P-04V is an independent scientific sibling. It consumes the same
 // fanoutModel Bar after common gates, commits independently of Adaptive+Price,
@@ -15,13 +15,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"quantram/internal/adaptive"
-	"quantram/internal/config"
-	"quantram/internal/domain"
-	"quantram/internal/ingestion"
-	"quantram/internal/pricing"
-	"quantram/internal/stagetransition"
-	"quantram/internal/volume"
+	"fin_feedsat_1/internal/adaptive"
+	"fin_feedsat_1/internal/config"
+	"fin_feedsat_1/internal/domain"
+	"fin_feedsat_1/internal/ingestion"
+	"fin_feedsat_1/internal/pricing"
+	"fin_feedsat_1/internal/stagetransition"
+	"fin_feedsat_1/internal/volume"
 )
 
 const (

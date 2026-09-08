@@ -1,0 +1,212 @@
+﻿package main
+
+import (
+	"context"
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"log"
+	"os"
+	"strings"
+	"time"
+
+	finfeedsatv1 "fin_feedsat_1/gen/fin_feedsat/v1"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+)
+
+func main() {
+	address := flag.String("address", "localhost:50051", "Fin_FeedSat_1 gRPC address")
+	operation := flag.String("operation", "stream", "operation: stream, decisions, health, ready, source, window, gapfill")
+	symbolsFlag := flag.String("symbols", "AAPL", "comma-separated symbols")
+	maxBars := flag.Uint("max-bars", 5, "maximum bars to receive; 0 streams until timeout")
+	timeout := flag.Duration("timeout", 45*time.Second, "request timeout")
+	limit := flag.Uint("limit", 8, "window size for window operation")
+	finalizedOnly := flag.Bool("finalized-only", false, "stream only finalized bars")
+	flag.Parse()
+
+	connection, err := grpc.NewClient(*address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("create gRPC client: %v", err)
+	}
+	defer connection.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
+	defer cancel()
+
+	symbols := splitSymbols(*symbolsFlag)
+	feed := finfeedsatv1.NewMarketFeedServiceClient(connection)
+	ingest := finfeedsatv1.NewIngestionServiceClient(connection)
+	ops := finfeedsatv1.NewOperationsServiceClient(connection)
+	model := finfeedsatv1.NewModelServiceClient(connection)
+
+	switch *operation {
+	case "health":
+		report, err := ops.GetHealth(ctx, &finfeedsatv1.GetHealthRequest{})
+		if err != nil {
+			log.Fatalf("health: %v", err)
+		}
+		fmt.Printf("state=%s\n", report.GetState())
+		for _, component := range report.GetComponents() {
+			fmt.Printf("component=%s state=%s detail=%q\n", component.GetName(), component.GetState(), component.GetDetail())
+		}
+	case "ready":
+		report, err := ops.GetReadiness(ctx, &finfeedsatv1.GetReadinessRequest{})
+		if err != nil {
+			log.Fatalf("ready: %v", err)
+		}
+		fmt.Printf("ready=%t observe=%t infer=%t message=%q\n", report.GetReady(), report.GetObserve(), report.GetInfer(), report.GetMessage())
+	case "source":
+		health, err := feed.GetFeedHealth(ctx, &finfeedsatv1.GetFeedHealthRequest{})
+		if err != nil {
+			log.Fatalf("feed health: %v", err)
+		}
+		active, err := feed.GetActiveSource(ctx, &finfeedsatv1.GetActiveSourceRequest{})
+		if err != nil {
+			log.Fatalf("active source: %v", err)
+		}
+		fmt.Printf("source=%s state=%s symbols=%s last_error=%q\n",
+			active.GetSourceId(), health.GetState(), strings.Join(health.GetSubscribedSymbols(), ","), health.GetLastError())
+	case "window":
+		if len(symbols) == 0 {
+			log.Fatal("symbols is required")
+		}
+		window, err := ingest.GetBarWindow(ctx, &finfeedsatv1.GetBarWindowRequest{Symbol: symbols[0], Limit: uint32(*limit)})
+		if err != nil {
+			log.Fatalf("window: %v", err)
+		}
+		fmt.Printf("symbol=%s bars=%d\n", window.GetSymbol(), len(window.GetBars()))
+		for _, bar := range window.GetBars() {
+			printBar(bar)
+		}
+	case "gapfill":
+		if len(symbols) == 0 {
+			log.Fatal("symbols is required")
+		}
+		result, err := ingest.TriggerGapFill(ctx, &finfeedsatv1.TriggerGapFillRequest{Symbol: symbols[0]})
+		if err != nil {
+			log.Fatalf("gapfill: %v", err)
+		}
+		fmt.Printf("symbol=%s fetched=%d injected=%d deduplicated=%d message=%q\n",
+			result.GetSymbol(), result.GetBarsFetched(), result.GetBarsInjected(), result.GetBarsDeduplicated(), result.GetMessage())
+	case "stream":
+		stream, err := ingest.StreamBars(ctx, &finfeedsatv1.StreamBarsRequest{
+			Symbols:       symbols,
+			MaxBars:       uint32(*maxBars),
+			FinalizedOnly: *finalizedOnly,
+		})
+		if err != nil {
+			log.Fatalf("stream bars: %v", err)
+		}
+		count := 0
+		for {
+			bar, err := stream.Recv()
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			if err != nil {
+				log.Fatalf("receive bar: %v", err)
+			}
+			printBar(bar)
+			count++
+		}
+		fmt.Printf("received=%d\n", count)
+	case "decisions":
+		stream, err := model.StreamDecisions(ctx, &finfeedsatv1.StreamDecisionsRequest{
+			Symbols:   symbols,
+			MaxEvents: uint32(*maxBars),
+		})
+		if err != nil {
+			log.Fatalf("stream decisions: %v", err)
+		}
+		count := 0
+		for {
+			ev, err := stream.Recv()
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			if err != nil {
+				log.Fatalf("receive decision: %v", err)
+			}
+			printDecision(ev)
+			count++
+		}
+		fmt.Printf("received=%d\n", count)
+	default:
+		fmt.Fprintf(os.Stderr, "unsupported operation %q\n", *operation)
+		os.Exit(2)
+	}
+}
+
+func printBar(bar *finfeedsatv1.Bar) {
+	fmt.Printf("symbol=%s source=%s ts=%s o=%.4f h=%.4f l=%.4f c=%.4f v=%d final=%t backfill=%t quality=%s snapshot=%s\n",
+		bar.GetSymbol(),
+		bar.GetSource(),
+		bar.GetSourceTimestamp(),
+		bar.GetOpen(),
+		bar.GetHigh(),
+		bar.GetLow(),
+		bar.GetClose(),
+		bar.GetVolume(),
+		bar.GetIsFinal(),
+		bar.GetIsBackfilled(),
+		bar.GetQualityStatus(),
+		trimID(bar.GetMarketSnapshotId()),
+	)
+}
+
+func printDecision(ev *finfeedsatv1.DecisionEvent) {
+	switch out := ev.GetOutcome().(type) {
+	case *finfeedsatv1.DecisionEvent_Decision:
+		d := out.Decision
+		fmt.Printf("symbol=%s interval_ms=%d side=%s status=%s H=%d QG=%.4f QS=%.4f QR=%.4f C=%.4f path=%s emitter=%s snapshot=%s event=%s\n",
+			ev.GetSymbol(),
+			ev.GetIntervalStartUnixMs(),
+			d.GetSide(),
+			d.GetModelStatus(),
+			d.GetH(),
+			d.GetQG(),
+			d.GetQS(),
+			d.GetQR(),
+			d.GetConfidence(),
+			d.GetPathDirection(),
+			d.GetEmitterPositionState(),
+			trimID(ev.GetMarketSnapshotId()),
+			trimID(ev.GetEventId()),
+		)
+	case *finfeedsatv1.DecisionEvent_Skip:
+		s := out.Skip
+		fmt.Printf("symbol=%s interval_ms=%d skip=%s status=%s detail=%q snapshot=%s event=%s\n",
+			ev.GetSymbol(),
+			ev.GetIntervalStartUnixMs(),
+			s.GetReason(),
+			s.GetModelStatus(),
+			s.GetDetail(),
+			trimID(ev.GetMarketSnapshotId()),
+			trimID(ev.GetEventId()),
+		)
+	default:
+		fmt.Printf("symbol=%s interval_ms=%d outcome=empty event=%s\n", ev.GetSymbol(), ev.GetIntervalStartUnixMs(), trimID(ev.GetEventId()))
+	}
+}
+
+func trimID(value string) string {
+	if len(value) <= 12 {
+		return value
+	}
+	return value[:12]
+}
+
+func splitSymbols(value string) []string {
+	parts := strings.Split(value, ",")
+	symbols := make([]string, 0, len(parts))
+	for _, part := range parts {
+		symbol := strings.ToUpper(strings.TrimSpace(part))
+		if symbol != "" {
+			symbols = append(symbols, symbol)
+		}
+	}
+	return symbols
+}

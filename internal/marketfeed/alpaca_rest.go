@@ -1,4 +1,4 @@
-package marketfeed
+﻿package marketfeed
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 type AlpacaREST struct {

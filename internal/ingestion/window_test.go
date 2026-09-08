@@ -1,10 +1,10 @@
-package ingestion
+﻿package ingestion
 
 import (
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 func windowBar(start time.Time, close float64, quality domain.QualityStatus, final, backfilled bool) domain.Bar {

@@ -1,9 +1,9 @@
-package volume
+﻿package volume
 
 import (
 	"strings"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 // Observation is the side-effect-free Volume input mapped from one domain.Bar.

@@ -1,15 +1,15 @@
-package server
+﻿package server
 
 import (
-	quantramv1 "quantram/gen/quantram/v1"
-	"quantram/internal/config"
-	"quantram/internal/domain"
+	finfeedsatv1 "fin_feedsat_1/gen/fin_feedsat/v1"
+	"fin_feedsat_1/internal/config"
+	"fin_feedsat_1/internal/domain"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (s *Server) StreamPriceEvents(request *quantramv1.StreamPriceEventsRequest, stream quantramv1.ModelService_StreamPriceEventsServer) error {
+func (s *Server) StreamPriceEvents(request *finfeedsatv1.StreamPriceEventsRequest, stream finfeedsatv1.ModelService_StreamPriceEventsServer) error {
 	if s.prices == nil {
 		if s.host != nil {
 			if ph, ok := s.host.(pricingHealth); ok {
@@ -71,8 +71,8 @@ func (s *Server) StreamPriceEvents(request *quantramv1.StreamPriceEventsRequest,
 	}
 }
 
-func toProtoPriceEvent(ev domain.PriceEvent) *quantramv1.PriceEvent {
-	out := &quantramv1.PriceEvent{
+func toProtoPriceEvent(ev domain.PriceEvent) *finfeedsatv1.PriceEvent {
+	out := &finfeedsatv1.PriceEvent{
 		EventId:             ev.EventID,
 		Symbol:              ev.Symbol,
 		IntervalStartUnixMs: unixMilli(ev.IntervalStart),
@@ -97,8 +97,8 @@ func toProtoPriceEvent(ev domain.PriceEvent) *quantramv1.PriceEvent {
 	return out
 }
 
-func toProtoPriceEmission(em domain.PriceEmission) *quantramv1.PriceEmission {
-	return &quantramv1.PriceEmission{
+func toProtoPriceEmission(em domain.PriceEmission) *finfeedsatv1.PriceEmission {
+	return &finfeedsatv1.PriceEmission{
 		Color:                     em.Color,
 		TrajectoryPhase:           em.TrajectoryPhase,
 		TurningTendency:           em.TurningTendency,
@@ -115,8 +115,8 @@ func toProtoPriceEmission(em domain.PriceEmission) *quantramv1.PriceEmission {
 	}
 }
 
-func toProtoPriceCockpit(c domain.PriceCockpit) *quantramv1.PriceCockpit {
-	return &quantramv1.PriceCockpit{
+func toProtoPriceCockpit(c domain.PriceCockpit) *finfeedsatv1.PriceCockpit {
+	return &finfeedsatv1.PriceCockpit{
 		CockpitColor:         c.CockpitColor,
 		RefinedInternalState: c.RefinedInternalState,
 		PersistenceState:     c.PersistenceState,
@@ -126,53 +126,53 @@ func toProtoPriceCockpit(c domain.PriceCockpit) *quantramv1.PriceCockpit {
 	}
 }
 
-func toProtoPricingSkip(s domain.PricingSkip) *quantramv1.PricingSkip {
-	return &quantramv1.PricingSkip{
+func toProtoPricingSkip(s domain.PricingSkip) *finfeedsatv1.PricingSkip {
+	return &finfeedsatv1.PricingSkip{
 		Reason: toProtoPricingSkipReason(s.Reason),
 		Detail: s.Detail,
 	}
 }
 
-func toProtoPricingStatus(value domain.PricingStatus) quantramv1.PricingStatus {
+func toProtoPricingStatus(value domain.PricingStatus) finfeedsatv1.PricingStatus {
 	switch value {
 	case domain.PricingStatusWarmupDerivative:
-		return quantramv1.PricingStatus_PRICING_STATUS_WARMUP_DERIVATIVE
+		return finfeedsatv1.PricingStatus_PRICING_STATUS_WARMUP_DERIVATIVE
 	case domain.PricingStatusWarmupF4:
-		return quantramv1.PricingStatus_PRICING_STATUS_WARMUP_F4
+		return finfeedsatv1.PricingStatus_PRICING_STATUS_WARMUP_F4
 	case domain.PricingStatusF4Unavailable:
-		return quantramv1.PricingStatus_PRICING_STATUS_F4_UNAVAILABLE
+		return finfeedsatv1.PricingStatus_PRICING_STATUS_F4_UNAVAILABLE
 	case domain.PricingStatusEmitted:
-		return quantramv1.PricingStatus_PRICING_STATUS_EMITTED
+		return finfeedsatv1.PricingStatus_PRICING_STATUS_EMITTED
 	case domain.PricingStatusProjectionFailure:
-		return quantramv1.PricingStatus_PRICING_STATUS_PROJECTION_FAILURE
+		return finfeedsatv1.PricingStatus_PRICING_STATUS_PROJECTION_FAILURE
 	default:
-		return quantramv1.PricingStatus_PRICING_STATUS_UNSPECIFIED
+		return finfeedsatv1.PricingStatus_PRICING_STATUS_UNSPECIFIED
 	}
 }
 
-func toProtoPricingSkipReason(value domain.PricingSkipReason) quantramv1.PricingSkipReason {
+func toProtoPricingSkipReason(value domain.PricingSkipReason) finfeedsatv1.PricingSkipReason {
 	switch value {
 	case domain.PricingSkipWarmupDerivative:
-		return quantramv1.PricingSkipReason_PRICING_SKIP_REASON_WARMUP_DERIVATIVE
+		return finfeedsatv1.PricingSkipReason_PRICING_SKIP_REASON_WARMUP_DERIVATIVE
 	case domain.PricingSkipWarmupF4:
-		return quantramv1.PricingSkipReason_PRICING_SKIP_REASON_WARMUP_F4
+		return finfeedsatv1.PricingSkipReason_PRICING_SKIP_REASON_WARMUP_F4
 	case domain.PricingSkipF4Unavailable:
-		return quantramv1.PricingSkipReason_PRICING_SKIP_REASON_F4_UNAVAILABLE
+		return finfeedsatv1.PricingSkipReason_PRICING_SKIP_REASON_F4_UNAVAILABLE
 	case domain.PricingSkipProjectionFail:
-		return quantramv1.PricingSkipReason_PRICING_SKIP_REASON_PROJECTION_FAILURE
+		return finfeedsatv1.PricingSkipReason_PRICING_SKIP_REASON_PROJECTION_FAILURE
 	case domain.PricingSkipUnstable:
-		return quantramv1.PricingSkipReason_PRICING_SKIP_REASON_NUMERICALLY_UNSTABLE
+		return finfeedsatv1.PricingSkipReason_PRICING_SKIP_REASON_NUMERICALLY_UNSTABLE
 	case domain.PricingSkipInvalidInput:
-		return quantramv1.PricingSkipReason_PRICING_SKIP_REASON_INVALID_INPUT
+		return finfeedsatv1.PricingSkipReason_PRICING_SKIP_REASON_INVALID_INPUT
 	case domain.PricingSkipTimeout:
-		return quantramv1.PricingSkipReason_PRICING_SKIP_REASON_TIMEOUT
+		return finfeedsatv1.PricingSkipReason_PRICING_SKIP_REASON_TIMEOUT
 	case domain.PricingSkipEngineError:
-		return quantramv1.PricingSkipReason_PRICING_SKIP_REASON_ENGINE_ERROR
+		return finfeedsatv1.PricingSkipReason_PRICING_SKIP_REASON_ENGINE_ERROR
 	case domain.PricingSkipEnginePanic:
-		return quantramv1.PricingSkipReason_PRICING_SKIP_REASON_ENGINE_PANIC
+		return finfeedsatv1.PricingSkipReason_PRICING_SKIP_REASON_ENGINE_PANIC
 	case domain.PricingSkipTimeTerm:
-		return quantramv1.PricingSkipReason_PRICING_SKIP_REASON_TIME_TERM
+		return finfeedsatv1.PricingSkipReason_PRICING_SKIP_REASON_TIME_TERM
 	default:
-		return quantramv1.PricingSkipReason_PRICING_SKIP_REASON_UNSPECIFIED
+		return finfeedsatv1.PricingSkipReason_PRICING_SKIP_REASON_UNSPECIFIED
 	}
 }

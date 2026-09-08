@@ -1,11 +1,11 @@
-package volume
+﻿package volume
 
 import (
 	"math"
 	"strings"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 // FeatureState is bounded positional Volume Feature State.

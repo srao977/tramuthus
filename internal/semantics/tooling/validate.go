@@ -1,9 +1,9 @@
-package tooling
+﻿package tooling
 
 import (
 	"os"
 
-	"quantram/internal/semantics"
+	"fin_feedsat_1/internal/semantics"
 )
 
 func ValidatePath(path string) error {

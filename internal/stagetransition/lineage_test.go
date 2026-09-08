@@ -1,10 +1,10 @@
-package stagetransition
+﻿package stagetransition
 
 import (
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 func TestFullInitiatingBarPreserved(t *testing.T) {

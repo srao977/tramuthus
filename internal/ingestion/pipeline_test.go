@@ -1,4 +1,4 @@
-package ingestion
+﻿package ingestion
 
 import (
 	"context"
@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
-	"quantram/internal/marketfeed"
-	"quantram/internal/stagetransition"
+	"fin_feedsat_1/internal/domain"
+	"fin_feedsat_1/internal/marketfeed"
+	"fin_feedsat_1/internal/stagetransition"
 )
 
 type stubHistorical struct {

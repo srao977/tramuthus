@@ -1,12 +1,12 @@
-package modelhost
+﻿package modelhost
 
 import (
 	"fmt"
 	"log"
 	"strings"
 
-	"quantram/internal/domain"
-	"quantram/internal/volume"
+	"fin_feedsat_1/internal/domain"
+	"fin_feedsat_1/internal/volume"
 )
 
 // P-04V host join (Phase G).

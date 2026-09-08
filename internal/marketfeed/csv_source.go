@@ -1,4 +1,4 @@
-package marketfeed
+﻿package marketfeed
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 var csvHeader = []string{"timestamp", "open", "high", "low", "close", "volume"}

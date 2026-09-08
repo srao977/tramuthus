@@ -1,9 +1,9 @@
-package server
+﻿package server
 
 import (
-	quantramv1 "quantram/gen/quantram/v1"
-	"quantram/internal/config"
-	"quantram/internal/domain"
+	finfeedsatv1 "fin_feedsat_1/gen/fin_feedsat/v1"
+	"fin_feedsat_1/internal/config"
+	"fin_feedsat_1/internal/domain"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -11,7 +11,7 @@ import (
 
 // StreamVolumeEvents publishes Host-produced VolumeEvents. It does not ingest
 // Bars or run Volume science. A slow or cancelled client cannot block ModelHost.
-func (s *Server) StreamVolumeEvents(request *quantramv1.StreamVolumeEventsRequest, stream quantramv1.ModelService_StreamVolumeEventsServer) error {
+func (s *Server) StreamVolumeEvents(request *finfeedsatv1.StreamVolumeEventsRequest, stream finfeedsatv1.ModelService_StreamVolumeEventsServer) error {
 	if s.volumes == nil {
 		return status.Error(codes.FailedPrecondition, "volume is not wired")
 	}
@@ -71,8 +71,8 @@ func (s *Server) StreamVolumeEvents(request *quantramv1.StreamVolumeEventsReques
 
 // toProtoVolumeEvent maps validated domain Volume Output to the canonical
 // protobuf contract. It does not recompute Volume science.
-func toProtoVolumeEvent(ev domain.VolumeEvent) *quantramv1.VolumeEvent {
-	out := &quantramv1.VolumeEvent{
+func toProtoVolumeEvent(ev domain.VolumeEvent) *finfeedsatv1.VolumeEvent {
+	out := &finfeedsatv1.VolumeEvent{
 		EventId:             ev.EventID,
 		Symbol:              ev.Lineage.Symbol,
 		IntervalStartUnixMs: unixMilli(ev.Lineage.IntervalStart),
@@ -91,8 +91,8 @@ func toProtoVolumeEvent(ev domain.VolumeEvent) *quantramv1.VolumeEvent {
 	return out
 }
 
-func toProtoVolumeEmission(ev domain.VolumeEvent) *quantramv1.VolumeEmission {
-	return &quantramv1.VolumeEmission{
+func toProtoVolumeEmission(ev domain.VolumeEvent) *finfeedsatv1.VolumeEmission {
+	return &finfeedsatv1.VolumeEmission{
 		VRaw:            toProtoVolumeQuantity(ev.VRaw),
 		VN:              toProtoVolumeQuantity(ev.VN),
 		V1:              toProtoVolumeQuantity(ev.V1),
@@ -108,8 +108,8 @@ func toProtoVolumeEmission(ev domain.VolumeEvent) *quantramv1.VolumeEmission {
 	}
 }
 
-func toProtoVolumeQuantity(q domain.VolumeQuantity) *quantramv1.VolumeQuantity {
-	out := &quantramv1.VolumeQuantity{Status: toProtoVolumeQuantityStatus(q.Status)}
+func toProtoVolumeQuantity(q domain.VolumeQuantity) *finfeedsatv1.VolumeQuantity {
+	out := &finfeedsatv1.VolumeQuantity{Status: toProtoVolumeQuantityStatus(q.Status)}
 	if q.Status == domain.VolumeQtyAvailable {
 		value := q.Value
 		out.Value = &value
@@ -117,21 +117,21 @@ func toProtoVolumeQuantity(q domain.VolumeQuantity) *quantramv1.VolumeQuantity {
 	return out
 }
 
-func toProtoVolumeSkip(status, reason string) *quantramv1.VolumeSkip {
+func toProtoVolumeSkip(status, reason string) *finfeedsatv1.VolumeSkip {
 	switch status {
 	case domain.VolumeStatusMaturing:
-		return &quantramv1.VolumeSkip{
-			Reason: quantramv1.VolumeSkipReason_VOLUME_SKIP_REASON_MATURING,
+		return &finfeedsatv1.VolumeSkip{
+			Reason: finfeedsatv1.VolumeSkipReason_VOLUME_SKIP_REASON_MATURING,
 			Detail: reason,
 		}
 	case domain.VolumeStatusInvalid:
-		return &quantramv1.VolumeSkip{
-			Reason: quantramv1.VolumeSkipReason_VOLUME_SKIP_REASON_INVALID,
+		return &finfeedsatv1.VolumeSkip{
+			Reason: finfeedsatv1.VolumeSkipReason_VOLUME_SKIP_REASON_INVALID,
 			Detail: reason,
 		}
 	case domain.VolumeStatusError:
-		return &quantramv1.VolumeSkip{
-			Reason: quantramv1.VolumeSkipReason_VOLUME_SKIP_REASON_ENGINE_ERROR,
+		return &finfeedsatv1.VolumeSkip{
+			Reason: finfeedsatv1.VolumeSkipReason_VOLUME_SKIP_REASON_ENGINE_ERROR,
 			Detail: reason,
 		}
 	default:
@@ -139,95 +139,95 @@ func toProtoVolumeSkip(status, reason string) *quantramv1.VolumeSkip {
 	}
 }
 
-func toProtoVolumeStatus(value string) quantramv1.VolumeStatus {
+func toProtoVolumeStatus(value string) finfeedsatv1.VolumeStatus {
 	switch value {
 	case domain.VolumeStatusMaturing:
-		return quantramv1.VolumeStatus_VOLUME_STATUS_MATURING
+		return finfeedsatv1.VolumeStatus_VOLUME_STATUS_MATURING
 	case domain.VolumeStatusAvailable:
-		return quantramv1.VolumeStatus_VOLUME_STATUS_AVAILABLE
+		return finfeedsatv1.VolumeStatus_VOLUME_STATUS_AVAILABLE
 	case domain.VolumeStatusInvalid:
-		return quantramv1.VolumeStatus_VOLUME_STATUS_INVALID
+		return finfeedsatv1.VolumeStatus_VOLUME_STATUS_INVALID
 	case domain.VolumeStatusError:
-		return quantramv1.VolumeStatus_VOLUME_STATUS_ENGINE_ERROR
+		return finfeedsatv1.VolumeStatus_VOLUME_STATUS_ENGINE_ERROR
 	default:
-		return quantramv1.VolumeStatus_VOLUME_STATUS_UNSPECIFIED
+		return finfeedsatv1.VolumeStatus_VOLUME_STATUS_UNSPECIFIED
 	}
 }
 
-func toProtoVolumeQuantityStatus(value string) quantramv1.VolumeQuantityStatus {
+func toProtoVolumeQuantityStatus(value string) finfeedsatv1.VolumeQuantityStatus {
 	switch value {
 	case domain.VolumeQtyInsufficient:
-		return quantramv1.VolumeQuantityStatus_VOLUME_QUANTITY_STATUS_INSUFFICIENT
+		return finfeedsatv1.VolumeQuantityStatus_VOLUME_QUANTITY_STATUS_INSUFFICIENT
 	case domain.VolumeQtyAvailable:
-		return quantramv1.VolumeQuantityStatus_VOLUME_QUANTITY_STATUS_AVAILABLE
+		return finfeedsatv1.VolumeQuantityStatus_VOLUME_QUANTITY_STATUS_AVAILABLE
 	case domain.VolumeQtyUndefined:
-		return quantramv1.VolumeQuantityStatus_VOLUME_QUANTITY_STATUS_UNDEFINED
+		return finfeedsatv1.VolumeQuantityStatus_VOLUME_QUANTITY_STATUS_UNDEFINED
 	default:
-		return quantramv1.VolumeQuantityStatus_VOLUME_QUANTITY_STATUS_UNSPECIFIED
+		return finfeedsatv1.VolumeQuantityStatus_VOLUME_QUANTITY_STATUS_UNSPECIFIED
 	}
 }
 
-func toProtoVolumeIndicator(value string) quantramv1.VolumeIndicator {
+func toProtoVolumeIndicator(value string) finfeedsatv1.VolumeIndicator {
 	switch value {
 	case domain.VolumeColorGreen:
-		return quantramv1.VolumeIndicator_VOLUME_INDICATOR_GREEN
+		return finfeedsatv1.VolumeIndicator_VOLUME_INDICATOR_GREEN
 	case domain.VolumeColorAmber:
-		return quantramv1.VolumeIndicator_VOLUME_INDICATOR_AMBER
+		return finfeedsatv1.VolumeIndicator_VOLUME_INDICATOR_AMBER
 	case domain.VolumeColorRed:
-		return quantramv1.VolumeIndicator_VOLUME_INDICATOR_RED
+		return finfeedsatv1.VolumeIndicator_VOLUME_INDICATOR_RED
 	default:
-		return quantramv1.VolumeIndicator_VOLUME_INDICATOR_UNSPECIFIED
+		return finfeedsatv1.VolumeIndicator_VOLUME_INDICATOR_UNSPECIFIED
 	}
 }
 
-func toProtoVolumeTransition(value string) quantramv1.VolumeTransition {
+func toProtoVolumeTransition(value string) finfeedsatv1.VolumeTransition {
 	switch value {
 	case "STABLE":
-		return quantramv1.VolumeTransition_VOLUME_TRANSITION_STABLE
+		return finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_STABLE
 	case "PENDING_GREEN":
-		return quantramv1.VolumeTransition_VOLUME_TRANSITION_PENDING_GREEN
+		return finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_PENDING_GREEN
 	case "PENDING_AMBER":
-		return quantramv1.VolumeTransition_VOLUME_TRANSITION_PENDING_AMBER
+		return finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_PENDING_AMBER
 	case "PENDING_RED":
-		return quantramv1.VolumeTransition_VOLUME_TRANSITION_PENDING_RED
+		return finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_PENDING_RED
 	case "CONFIRMED_GREEN":
-		return quantramv1.VolumeTransition_VOLUME_TRANSITION_CONFIRMED_GREEN
+		return finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_CONFIRMED_GREEN
 	case "CONFIRMED_AMBER":
-		return quantramv1.VolumeTransition_VOLUME_TRANSITION_CONFIRMED_AMBER
+		return finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_CONFIRMED_AMBER
 	case "CONFIRMED_RED":
-		return quantramv1.VolumeTransition_VOLUME_TRANSITION_CONFIRMED_RED
+		return finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_CONFIRMED_RED
 	default:
-		return quantramv1.VolumeTransition_VOLUME_TRANSITION_UNSPECIFIED
+		return finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_UNSPECIFIED
 	}
 }
 
-func toProtoVolumePhase(value string) quantramv1.VolumePhase {
+func toProtoVolumePhase(value string) finfeedsatv1.VolumePhase {
 	switch value {
 	case domain.VolumePhaseStationary:
-		return quantramv1.VolumePhase_VOLUME_PHASE_ACTIVITY_STATIONARY
+		return finfeedsatv1.VolumePhase_VOLUME_PHASE_ACTIVITY_STATIONARY
 	case domain.VolumePhaseIncreasingAccelerating:
-		return quantramv1.VolumePhase_VOLUME_PHASE_ACTIVITY_INCREASING_ACCELERATING
+		return finfeedsatv1.VolumePhase_VOLUME_PHASE_ACTIVITY_INCREASING_ACCELERATING
 	case domain.VolumePhaseIncreasingDecelerating:
-		return quantramv1.VolumePhase_VOLUME_PHASE_ACTIVITY_INCREASING_DECELERATING
+		return finfeedsatv1.VolumePhase_VOLUME_PHASE_ACTIVITY_INCREASING_DECELERATING
 	case domain.VolumePhaseDecreasingAccelerating:
-		return quantramv1.VolumePhase_VOLUME_PHASE_ACTIVITY_DECREASING_ACCELERATING
+		return finfeedsatv1.VolumePhase_VOLUME_PHASE_ACTIVITY_DECREASING_ACCELERATING
 	case domain.VolumePhaseDecreasingDecelerating:
-		return quantramv1.VolumePhase_VOLUME_PHASE_ACTIVITY_DECREASING_DECELERATING
+		return finfeedsatv1.VolumePhase_VOLUME_PHASE_ACTIVITY_DECREASING_DECELERATING
 	default:
-		return quantramv1.VolumePhase_VOLUME_PHASE_UNSPECIFIED
+		return finfeedsatv1.VolumePhase_VOLUME_PHASE_UNSPECIFIED
 	}
 }
 
-func toProtoVolumeConfidence(value string) quantramv1.VolumeConfidence {
+func toProtoVolumeConfidence(value string) finfeedsatv1.VolumeConfidence {
 	if value == domain.VolumeConfidenceHigh {
-		return quantramv1.VolumeConfidence_VOLUME_CONFIDENCE_HIGH
+		return finfeedsatv1.VolumeConfidence_VOLUME_CONFIDENCE_HIGH
 	}
-	return quantramv1.VolumeConfidence_VOLUME_CONFIDENCE_UNSPECIFIED
+	return finfeedsatv1.VolumeConfidence_VOLUME_CONFIDENCE_UNSPECIFIED
 }
 
-func toProtoVolumeDomainState(value string) quantramv1.VolumeDomainState {
+func toProtoVolumeDomainState(value string) finfeedsatv1.VolumeDomainState {
 	if value == domain.VolumeDomainCausalLocal {
-		return quantramv1.VolumeDomainState_VOLUME_DOMAIN_STATE_CAUSAL_LOCAL_VOLUME
+		return finfeedsatv1.VolumeDomainState_VOLUME_DOMAIN_STATE_CAUSAL_LOCAL_VOLUME
 	}
-	return quantramv1.VolumeDomainState_VOLUME_DOMAIN_STATE_UNSPECIFIED
+	return finfeedsatv1.VolumeDomainState_VOLUME_DOMAIN_STATE_UNSPECIFIED
 }

@@ -1,11 +1,11 @@
-package adaptive
+﻿package adaptive
 
 import (
 	"fmt"
 	"math"
 	"sort"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 type EnvelopeContext struct {

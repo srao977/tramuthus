@@ -1,4 +1,4 @@
-package volume
+﻿package volume
 
 import (
 	"math"
@@ -292,16 +292,16 @@ func TestC21PhaseBPreservation(t *testing.T) {
 
 func TestC22NoPricingScientificDependency(t *testing.T) {
 	t.Log("invariant: internal/volume must not import internal/pricing")
-	assertNoProductionImport(t, packageDir(t), `"quantram/internal/pricing"`)
+	assertNoProductionImport(t, packageDir(t), `"fin_feedsat_1/internal/pricing"`)
 }
 
 func TestC23NoAdaptiveScientificDependency(t *testing.T) {
 	t.Log("invariant: internal/volume must not import Adaptive implementation")
-	assertNoProductionImport(t, packageDir(t), `"quantram/internal/adaptive"`)
+	assertNoProductionImport(t, packageDir(t), `"fin_feedsat_1/internal/adaptive"`)
 }
 
 func TestC24NoRuntimeIntegration(t *testing.T) {
 	t.Log("invariant: ingestion must not import Phase C Volume code")
 	root := repoRoot(t)
-	assertNoImport(t, filepath.Join(root, "internal", "ingestion"), `"quantram/internal/volume"`, false)
+	assertNoImport(t, filepath.Join(root, "internal", "ingestion"), `"fin_feedsat_1/internal/volume"`, false)
 }

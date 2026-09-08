@@ -1,4 +1,4 @@
-package pricing
+﻿package pricing
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 // Observation is the live/offline pricing input. Time is IntervalStart minutes.

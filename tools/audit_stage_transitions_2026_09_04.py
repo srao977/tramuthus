@@ -1,11 +1,11 @@
 """
-QuanTRAM StageTransition V1.1 live-run forensic parser (2026-09-04).
+Fin_FeedSat_1 StageTransition V1.1 live-run forensic parser (2026-09-04).
 
 Purpose
     Independently parse a human-readable stage_transitions.txt diagnostic
     and emit quantitative evidence for the live-run audit. This script is
     investigation tooling only. It is not on the realtime path, does not
-    publish transitions, and must not be imported by quantram-server.
+    publish transitions, and must not be imported by fin-feedsat-server.
 
 Inputs
     Path to a StageTransition diagnostic TXT file (default:

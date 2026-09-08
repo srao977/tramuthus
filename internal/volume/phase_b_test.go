@@ -1,4 +1,4 @@
-package volume
+﻿package volume
 
 import (
 	"math"
@@ -292,18 +292,18 @@ func TestB18CandidateStateSafety(t *testing.T) {
 
 func TestB19NoPriceDependency(t *testing.T) {
 	t.Log("invariant: Phase B production sources must not import internal/pricing")
-	assertNoProductionImport(t, packageDir(t), `"quantram/internal/pricing"`)
+	assertNoProductionImport(t, packageDir(t), `"fin_feedsat_1/internal/pricing"`)
 }
 
 func TestB20NoAdaptiveDependency(t *testing.T) {
 	t.Log("invariant: Phase B production sources must not import Adaptive science")
-	assertNoProductionImport(t, packageDir(t), `"quantram/internal/adaptive"`)
+	assertNoProductionImport(t, packageDir(t), `"fin_feedsat_1/internal/adaptive"`)
 }
 
 func TestB21NoRuntimeIntegration(t *testing.T) {
 	t.Log("invariant: ingestion must not import Phase B Volume code")
 	root := repoRoot(t)
-	assertNoImport(t, filepath.Join(root, "internal", "ingestion"), `"quantram/internal/volume"`, false)
+	assertNoImport(t, filepath.Join(root, "internal", "ingestion"), `"fin_feedsat_1/internal/volume"`, false)
 }
 
 func TestB22NoNamedProductionEntityAssumptions(t *testing.T) {

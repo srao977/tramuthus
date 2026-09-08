@@ -1,4 +1,4 @@
-package volume
+﻿package volume
 
 import (
 	"math"
@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 func mustEngine(t *testing.T, entity string) *Engine {
@@ -397,12 +397,12 @@ func TestE38PerEntityIsolation(t *testing.T) {
 
 func TestE39NoPricingDependency(t *testing.T) {
 	t.Log("invariant: internal/volume must not import internal/pricing")
-	assertNoProductionImport(t, packageDir(t), `"quantram/internal/pricing"`)
+	assertNoProductionImport(t, packageDir(t), `"fin_feedsat_1/internal/pricing"`)
 }
 
 func TestE40NoAdaptiveDependency(t *testing.T) {
 	t.Log("invariant: internal/volume must not import Adaptive science")
-	assertNoProductionImport(t, packageDir(t), `"quantram/internal/adaptive"`)
+	assertNoProductionImport(t, packageDir(t), `"fin_feedsat_1/internal/adaptive"`)
 }
 
 func TestE41PhaseADStillPass(t *testing.T) {
@@ -416,13 +416,13 @@ func TestE41PhaseADStillPass(t *testing.T) {
 func TestE42E43NoIngestionVolumeImport(t *testing.T) {
 	t.Log("invariant: ingestion must not import the Volume Engine; Phase G authorizes modelhost")
 	root := repoRoot(t)
-	assertNoImport(t, filepath.Join(root, "internal", "ingestion"), `"quantram/internal/volume"`, false)
+	assertNoImport(t, filepath.Join(root, "internal", "ingestion"), `"fin_feedsat_1/internal/volume"`, false)
 }
 
 func TestE44VolumeScienceDoesNotImportProto(t *testing.T) {
 	t.Log("invariant: Volume science does not import generated proto; no VolumeService microservice")
-	assertNoProductionImport(t, packageDir(t), `"quantram/gen/quantram/v1"`)
-	body, err := os.ReadFile(filepath.Join(repoRoot(t), "api", "proto", "quantram", "v1", "quantram.proto"))
+	assertNoProductionImport(t, packageDir(t), `"fin_feedsat_1/gen/fin_feedsat/v1"`)
+	body, err := os.ReadFile(filepath.Join(repoRoot(t), "api", "proto", "fin_feedsat", "v1", "Fin_FeedSat_1.proto"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -454,7 +454,7 @@ func TestE45NoStageTransitionVolume(t *testing.T) {
 func TestE46ProcessModelUntouchedByPhaseE(t *testing.T) {
 	t.Log("invariant: Phase E must not require Process Model edits")
 	// Presence of the master document is enough; Phase E does not write it.
-	if _, err := os.Stat(filepath.Join(repoRoot(t), "docs", "design", "QuanTRAM_PROCESS_MODEL_082926.md")); err != nil {
+	if _, err := os.Stat(filepath.Join(repoRoot(t), "docs", "design", "Fin_FeedSat_1_PROCESS_MODEL_082926.md")); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -1,9 +1,9 @@
-package pricing
+﻿package pricing
 
 import (
 	"math"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 type CockpitState struct {

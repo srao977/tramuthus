@@ -1,13 +1,13 @@
-package catalog
+﻿package catalog
 
-import "quantram/internal/semantics"
+import "fin_feedsat_1/internal/semantics"
 
 // V1 is the authoring source for Semantic Contract 1.0.
-// Meanings are curated here. Run quantram-semantics build to publish JSON.
+// Meanings are curated here. Run fin-feedsat-semantics build to publish JSON.
 func V1() semantics.Document {
 	return semantics.Document{
 		SemanticContract: semantics.Contract{
-			Name:              "QuanTRAM Semantic Dictionary",
+			Name:              "Fin_FeedSat_1 Semantic Dictionary",
 			Version:           "1.0",
 			Date:              "2026-09-02",
 			Status:            "INITIAL_CANONICAL_BASELINE",
@@ -34,7 +34,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/engine.go",
 					GoSymbol:         "decide",
-					ProtoEnumOrField: "quantram.v1.Side.SIDE_BUY",
+					ProtoEnumOrField: "finfeedsat.v1.Side.SIDE_BUY",
 					TestReference:    "internal/adaptive/equivalence_test.go",
 				},
 				UI: semantics.UI{
@@ -64,7 +64,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/engine.go",
 					GoSymbol:         "decide",
-					ProtoEnumOrField: "quantram.v1.Side.SIDE_SELL",
+					ProtoEnumOrField: "finfeedsat.v1.Side.SIDE_SELL",
 					TestReference:    "internal/adaptive/equivalence_test.go",
 				},
 				UI: semantics.UI{
@@ -94,7 +94,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/engine.go",
 					GoSymbol:         "decide",
-					ProtoEnumOrField: "quantram.v1.Side.SIDE_HOLD",
+					ProtoEnumOrField: "finfeedsat.v1.Side.SIDE_HOLD",
 					TestReference:    "internal/adaptive/equivalence_test.go",
 				},
 				UI: semantics.UI{
@@ -124,7 +124,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/decision.go",
 					GoSymbol:         "EmitterLong",
-					ProtoEnumOrField: "quantram.v1.EmitterPosition.EMITTER_POSITION_LONG",
+					ProtoEnumOrField: "finfeedsat.v1.EmitterPosition.EMITTER_POSITION_LONG",
 					TestReference:    "internal/adaptive/engine.go",
 				},
 				UI: semantics.UI{
@@ -154,7 +154,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/decision.go",
 					GoSymbol:         "EmitterShort",
-					ProtoEnumOrField: "quantram.v1.EmitterPosition.EMITTER_POSITION_SHORT",
+					ProtoEnumOrField: "finfeedsat.v1.EmitterPosition.EMITTER_POSITION_SHORT",
 					TestReference:    "internal/adaptive/engine.go",
 				},
 				UI: semantics.UI{
@@ -184,7 +184,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/decision.go",
 					GoSymbol:         "EmitterFlat",
-					ProtoEnumOrField: "quantram.v1.EmitterPosition.EMITTER_POSITION_FLAT",
+					ProtoEnumOrField: "finfeedsat.v1.EmitterPosition.EMITTER_POSITION_FLAT",
 					TestReference:    "internal/adaptive/engine.go",
 				},
 				UI: semantics.UI{
@@ -214,7 +214,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/d02.go",
 					GoSymbol:         "ReturnShape.PathDirection",
-					ProtoEnumOrField: "quantram.v1.PathDirection.PATH_DIRECTION_UPWARD",
+					ProtoEnumOrField: "finfeedsat.v1.PathDirection.PATH_DIRECTION_UPWARD",
 					TestReference:    "internal/adaptive/d04.go",
 				},
 				UI: semantics.UI{
@@ -244,7 +244,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/d02.go",
 					GoSymbol:         "ReturnShape.PathDirection",
-					ProtoEnumOrField: "quantram.v1.PathDirection.PATH_DIRECTION_DOWNWARD",
+					ProtoEnumOrField: "finfeedsat.v1.PathDirection.PATH_DIRECTION_DOWNWARD",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -274,7 +274,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/d02.go",
 					GoSymbol:         "ReturnShape.PathDirection",
-					ProtoEnumOrField: "quantram.v1.PathDirection.PATH_DIRECTION_FLAT",
+					ProtoEnumOrField: "finfeedsat.v1.PathDirection.PATH_DIRECTION_FLAT",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -304,7 +304,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/engine.go",
 					GoSymbol:         "SkipInitializing",
-					ProtoEnumOrField: "quantram.v1.SkipReason.SKIP_REASON_INITIALIZING",
+					ProtoEnumOrField: "finfeedsat.v1.SkipReason.SKIP_REASON_INITIALIZING",
 					TestReference:    "internal/adaptive/equivalence_test.go",
 				},
 				UI: semantics.UI{
@@ -334,7 +334,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/decision.go",
 					GoSymbol:         "StatusActionable",
-					ProtoEnumOrField: "quantram.v1.ModelStatus",
+					ProtoEnumOrField: "finfeedsat.v1.ModelStatus",
 					TestReference:    "internal/adaptive/engine.go",
 				},
 				UI: semantics.UI{
@@ -364,7 +364,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/d04.go",
 					GoSymbol:         "EvaluateCapturability",
-					ProtoEnumOrField: "quantram.v1.Decision.h",
+					ProtoEnumOrField: "finfeedsat.v1.Decision.h",
 					TestReference:    "internal/adaptive/equivalence_test.go",
 				},
 				UI: semantics.UI{
@@ -394,7 +394,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/d04.go",
 					GoSymbol:         "geometryQuality",
-					ProtoEnumOrField: "quantram.v1.Decision.q_g",
+					ProtoEnumOrField: "finfeedsat.v1.Decision.q_g",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -424,7 +424,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/d04.go",
 					GoSymbol:         "structuralQuality",
-					ProtoEnumOrField: "quantram.v1.Decision.q_s",
+					ProtoEnumOrField: "finfeedsat.v1.Decision.q_s",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -454,7 +454,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/d04.go",
 					GoSymbol:         "riskQuality",
-					ProtoEnumOrField: "quantram.v1.Decision.q_r",
+					ProtoEnumOrField: "finfeedsat.v1.Decision.q_r",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -484,7 +484,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/d04.go",
 					GoSymbol:         "EvaluateCapturability",
-					ProtoEnumOrField: "quantram.v1.Decision.confidence",
+					ProtoEnumOrField: "finfeedsat.v1.Decision.confidence",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -664,7 +664,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/modelhost/host.go",
 					GoSymbol:         "Host.handle",
-					ProtoEnumOrField: "quantram.v1.SkipReason.SKIP_REASON_INFER_OFF",
+					ProtoEnumOrField: "finfeedsat.v1.SkipReason.SKIP_REASON_INFER_OFF",
 					TestReference:    "internal/modelhost/host_test.go",
 				},
 				UI: semantics.UI{
@@ -694,7 +694,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/quality.go",
 					GoSymbol:         "Bar.ModelEligible",
-					ProtoEnumOrField: "quantram.v1.SkipReason.SKIP_REASON_NOT_MODEL_ELIGIBLE",
+					ProtoEnumOrField: "finfeedsat.v1.SkipReason.SKIP_REASON_NOT_MODEL_ELIGIBLE",
 					TestReference:    "internal/domain/quality_test.go",
 				},
 				UI: semantics.UI{
@@ -724,7 +724,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/continuity.go",
 					GoSymbol:         "ClassifyBarContinuity",
-					ProtoEnumOrField: "quantram.v1.SkipReason.SKIP_REASON_DUPLICATE_OR_REGRESSION",
+					ProtoEnumOrField: "finfeedsat.v1.SkipReason.SKIP_REASON_DUPLICATE_OR_REGRESSION",
 					TestReference:    "internal/modelhost/host_test.go",
 				},
 				UI: semantics.UI{
@@ -754,7 +754,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/modelhost/host.go",
 					GoSymbol:         "Host.handle",
-					ProtoEnumOrField: "quantram.v1.SkipReason.SKIP_REASON_INPUT_GAP",
+					ProtoEnumOrField: "finfeedsat.v1.SkipReason.SKIP_REASON_INPUT_GAP",
 					TestReference:    "internal/modelhost/host_test.go",
 				},
 				UI: semantics.UI{
@@ -784,7 +784,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/modelhost/host.go",
 					GoSymbol:         "Host.dispatch",
-					ProtoEnumOrField: "quantram.v1.SkipReason.SKIP_REASON_QUEUE_OVERFLOW",
+					ProtoEnumOrField: "finfeedsat.v1.SkipReason.SKIP_REASON_QUEUE_OVERFLOW",
 					TestReference:    "internal/ingestion/model_path_test.go",
 				},
 				UI: semantics.UI{
@@ -801,7 +801,7 @@ func V1() semantics.Document {
 				Type:                 "REASON",
 				Component:            "MODEL_HOST",
 				PlainMeaning:         "The step exceeded the host deadline. State was not committed.",
-				ScientificMeaning:    "QUANTRAM_MODEL_DEADLINE default 200ms. Timeout leaves committed adaptive/pricing state unchanged.",
+				ScientificMeaning:    "FIN_FEEDSAT_MODEL_DEADLINE default 200ms. Timeout leaves committed adaptive/pricing state unchanged.",
 				Interpretation:       "The step exceeded the host deadline. State was not committed.",
 				DoesNotMean:          []string{"Timeout does not reset history."},
 				RelatedTerms:         []string{"SKIP_ENGINE_ERROR"},
@@ -814,7 +814,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/modelhost/host.go",
 					GoSymbol:         "Host.handle",
-					ProtoEnumOrField: "quantram.v1.SkipReason.SKIP_REASON_TIMEOUT",
+					ProtoEnumOrField: "finfeedsat.v1.SkipReason.SKIP_REASON_TIMEOUT",
 					TestReference:    "internal/modelhost/host_test.go",
 				},
 				UI: semantics.UI{
@@ -844,7 +844,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/engine.go",
 					GoSymbol:         "stepLocked",
-					ProtoEnumOrField: "quantram.v1.SkipReason.SKIP_REASON_INVALID_INPUT",
+					ProtoEnumOrField: "finfeedsat.v1.SkipReason.SKIP_REASON_INVALID_INPUT",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -874,7 +874,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/adaptive/engine.go",
 					GoSymbol:         "stepLocked",
-					ProtoEnumOrField: "quantram.v1.SkipReason.SKIP_REASON_ENGINE_ERROR",
+					ProtoEnumOrField: "finfeedsat.v1.SkipReason.SKIP_REASON_ENGINE_ERROR",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -904,7 +904,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/modelhost/host.go",
 					GoSymbol:         "Host.handle",
-					ProtoEnumOrField: "quantram.v1.SkipReason.SKIP_REASON_ENGINE_PANIC",
+					ProtoEnumOrField: "finfeedsat.v1.SkipReason.SKIP_REASON_ENGINE_PANIC",
 					TestReference:    "internal/modelhost/host_test.go",
 				},
 				UI: semantics.UI{
@@ -934,7 +934,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/modelhost/host.go",
 					GoSymbol:         "Host.discontinuousSkip",
-					ProtoEnumOrField: "quantram.v1.SkipReason.SKIP_REASON_STATE_DISCONTINUOUS",
+					ProtoEnumOrField: "finfeedsat.v1.SkipReason.SKIP_REASON_STATE_DISCONTINUOUS",
 					TestReference:    "internal/modelhost/host_test.go",
 				},
 				UI: semantics.UI{
@@ -964,7 +964,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "EmissionPolicy.emit",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.color",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.color",
 					TestReference:    "internal/pricing/equivalence_test.go",
 				},
 				UI: semantics.UI{
@@ -994,7 +994,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "EmissionPolicy.emit",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.color",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.color",
 					TestReference:    "internal/pricing/policy.go",
 				},
 				UI: semantics.UI{
@@ -1024,7 +1024,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "EmissionPolicy.emit",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.color",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.color",
 					TestReference:    "internal/pricing/equivalence_test.go",
 				},
 				UI: semantics.UI{
@@ -1054,7 +1054,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "EmissionPolicy.emit",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.color",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.color",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1084,7 +1084,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "phase",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.trajectory_phase",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.trajectory_phase",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1114,7 +1114,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "phase",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.trajectory_phase",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.trajectory_phase",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1144,7 +1144,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "phase",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.trajectory_phase",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.trajectory_phase",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1174,7 +1174,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "phase",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.trajectory_phase",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.trajectory_phase",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1204,7 +1204,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "phase",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.trajectory_phase",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.trajectory_phase",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1234,7 +1234,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "phase",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.trajectory_phase",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.trajectory_phase",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1264,7 +1264,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "phase",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.trajectory_phase",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.trajectory_phase",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1294,7 +1294,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "EmissionPolicy.emit",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.confidence_state",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.confidence_state",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1324,7 +1324,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "EmissionPolicy.emit",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.confidence_state",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.confidence_state",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1354,7 +1354,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "EmissionPolicy.emit",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.confidence_state",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.confidence_state",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1384,7 +1384,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "EmissionPolicy.emit",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.domain_state",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.domain_state",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1414,7 +1414,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "EmissionPolicy.emit",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.domain_state",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.domain_state",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1444,7 +1444,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/price.go",
 					GoSymbol:         "PriceEvent.DomainExit",
-					ProtoEnumOrField: "quantram.v1.PriceEvent.domain_exit",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEvent.domain_exit",
 					TestReference:    "internal/pricing/equivalence_test.go",
 				},
 				UI: semantics.UI{
@@ -1474,7 +1474,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "EmissionPolicy.emit",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.stability_state",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.stability_state",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1504,7 +1504,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "EmissionPolicy.emit",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.stability_state",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.stability_state",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1534,7 +1534,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/price.go",
 					GoSymbol:         "PricingStatusWarmupDerivative",
-					ProtoEnumOrField: "quantram.v1.PricingStatus.PRICING_STATUS_WARMUP_DERIVATIVE",
+					ProtoEnumOrField: "finfeedsat.v1.PricingStatus.PRICING_STATUS_WARMUP_DERIVATIVE",
 					TestReference:    "internal/pricing/equivalence_test.go",
 				},
 				UI: semantics.UI{
@@ -1564,7 +1564,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/price.go",
 					GoSymbol:         "PricingStatusWarmupF4",
-					ProtoEnumOrField: "quantram.v1.PricingStatus.PRICING_STATUS_WARMUP_F4",
+					ProtoEnumOrField: "finfeedsat.v1.PricingStatus.PRICING_STATUS_WARMUP_F4",
 					TestReference:    "internal/pricing/equivalence_test.go",
 				},
 				UI: semantics.UI{
@@ -1594,7 +1594,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/price.go",
 					GoSymbol:         "PricingStatusF4Unavailable",
-					ProtoEnumOrField: "quantram.v1.PricingStatus.PRICING_STATUS_F4_UNAVAILABLE",
+					ProtoEnumOrField: "finfeedsat.v1.PricingStatus.PRICING_STATUS_F4_UNAVAILABLE",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1624,7 +1624,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/price.go",
 					GoSymbol:         "PricingStatusEmitted",
-					ProtoEnumOrField: "quantram.v1.PricingStatus.PRICING_STATUS_EMITTED",
+					ProtoEnumOrField: "finfeedsat.v1.PricingStatus.PRICING_STATUS_EMITTED",
 					TestReference:    "internal/pricing/equivalence_test.go",
 				},
 				UI: semantics.UI{
@@ -1654,13 +1654,13 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/price.go",
 					GoSymbol:         "PricingStatusProjectionFailure",
-					ProtoEnumOrField: "quantram.v1.PricingStatus.PRICING_STATUS_PROJECTION_FAILURE",
+					ProtoEnumOrField: "finfeedsat.v1.PricingStatus.PRICING_STATUS_PROJECTION_FAILURE",
 					TestReference:    "internal/pricing/equivalence_test.go",
 				},
 				UI: semantics.UI{
 					Tooltip:              "Projection failed. Production solver is EXPM.",
 					PopoverTitle:         "Projection failure",
-					PopoverBody:          "The cover did not succeed, so color is invalid this minute. Historical SADE CSV used the name RK45_FAILURE. QuanTRAM Go does not execute RK45.",
+					PopoverBody:          "The cover did not succeed, so color is invalid this minute. Historical SADE CSV used the name RK45_FAILURE. Fin_FeedSat_1 Go does not execute RK45.",
 					ShowScientificDetail: true,
 				},
 			},
@@ -1684,7 +1684,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/price.go",
 					GoSymbol:         "PricingSkipProjectionFail",
-					ProtoEnumOrField: "quantram.v1.PricingSkipReason.PRICING_SKIP_REASON_PROJECTION_FAILURE",
+					ProtoEnumOrField: "finfeedsat.v1.PricingSkipReason.PRICING_SKIP_REASON_PROJECTION_FAILURE",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1894,7 +1894,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/bar.go",
 					GoSymbol:         "QualityComplete",
-					ProtoEnumOrField: "quantram.v1.QualityStatus.QUALITY_STATUS_COMPLETE",
+					ProtoEnumOrField: "finfeedsat.v1.QualityStatus.QUALITY_STATUS_COMPLETE",
 					TestReference:    "internal/domain/quality_test.go",
 				},
 				UI: semantics.UI{
@@ -1924,7 +1924,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/bar.go",
 					GoSymbol:         "QualityPartial",
-					ProtoEnumOrField: "quantram.v1.QualityStatus.QUALITY_STATUS_PARTIAL",
+					ProtoEnumOrField: "finfeedsat.v1.QualityStatus.QUALITY_STATUS_PARTIAL",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -1943,7 +1943,7 @@ func V1() semantics.Document {
 				PlainMeaning:         "REST/gap-fill bar. Observe-only. Never Adaptive or Price Engine input.",
 				ScientificMeaning:    "QualityReconstructed and IsBackfilled. ModelEligible is false.",
 				Interpretation:       "REST/gap-fill bar. Observe-only. Never Adaptive or Price Engine input.",
-				DoesNotMean:          []string{"Not a synthetic flat bar invented by QuanTRAM science."},
+				DoesNotMean:          []string{"Not a synthetic flat bar invented by Fin_FeedSat_1 science."},
 				RelatedTerms:         []string{"SKIP_NOT_MODEL_ELIGIBLE"},
 				CompatibilityAliases: []string{},
 				CanonicalSourceIDs:   []string{},
@@ -1954,7 +1954,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/bar.go",
 					GoSymbol:         "QualityReconstructed",
-					ProtoEnumOrField: "quantram.v1.QualityStatus.QUALITY_STATUS_RECONSTRUCTED",
+					ProtoEnumOrField: "finfeedsat.v1.QualityStatus.QUALITY_STATUS_RECONSTRUCTED",
 					TestReference:    "internal/domain/quality_test.go",
 				},
 				UI: semantics.UI{
@@ -1984,7 +1984,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/bar.go",
 					GoSymbol:         "QualityStale",
-					ProtoEnumOrField: "quantram.v1.QualityStatus.QUALITY_STATUS_STALE",
+					ProtoEnumOrField: "finfeedsat.v1.QualityStatus.QUALITY_STATUS_STALE",
 					TestReference:    "internal/marketfeed/decode.go",
 				},
 				UI: semantics.UI{
@@ -2014,7 +2014,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/quality.go",
 					GoSymbol:         "InferReady",
-					ProtoEnumOrField: "quantram.v1.ReadinessReport.infer",
+					ProtoEnumOrField: "finfeedsat.v1.ReadinessReport.infer",
 					TestReference:    "internal/domain/quality_test.go",
 				},
 				UI: semantics.UI{
@@ -2044,7 +2044,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/health.go",
 					GoSymbol:         "Readiness.Observe",
-					ProtoEnumOrField: "quantram.v1.ReadinessReport.observe",
+					ProtoEnumOrField: "finfeedsat.v1.ReadinessReport.observe",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2074,7 +2074,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/health.go",
 					GoSymbol:         "FeedHealthy",
-					ProtoEnumOrField: "quantram.v1.FeedState.FEED_STATE_HEALTHY",
+					ProtoEnumOrField: "finfeedsat.v1.FeedState.FEED_STATE_HEALTHY",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2104,7 +2104,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/health.go",
 					GoSymbol:         "FeedDegraded",
-					ProtoEnumOrField: "quantram.v1.FeedState.FEED_STATE_DEGRADED",
+					ProtoEnumOrField: "finfeedsat.v1.FeedState.FEED_STATE_DEGRADED",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2134,7 +2134,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/health.go",
 					GoSymbol:         "FeedFailed",
-					ProtoEnumOrField: "quantram.v1.FeedState.FEED_STATE_FAILED",
+					ProtoEnumOrField: "finfeedsat.v1.FeedState.FEED_STATE_FAILED",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2164,7 +2164,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/health.go",
 					GoSymbol:         "FeedRecovering",
-					ProtoEnumOrField: "quantram.v1.FeedState.FEED_STATE_RECOVERING",
+					ProtoEnumOrField: "finfeedsat.v1.FeedState.FEED_STATE_RECOVERING",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2181,9 +2181,9 @@ func V1() semantics.Document {
 				Type:                 "STATUS",
 				Component:            "VIEWER",
 				PlainMeaning:         "Airport-board alias for Adaptive INITIALIZING.",
-				ScientificMeaning:    "quantram-dashboard adaptiveFlight maps skipReason INITIALIZING to status BOARDING. Not a Go enum.",
+				ScientificMeaning:    "Fin_FeedSat_1-dashboard adaptiveFlight maps skipReason INITIALIZING to status BOARDING. Not a Go enum.",
 				Interpretation:       "Airport-board alias for Adaptive INITIALIZING.",
-				DoesNotMean:          []string{"Not a QuanTRAM domain enum.", "Not Price Engine boarding (that is pricing warm-up)."},
+				DoesNotMean:          []string{"Not a Fin_FeedSat_1 domain enum.", "Not Price Engine boarding (that is pricing warm-up)."},
 				RelatedTerms:         []string{"ADAPTIVE_INITIALIZING", "VIEWER_PRICE_BOARDING"},
 				CompatibilityAliases: []string{},
 				CanonicalSourceIDs:   []string{"ADAPTIVE_INITIALIZING"},
@@ -2192,7 +2192,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "adaptiveFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2222,7 +2222,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "adaptiveFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2252,7 +2252,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "adaptiveFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2282,7 +2282,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "adaptiveFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2312,7 +2312,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "adaptiveFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2342,7 +2342,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "adaptiveFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2372,7 +2372,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "pricingFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2402,7 +2402,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "pricingFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2432,7 +2432,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "pricingFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2462,7 +2462,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "pricingFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2492,7 +2492,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "pricingFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2524,7 +2524,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "direction",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.current_direction",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.current_direction",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2554,7 +2554,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "direction",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.current_direction",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.current_direction",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2584,7 +2584,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "direction",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.current_direction",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.current_direction",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2614,7 +2614,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/cockpit.go",
 					GoSymbol:         "cockpitInterpreter.observe",
-					ProtoEnumOrField: "quantram.v1.PriceCockpit.persistence_state",
+					ProtoEnumOrField: "finfeedsat.v1.PriceCockpit.persistence_state",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2644,7 +2644,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "turningTendency",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.turning_tendency",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.turning_tendency",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2674,7 +2674,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "turningTendency",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.turning_tendency",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.turning_tendency",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2704,7 +2704,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "turningTendency",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.turning_tendency",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.turning_tendency",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2734,7 +2734,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "turningTendency",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.turning_tendency",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.turning_tendency",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2764,7 +2764,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "turningTendency",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.turning_tendency",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.turning_tendency",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2794,7 +2794,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/policy.go",
 					GoSymbol:         "turningTendency",
-					ProtoEnumOrField: "quantram.v1.PriceEmission.turning_tendency",
+					ProtoEnumOrField: "finfeedsat.v1.PriceEmission.turning_tendency",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2824,7 +2824,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/projection.go",
 					GoSymbol:         "solveCover",
-					ProtoEnumOrField: "quantram.v1.PricingSkipReason.PRICING_SKIP_REASON_TIME_TERM",
+					ProtoEnumOrField: "finfeedsat.v1.PricingSkipReason.PRICING_SKIP_REASON_TIME_TERM",
 					TestReference:    "internal/pricing/mapper_test.go",
 				},
 				UI: semantics.UI{
@@ -2854,7 +2854,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/projection.go",
 					GoSymbol:         "solveCover",
-					ProtoEnumOrField: "quantram.v1.PricingSkipReason.PRICING_SKIP_REASON_NUMERICALLY_UNSTABLE",
+					ProtoEnumOrField: "finfeedsat.v1.PricingSkipReason.PRICING_SKIP_REASON_NUMERICALLY_UNSTABLE",
 					TestReference:    "",
 				},
 				UI: semantics.UI{
@@ -2871,7 +2871,7 @@ func V1() semantics.Document {
 				Type:                 "STATE",
 				Component:            "VIEWER",
 				PlainMeaning:         "Arrivals-board alias for Price Engine AMBER.",
-				ScientificMeaning:    "quantram-dashboard pricingFlight maps color AMBER to status HOLDING. Not a Price Engine enum. Canonical viewer twin of VIEWER_PRICE_HOLDING.",
+				ScientificMeaning:    "Fin_FeedSat_1-dashboard pricingFlight maps color AMBER to status HOLDING. Not a Price Engine enum. Canonical viewer twin of VIEWER_PRICE_HOLDING.",
 				Interpretation:       "Arrivals-board alias for Price Engine AMBER.",
 				DoesNotMean:          []string{"This does not mean the Adaptive Emitter decision HOLD.", "This is not independently a BUY or SELL instruction.", "This is not a Price Engine phase named HOLDING."},
 				RelatedTerms:         []string{"VIEWER_PRICE_HOLDING", "PRICE_COLOR_AMBER", "ADAPTIVE_HOLD", "VIEWER_ADAPTIVE_HOLDING"},
@@ -2882,7 +2882,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "pricingFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2912,7 +2912,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "pricingFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -2942,7 +2942,7 @@ func V1() semantics.Document {
 				LivePathProven:       false,
 				LifecycleStatus:      "ACTIVE",
 				Source: semantics.Source{
-					GoFile:           "quantram-dashboard/src/lib/pipeline.ts",
+					GoFile:           "Fin_FeedSat_1-dashboard/src/lib/pipeline.ts",
 					GoSymbol:         "pricingFlight",
 					ProtoEnumOrField: "",
 					TestReference:    "",
@@ -3094,7 +3094,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/pricing/pipeline.go",
 					GoSymbol:         "Engine.PrepareStep",
-					ProtoEnumOrField: "quantram.v1.ModelService.StreamPriceEvents",
+					ProtoEnumOrField: "finfeedsat.v1.ModelService.StreamPriceEvents",
 					TestReference:    "internal/pricing/equivalence_test.go",
 				},
 				UI: semantics.UI{
@@ -3124,7 +3124,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/bar.go",
 					GoSymbol:         "QualityDegraded",
-					ProtoEnumOrField: "quantram.v1.QualityStatus.QUALITY_STATUS_DEGRADED",
+					ProtoEnumOrField: "finfeedsat.v1.QualityStatus.QUALITY_STATUS_DEGRADED",
 					TestReference:    "internal/marketfeed/decode.go",
 				},
 				UI: semantics.UI{
@@ -3214,7 +3214,7 @@ func V1() semantics.Document {
 				Source: semantics.Source{
 					GoFile:           "internal/domain/decision.go",
 					GoSymbol:         "SkipInitializing",
-					ProtoEnumOrField: "quantram.v1.SkipReason.SKIP_REASON_INITIALIZING",
+					ProtoEnumOrField: "finfeedsat.v1.SkipReason.SKIP_REASON_INITIALIZING",
 					TestReference:    "",
 				},
 				UI: semantics.UI{

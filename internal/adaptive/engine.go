@@ -1,11 +1,11 @@
-package adaptive
+﻿package adaptive
 
 import (
 	"fmt"
 	"slices"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 const (

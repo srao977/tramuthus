@@ -1,4 +1,4 @@
-package pricing
+﻿package pricing
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 const pricingFixtureSHA256 = "4b3b8783108988e71c4bf2cec9b6f8a4c6bf929fb93a4be27706a16ef4c1752a"

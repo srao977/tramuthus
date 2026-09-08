@@ -1,10 +1,10 @@
-package pricing
+﻿package pricing
 
 import (
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 func TestProjectionFailureKeepsSADEFixtureAlias(t *testing.T) {

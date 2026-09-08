@@ -1,4 +1,4 @@
-# QuanTRAM P-03 Adaptive Model Host Feedback
+﻿# Fin_FeedSat_1 P-03 Adaptive Model Host Feedback
 
 **Date:** August 31, 2026  
 **Requested scope:** Completeness review for P-03 Adaptive Model Host consuming P-02 Finalized Bar Streams  
@@ -6,7 +6,7 @@
 
 ## Purpose
 
-This document reviews the proposed P-03 Adaptive Model Host and implementation increment for completeness against the current QuanTRAM process model, P-02 data-quality design, decision-integrity gap register, and implemented Go ingestion behavior.
+This document reviews the proposed P-03 Adaptive Model Host and implementation increment for completeness against the current Fin_FeedSat_1 process model, P-02 data-quality design, decision-integrity gap register, and implemented Go ingestion behavior.
 
 The review focuses on whether P-03 can safely consume finalized bars, preserve per-symbol causal order, reproduce the SADE adaptive path, emit unambiguous decisions or skips, and provide enough evidence to diagnose and replay its behavior. It does not evaluate the trading merit of the adaptive model and does not expand P-03 into risk, execution, or the later RK45/PriceEngine increment.
 
@@ -14,22 +14,22 @@ The review focuses on whether P-03 can safely consume finalized bars, preserve p
 
 Primary documents:
 
-- `C:\Users\chino\QuanTRAM\docs\design\QuanTRAM_P03_ADAPTIVE_MODEL_HOST_083126.md`
-- `C:\Users\chino\QuanTRAM\docs\design\QuanTRAM_P03_IMPLEMENTATION_083126.md`
-- `C:\Users\chino\QuanTRAM\docs\design\QuanTRAM_PROCESS_MODEL_082926.md`
-- `C:\Users\chino\QuanTRAM\docs\design\QuanTRAM_INGESTION_P02_DATA_QUALITY_083126.md`
-- `C:\Users\chino\QuanTRAM\docs\design\QuanTRAM_INGESTION_INCREMENT_1_083026.md`
-- `C:\Users\chino\QuanTRAM\docs\design\QuanTRAM_DECISION_INTEGRITY_GAP_ANALYSIS_082826.md`
-- `C:\Users\chino\QuanTRAM\docs\design\QuanTRAM_hi-level_design_082826.md`
-- `C:\Users\chino\QuanTRAM\docs\design\E2E_QuanTRAM_ARTIFACTS.md`
+- `C:\Users\chino\Fin_FeedSat_1\docs\design\Fin_FeedSat_1_P03_ADAPTIVE_MODEL_HOST_083126.md`
+- `C:\Users\chino\Fin_FeedSat_1\docs\design\Fin_FeedSat_1_P03_IMPLEMENTATION_083126.md`
+- `C:\Users\chino\Fin_FeedSat_1\docs\design\Fin_FeedSat_1_PROCESS_MODEL_082926.md`
+- `C:\Users\chino\Fin_FeedSat_1\docs\design\Fin_FeedSat_1_INGESTION_P02_DATA_QUALITY_083126.md`
+- `C:\Users\chino\Fin_FeedSat_1\docs\design\Fin_FeedSat_1_INGESTION_INCREMENT_1_083026.md`
+- `C:\Users\chino\Fin_FeedSat_1\docs\design\Fin_FeedSat_1_DECISION_INTEGRITY_GAP_ANALYSIS_082826.md`
+- `C:\Users\chino\Fin_FeedSat_1\docs\design\Fin_FeedSat_1_hi-level_design_082826.md`
+- `C:\Users\chino\Fin_FeedSat_1\docs\design\E2E_Fin_FeedSat_1_ARTIFACTS.md`
 
 Implementation surfaces checked:
 
-- `C:\Users\chino\QuanTRAM\internal\ingestion\pipeline.go`
-- `C:\Users\chino\QuanTRAM\internal\ingestion\window.go`
-- `C:\Users\chino\QuanTRAM\internal\domain\bar.go`
-- `C:\Users\chino\QuanTRAM\internal\domain\quality.go`
-- `C:\Users\chino\QuanTRAM\api\proto\quantram\v1\quantram.proto`
+- `C:\Users\chino\Fin_FeedSat_1\internal\ingestion\pipeline.go`
+- `C:\Users\chino\Fin_FeedSat_1\internal\ingestion\window.go`
+- `C:\Users\chino\Fin_FeedSat_1\internal\domain\bar.go`
+- `C:\Users\chino\Fin_FeedSat_1\internal\domain\quality.go`
+- `C:\Users\chino\Fin_FeedSat_1\api\proto\Fin_FeedSat_1\v1\Fin_FeedSat_1.proto`
 
 Scientific and supporting references identified by the design documents:
 
@@ -361,7 +361,7 @@ A practical invariant is: one immutable `event_id` per terminal processing outco
 
 #### M5. Configuration validation and startup failure behavior are absent
 
-For `QUANTRAM_MODEL` and `QUANTRAM_MODEL_DEADLINE`, define invalid-value behavior. Recommended:
+For `FIN_FEEDSAT_MODEL` and `FIN_FEEDSAT_MODEL_DEADLINE`, define invalid-value behavior. Recommended:
 
 - reject unknown model modes at startup
 - reject zero, negative, or unreasonably large deadlines
@@ -553,7 +553,7 @@ Any failure before commit produces no state change.
 7. Implement keyed per-symbol workers, readiness behavior, deadline enforcement, and health/status.
 8. Add proto only after domain semantics and integration tests are stable.
 9. Validate with race tests, forced overflow, timeout/panic isolation, and regular-market live data.
-10. Keep `QUANTRAM_MODEL=off` as the default until scientific equivalence and finalized-stream acceptance tests are green.
+10. Keep `FIN_FEEDSAT_MODEL=off` as the default until scientific equivalence and finalized-stream acceptance tests are green.
 
 ## Minimum Definition of Done for P-03
 
@@ -569,7 +569,7 @@ P-03 should be considered complete for this adaptive-only increment when all of 
 - The current global-versus-per-symbol `infer` policy is explicit and tested.
 - Model version and source snapshot identity accompany every evaluated outcome.
 - Health/status distinguishes disabled, initializing, ready, paused, discontinuous, and failed states.
-- Ingestion behavior is unchanged when `QUANTRAM_MODEL=off`.
+- Ingestion behavior is unchanged when `FIN_FEEDSAT_MODEL=off`.
 - `go test ./...` and `go test -race ./...` pass.
 - A regular-market live run crosses warm-up and demonstrates decisions/skips with measured latency.
 - No P-03 output is connected to orders in this increment.
@@ -580,4 +580,4 @@ Proceed with the mapper, configuration, D01/D02/D04/emitter port, and frozen equ
 
 Before accepting the live host integration, revise the P-03 documents and P-02 consumer boundary to close the finalized-delivery gap. A lossy depth-2 channel is acceptable for a viewer but not for a recursive adaptive state machine unless loss is detected and forces an explicit pause/rebuild. Also define startup recovery, state-transaction deadline behavior, per-symbol readiness, and a complete decision-or-skip event contract.
 
-With those changes, the P-03 design is a strong and appropriately scoped bridge from the proved SADE adaptive path to QuanTRAM's later risk and execution processes. Without them, numerical equivalence may be green while the live state trajectory silently diverges from the finalized bar sequence it is supposed to represent.
+With those changes, the P-03 design is a strong and appropriately scoped bridge from the proved SADE adaptive path to Fin_FeedSat_1's later risk and execution processes. Without them, numerical equivalence may be green while the live state trajectory silently diverges from the finalized bar sequence it is supposed to represent.

@@ -1,4 +1,4 @@
-package modelhost
+﻿package modelhost
 
 import (
 	"bytes"
@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"quantram/internal/config"
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/config"
+	"fin_feedsat_1/internal/domain"
 )
 
 func collectVolume(t *testing.T, events <-chan domain.VolumeEvent, n int, timeout time.Duration) []domain.VolumeEvent {

@@ -1,10 +1,10 @@
-package ingestion
+﻿package ingestion
 
 import (
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 func TestSubscribeFinalizedStillDropOldest(t *testing.T) {

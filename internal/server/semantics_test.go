@@ -1,12 +1,12 @@
-package server
+﻿package server
 
 import (
 	"context"
 	"testing"
 
-	quantramv1 "quantram/gen/quantram/v1"
-	"quantram/internal/ingestion"
-	"quantram/internal/semantics"
+	finfeedsatv1 "fin_feedsat_1/gen/fin_feedsat/v1"
+	"fin_feedsat_1/internal/ingestion"
+	"fin_feedsat_1/internal/semantics"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,7 +14,7 @@ import (
 
 func TestSemanticServiceUnavailableWithoutDictionary(t *testing.T) {
 	s := New(ingestion.NewPipeline(nil, nil, "TEST", []string{"AAPL"}), nil)
-	_, err := s.GetTerm(context.Background(), &quantramv1.GetSemanticTermRequest{Id: "ADAPTIVE_HOLD"})
+	_, err := s.GetTerm(context.Background(), &finfeedsatv1.GetSemanticTermRequest{Id: "ADAPTIVE_HOLD"})
 	if status.Code(err) != codes.Unavailable {
 		t.Fatalf("want Unavailable, got %v", err)
 	}
@@ -28,7 +28,7 @@ func TestSemanticServiceGetListContract(t *testing.T) {
 	s := New(ingestion.NewPipeline(nil, nil, "TEST", []string{"AAPL"}), nil)
 	s.SetSemantics(dict)
 
-	term, err := s.GetTerm(context.Background(), &quantramv1.GetSemanticTermRequest{Id: "ADAPTIVE_HOLD"})
+	term, err := s.GetTerm(context.Background(), &finfeedsatv1.GetSemanticTermRequest{Id: "ADAPTIVE_HOLD"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,12 +39,12 @@ func TestSemanticServiceGetListContract(t *testing.T) {
 		t.Fatal("expected go_symbol metadata")
 	}
 
-	_, err = s.GetTerm(context.Background(), &quantramv1.GetSemanticTermRequest{Id: "NOT_A_REAL_TERM"})
+	_, err = s.GetTerm(context.Background(), &finfeedsatv1.GetSemanticTermRequest{Id: "NOT_A_REAL_TERM"})
 	if status.Code(err) != codes.NotFound {
 		t.Fatalf("unknown want NotFound, got %v", err)
 	}
 
-	listed, err := s.ListTerms(context.Background(), &quantramv1.ListSemanticTermsRequest{
+	listed, err := s.ListTerms(context.Background(), &finfeedsatv1.ListSemanticTermsRequest{
 		Component: "PRICE_ENGINE",
 		Type:      "STATE",
 	})
@@ -60,7 +60,7 @@ func TestSemanticServiceGetListContract(t *testing.T) {
 		}
 	}
 
-	contract, err := s.GetSemanticContract(context.Background(), &quantramv1.GetSemanticContractRequest{})
+	contract, err := s.GetSemanticContract(context.Background(), &finfeedsatv1.GetSemanticContractRequest{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,31 +82,31 @@ func TestSemanticQueryDoesNotRequireModelHost(t *testing.T) {
 	}
 	s := New(ingestion.NewPipeline(nil, nil, "TEST", []string{"AAPL"}), nil)
 	s.SetSemantics(dict)
-	if err := s.StreamDecisions(&quantramv1.StreamDecisionsRequest{}, nil); status.Code(err) != codes.FailedPrecondition {
+	if err := s.StreamDecisions(&finfeedsatv1.StreamDecisionsRequest{}, nil); status.Code(err) != codes.FailedPrecondition {
 		t.Fatalf("model remains off after semantic load, got %v", err)
 	}
-	holding, err := s.GetTerm(context.Background(), &quantramv1.GetSemanticTermRequest{Id: "PRICE_HOLDING"})
+	holding, err := s.GetTerm(context.Background(), &finfeedsatv1.GetSemanticTermRequest{Id: "PRICE_HOLDING"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !holding.GetPresentationOnly() || holding.GetPersistencePolicy() != "RENDER_ONLY" {
 		t.Fatalf("PRICE_HOLDING must be presentation-only RENDER_ONLY, got %+v", holding)
 	}
-	proj, err := s.GetTerm(context.Background(), &quantramv1.GetSemanticTermRequest{Id: "PRICE_STATUS_PROJECTION_FAILURE"})
+	proj, err := s.GetTerm(context.Background(), &finfeedsatv1.GetSemanticTermRequest{Id: "PRICE_STATUS_PROJECTION_FAILURE"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if proj.GetTerm() != "PROJECTION_FAILURE" {
 		t.Fatalf("canonical projection term %q", proj.GetTerm())
 	}
-	stale, err := s.GetTerm(context.Background(), &quantramv1.GetSemanticTermRequest{Id: "QUALITY_STALE"})
+	stale, err := s.GetTerm(context.Background(), &finfeedsatv1.GetSemanticTermRequest{Id: "QUALITY_STALE"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if stale.GetLifecycleStatus() != "RESERVED" || stale.GetLivePathProven() {
 		t.Fatalf("QUALITY_STALE %+v", stale)
 	}
-	contract, err := s.GetSemanticContract(context.Background(), &quantramv1.GetSemanticContractRequest{})
+	contract, err := s.GetSemanticContract(context.Background(), &finfeedsatv1.GetSemanticContractRequest{})
 	if err != nil {
 		t.Fatal(err)
 	}

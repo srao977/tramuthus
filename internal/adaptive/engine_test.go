@@ -1,11 +1,11 @@
-package adaptive
+﻿package adaptive
 
 import (
 	"math"
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 func syntheticBar(i int, close float64, volume uint64) domain.Bar {

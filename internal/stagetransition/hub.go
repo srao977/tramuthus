@@ -1,9 +1,9 @@
-package stagetransition
+﻿package stagetransition
 
 import (
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 // Hub is the process-level StageTransitionPublisher.

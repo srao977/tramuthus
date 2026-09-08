@@ -1,4 +1,4 @@
-# QUANTAM HIGH-ASSURANCE CORE (HAC) DESIGN SPECIFICATION
+﻿# QUANTAM HIGH-ASSURANCE CORE (HAC) DESIGN SPECIFICATION
 
 ## Document Control
 
@@ -11,7 +11,7 @@
 | Status | **PROPOSED FOR HUMAN REVIEW** |
 | Implementation Status | **NOT YET AUTHORIZED** |
 | System | Quantam, the domain-neutral parent architecture |
-| Current specialization | QuanTRAM, financial markets |
+| Current specialization | Fin_FeedSat_1, financial markets |
 | Design class | Implementation-oriented, implementation-neutral security and runtime architecture |
 | Governing intent | Define the common protected processing foundation and the contracts inherited by later Trust Boundary, external API, identity, authorization, release, audit, compliance-profile, implementation, and validation designs |
 
@@ -19,24 +19,24 @@
 
 This document defines the proposed Quantam High-Assurance Core (HAC): the domain-neutral trusted processing foundation within which a Quantam specialization accepts Signals or Observations, associates them with Entities, preserves Causal Order, advances authoritative Process State, executes deterministic or adaptive Processes, and produces authoritative Process Outputs. It defines the security, isolation, integrity, availability, audit, lifecycle, and publication properties that implementations and later designs MUST preserve.
 
-This is a design authority, not an implementation authorization. It does not add a QuanTRAM Process, modify the frozen QuanTRAM Process Model V2, define an external protobuf, select an identity vendor, or claim compliance, certification, accreditation, or suitability for classified information.
+This is a design authority, not an implementation authorization. It does not add a Fin_FeedSat_1 Process, modify the frozen Fin_FeedSat_1 Process Model V2, define an external protobuf, select an identity vendor, or claim compliance, certification, accreditation, or suitability for classified information.
 
 ### Scope
 
 In scope:
 
-- the domain-neutral Quantam abstraction and its relationship to QuanTRAM;
+- the domain-neutral Quantam abstraction and its relationship to Fin_FeedSat_1;
 - HAC responsibilities, boundaries, planes, invariants, and failure behavior;
 - the conceptual Quantam Trust Boundary and controlled-release contract;
 - machine-to-machine security direction using gRPC, TLS 1.3, mutual TLS (mTLS), explicit authorization, entitlements, audit, and resource protection;
 - conceptual workload identity, authorization, classification, cryptographic, audit, supply-chain, and resource-protection requirements;
 - requirements inherited by future external APIs and deployment/compliance profiles;
 - initial threat model, failure matrix, and future validation plan;
-- factual reconciliation with current QuanTRAM Process Model V2, protobuf, and publication surfaces.
+- factual reconciliation with current Fin_FeedSat_1 Process Model V2, protobuf, and publication surfaces.
 
 ### Executive Summary
 
-Quantam is a domain-neutral signal/observation processing architecture. A specialization defines what an Entity and Observation mean, which Processes exist, what Process State they own, and what domain science they perform. QuanTRAM, the current financial-market specialization of Quantam, provides the repository's implemented example. Future industrial or government/defense specializations are architectural examples only and are not claimed to exist.
+Quantam is a domain-neutral signal/observation processing architecture. A specialization defines what an Entity and Observation mean, which Processes exist, what Process State they own, and what domain science they perform. Fin_FeedSat_1, the current financial-market specialization of Quantam, provides the repository's implemented example. Future industrial or government/defense specializations are architectural examples only and are not claimed to exist.
 
 The HAC is the protected execution foundation around domain Processes. It establishes trustworthy workload identity, secure configuration and key use, process isolation, authoritative state and output handling, bounded resources, security telemetry, audit generation, software integrity, and fail-secure lifecycle behavior. It does not dictate domain mathematics and is not itself an external API, identity provider, certificate authority, compliance framework, or domain Process.
 
@@ -71,7 +71,7 @@ Controlled Publication
  Authorized Consumers
 ```
 
-This abstraction does not redefine the frozen QuanTRAM Process Model. It generalizes the architectural role demonstrated by the current specialization: Entity, Entity Key, Entity-Key Worker, Process, Process State, State Update, Process Output, Output Publication, Model Publication, Common Host Gates, and causal per-Entity processing.
+This abstraction does not redefine the frozen Fin_FeedSat_1 Process Model. It generalizes the architectural role demonstrated by the current specialization: Entity, Entity Key, Entity-Key Worker, Process, Process State, State Update, Process Output, Output Publication, Model Publication, Common Host Gates, and causal per-Entity processing.
 
 ### Inputs
 
@@ -115,7 +115,7 @@ Security-relevant configuration MUST be versioned, validated before activation, 
 
 - A specialization defines Entity and Observation semantics; Quantam does not.
 - Processes may differ in state, mathematics, failure semantics, and output shape.
-- Current QuanTRAM demonstrates one valid specialization and provides evidence, not a universal domain model.
+- Current Fin_FeedSat_1 demonstrates one valid specialization and provides evidence, not a universal domain model.
 - Authoritative realtime processing can be isolated from external consumption through bounded, sideways/downstream publication.
 - Machine workloads are the only external-client class targeted by V1 direction.
 - Deployment operators will provide identity, key, audit, storage, and compliance controls appropriate to their environment.
@@ -123,7 +123,7 @@ Security-relevant configuration MUST be versioned, validated before activation, 
 ### Exclusions
 
 - implementation code, protobuf changes, services, certificates, keys, infrastructure, or deployment configuration;
-- changes to QuanTRAM Process Model V2 or existing QuanTRAM terminology and artifacts;
+- changes to Fin_FeedSat_1 Process Model V2 or existing Fin_FeedSat_1 terminology and artifacts;
 - final Trust Boundary topology, gRPC service definitions, external protobuf fields, or publication-adapter design;
 - human authentication, browser login, passwords, consumer multi-factor authentication (MFA), interactive OpenID Connect (OIDC), user-interface roles, and dashboards;
 - certification, accreditation, authorization to operate, compliance attestation, or classified-data suitability;
@@ -135,7 +135,7 @@ Security-relevant configuration MUST be versioned, validated before activation, 
 
 ### 1.1 Parent and specialization relationship
 
-Quantam is the domain-neutral parent architecture. QuanTRAM remains the existing financial-market specialization and retains its repository name, package names, services, process IDs, documents, and artifacts.
+Quantam is the domain-neutral parent architecture. Fin_FeedSat_1 remains the existing financial-market specialization and retains its repository name, package names, services, process IDs, documents, and artifacts.
 
 ```text
                          QUANTAM
@@ -144,7 +144,7 @@ Quantam is the domain-neutral parent architecture. QuanTRAM remains the existing
           +---------------+---------------+
           |               |               |
           v               v               v
-       QuanTRAM         Future          Future
+       Fin_FeedSat_1         Future          Future
        Financial       Industrial     Government /
        Markets          Systems         Defense
           |               |               |
@@ -302,7 +302,7 @@ The HAC is not and MUST NOT silently become:
 
 The Quantam HAC is a layered protected execution architecture. Its five numbered layers are architectural responsibility layers: they identify which assurance contract owns a concern and which lower-layer guarantees a higher layer relies upon.
 
-The layers are **not** QuanTRAM Process IDs, software packages, Go modules, network tiers, deployment nodes, service names, containers, Kubernetes namespaces, separate machines, or mandatory physical boundaries. A future implementation MAY map multiple logical HAC layers into one runtime component, or distribute one layer across components, provided that the layer contracts, assurance dependencies, separation of authority, and failure semantics remain intact.
+The layers are **not** Fin_FeedSat_1 Process IDs, software packages, Go modules, network tiers, deployment nodes, service names, containers, Kubernetes namespaces, separate machines, or mandatory physical boundaries. A future implementation MAY map multiple logical HAC layers into one runtime component, or distribute one layer across components, provided that the layer contracts, assurance dependencies, separation of authority, and failure semantics remain intact.
 
 ### Internal layer model
 
@@ -353,7 +353,7 @@ The diagram expresses assurance layering, not a universal runtime call sequence.
 
 ### Layer responsibility matrix
 
-| Layer | Name | Primary responsibility | Inputs | Outputs | Trust assumptions | Must guarantee | Must not do | QuanTRAM example, if applicable |
+| Layer | Name | Primary responsibility | Inputs | Outputs | Trust assumptions | Must guarantee | Must not do | Fin_FeedSat_1 example, if applicable |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | L4 | Controlled Output and Internal Publication | Protect and publish authoritative Process Outputs within the HAC | Authoritative L3 Process Output, lineage, classification and publication metadata | Bounded internal Output Publication; candidate input to the Trust Boundary | L3 output authority; L2 lineage/integrity; L1 delivery bounds | Output identity and lineage, contract validation, bounded delivery, subscriber isolation, explicit publication failure | Turn an internal contract into an external product; let optional consumers control L3; make external release decisions | Internal `DecisionEvent`, `PriceEvent`, and `VolumeEvent` publication |
 | L3 | Domain Process Execution | Execute specialization-defined deterministic/adaptive Processes and domain science | Validated Observation and protected L2 Process State/context | Process Success, Process Failure, candidate State Update, authoritative Process Output | L2 causal/state guarantees; L1 containment; L0 trusted execution | Execute the authorized Process/version and make outcomes explicit | Define generic Quantam domain mathematics; bypass L2 state rules; treat failure as success | P-03 Adaptive, P-04 Price, P-04V Volume |
@@ -377,7 +377,7 @@ L1 MUST prevent one workload, Process, Entity scope, or consumer from exhausting
 
 L2 protects authoritative processing semantics. It governs Entity identity association, Causal Order, Observation lineage, authoritative Process State ownership, State Update integrity, continuity/discontinuity semantics, Process-defined transaction semantics, prevention of unauthorized state mutation, state-version integrity, rollback/recovery rules, state provenance, explicit failure/non-update, and the integrity of Process Opportunity and Process State transitions.
 
-L2 MUST NOT silently substitute a later Observation for a missing required Observation or represent an unperformed State Update as successful. It does not require every specialization to use identical state machinery, transaction scope, persistence, recovery, or continuity rules. In QuanTRAM, the P-03/P-04 Joint State-Update Transaction and the P-04V Independent State Update are examples of different L2 guarantees within one specialization; they are not generic patterns every Quantam specialization must reproduce.
+L2 MUST NOT silently substitute a later Observation for a missing required Observation or represent an unperformed State Update as successful. It does not require every specialization to use identical state machinery, transaction scope, persistence, recovery, or continuity rules. In Fin_FeedSat_1, the P-03/P-04 Joint State-Update Transaction and the P-04V Independent State Update are examples of different L2 guarantees within one specialization; they are not generic patterns every Quantam specialization must reproduce.
 
 ### L3 - Domain Process Execution
 
@@ -385,7 +385,7 @@ L3 is where specialization-defined deterministic Processes, adaptive Processes, 
 
 **L3 is domain-neutral as an execution category, but the Processes hosted within it are domain-specific.** Quantam HAC defines the protected execution requirements around these Processes; it does not define their mathematics. A specialization owns Process identity, inputs, algorithms, state relationship, validity rules, outputs, and scientific or operational evidence.
 
-QuanTRAM's P-03 Adaptive Model, P-04 Price, and P-04V Volume are current L3 examples only. P-04 and P-04V are not generic Quantam layers or services, and this revision does not rename or generalize them.
+Fin_FeedSat_1's P-03 Adaptive Model, P-04 Price, and P-04V Volume are current L3 examples only. P-04 and P-04V are not generic Quantam layers or services, and this revision does not rename or generalize them.
 
 ### L4 - Controlled Output and Internal Publication
 
@@ -486,10 +486,10 @@ A **Process Failure** is a specialization-defined inability to complete one L3 P
 
 HAC-INV-08 applies across the layer model without changing its wording. L4 publication failure cannot retroactively alter L3 execution. Trust Boundary failure cannot control L3. External-client backpressure MUST terminate, shed, or isolate at or above L4 and MUST NOT enter the authoritative State Update path. L1 supplies bounded queues, budgets, deadlines, and failure containment; L2 protects authoritative state and Causal Order; L3 remains independent of external consumer state. External systems never become participants in authoritative State Update.
 
-### Illustrative QuanTRAM mapping
+### Illustrative Fin_FeedSat_1 mapping
 
 ```text
-QuanTRAM example within Quantam HAC
+Fin_FeedSat_1 example within Quantam HAC
 
 L4  DecisionEvent / PriceEvent / VolumeEvent internal publication
 L3  P-03 Adaptive / P-04 Price / P-04V Volume
@@ -501,9 +501,9 @@ L1  Entity-Key Worker containment / bounded queues and mailboxes
 L0  Go runtime / host platform / trusted deployment foundation
 ```
 
-This mapping is illustrative evidence only. It does not assert that every current QuanTRAM implementation already satisfies the complete HAC requirements. QuanTRAM predates this complete Quantam HAC design; future reconciliation and validation are required.
+This mapping is illustrative evidence only. It does not assert that every current Fin_FeedSat_1 implementation already satisfies the complete HAC requirements. Fin_FeedSat_1 predates this complete Quantam HAC design; future reconciliation and validation are required.
 
-QuanTRAM's Adaptive Model, Price Engine, Volume Engine, `DecisionEvent`, `PriceEvent`, and `VolumeEvent` remain financial-specialization concepts with their existing names. The future Quantam model/process generalization exercise is **DEFERRED** until QuanTRAM has completed end-to-end model processing, decision processing, paper execution, profit-and-loss (P&L)/benchmarking, and a stable deployment baseline including planned Azure deployment. Only then should the architecture determine which QuanTRAM Process concepts are genuinely domain-invariant. L3 being a generic Quantam execution category does not mean the Processes currently executing within QuanTRAM L3 have been generalized.
+Fin_FeedSat_1's Adaptive Model, Price Engine, Volume Engine, `DecisionEvent`, `PriceEvent`, and `VolumeEvent` remain financial-specialization concepts with their existing names. The future Quantam model/process generalization exercise is **DEFERRED** until Fin_FeedSat_1 has completed end-to-end model processing, decision processing, paper execution, profit-and-loss (P&L)/benchmarking, and a stable deployment baseline including planned Azure deployment. Only then should the architecture determine which Fin_FeedSat_1 Process concepts are genuinely domain-invariant. L3 being a generic Quantam execution category does not mean the Processes currently executing within Fin_FeedSat_1 L3 have been generalized.
 
 ## 6. Quantam Trust Boundary
 
@@ -792,11 +792,11 @@ The following 20 cases remain canonical V0.2 design cases. "HAC impact" assumes 
 
 These requirements align conceptually with NIST SSDF and supply-chain risk-management guidance. No CI/CD vendor is prescribed.
 
-## 19. Relationship to Current QuanTRAM
+## 19. Relationship to Current Fin_FeedSat_1
 
 ### 19.1 Current processing topology
 
-The frozen QuanTRAM Process Model V2 defines:
+The frozen Fin_FeedSat_1 Process Model V2 defines:
 
 ```text
 P-02 Model Publication
@@ -824,12 +824,12 @@ For HAC V0.2, `DecisionEvent`, `PriceEvent`, and `VolumeEvent` are treated as in
 
 ### 19.3 Current non-interference precedent
 
-QuanTRAM already requires slow/cancelled RPC subscribers, StageTransition subscribers, diagnostics, persistence, snapshots, benchmark consumers, and dashboards not to control realtime Process behavior. HAC elevates that precedent into a domain-neutral invariant.
+Fin_FeedSat_1 already requires slow/cancelled RPC subscribers, StageTransition subscribers, diagnostics, persistence, snapshots, benchmark consumers, and dashboards not to control realtime Process behavior. HAC elevates that precedent into a domain-neutral invariant.
 
 ## 20. Internal and External Contracts
 
 ```text
-QuanTRAM Internal Runtime
+Fin_FeedSat_1 Internal Runtime
           |
           +-- DecisionEvent
           +-- PriceEvent
@@ -967,7 +967,7 @@ The following are future design gates, not blanks to be filled silently during i
 17. deployment/compliance profile format, inheritance, evidence, and conflict handling;
 18. clock source, synchronization tolerance, and degraded-time behavior;
 19. classification-aware deletion, retention, and legal-hold interactions;
-20. publication-adapter mapping from current QuanTRAM internal events to supported external semantics.
+20. publication-adapter mapping from current Fin_FeedSat_1 internal events to supported external semantics.
 
 ## 26. Future Design Dependencies
 
@@ -992,18 +992,18 @@ This document does not create or pre-authorize that design.
 
 Artifacts inspected for V0.2:
 
-- `docs/design/QuanTRAM_PROCESS_MODEL_V2_090626.md`;
-- `api/proto/quantram/v1/quantram.proto`;
-- `docs/design/QuanTRAM_hi-level_design_082826.md`;
-- `docs/design/QuanTRAM_P03_IMPLEMENTATION_083126.md`;
-- `docs/design/QuanTRAM_P04_IMPLEMENTATION_090226.md`;
-- `docs/implementations/QuanTRAM_P04V_VOLUME_ENGINE_IMPLEMENTATION_090526.md`;
-- `docs/design/QuanTRAM_STAGE_TRANSITION_PUBLICATION_V1_2026-09-04.md`;
-- `docs/design/QuanTRAM_SEMANTIC_CONTRACT_V1_090226.md`.
+- `docs/design/Fin_FeedSat_1_PROCESS_MODEL_V2_090626.md`;
+- `api/proto/Fin_FeedSat_1/v1/Fin_FeedSat_1.proto`;
+- `docs/design/Fin_FeedSat_1_hi-level_design_082826.md`;
+- `docs/design/Fin_FeedSat_1_P03_IMPLEMENTATION_083126.md`;
+- `docs/design/Fin_FeedSat_1_P04_IMPLEMENTATION_090226.md`;
+- `docs/implementations/Fin_FeedSat_1_P04V_VOLUME_ENGINE_IMPLEMENTATION_090526.md`;
+- `docs/design/Fin_FeedSat_1_STAGE_TRANSITION_PUBLICATION_V1_2026-09-04.md`;
+- `docs/design/Fin_FeedSat_1_SEMANTIC_CONTRACT_V1_090226.md`.
 
 Observed discrepancies requiring human review, not silent correction:
 
-1. Several current documents still link to `QuanTRAM_PROCESS_MODEL_082926.md` or `QuanTRAM_PROCESS_MODEL_V1_082926.md`, while the current frozen repository artifact is `QuanTRAM_PROCESS_MODEL_V2_090626.md`.
+1. Several current documents still link to `Fin_FeedSat_1_PROCESS_MODEL_082926.md` or `Fin_FeedSat_1_PROCESS_MODEL_V1_082926.md`, while the current frozen repository artifact is `Fin_FeedSat_1_PROCESS_MODEL_V2_090626.md`.
 2. The StageTransition V1.1 document describes P-01 through P-04 and predates/restricts P-04V publication; Process Model V2 and the P-04V implementation record now establish P-04V as implemented, with StageTransition publication still deferred.
 3. The protobuf header/commentary describes an earlier increment boundary (including a comment that `Evaluate`/`ModelInferenceService` wait for the PriceEngine increment), while current protobuf already includes Price and Volume event streaming and no `Evaluate` method.
 4. Current `ModelService` protobuf streams are technically callable gRPC surfaces, but repository design language characterizes them as internal Output Publication. Their exposure status, support commitment, authentication, and release policy are not yet defined; HAC therefore does not classify them as external supported contracts.
@@ -1016,7 +1016,7 @@ For avoidance of doubt, this specification does not:
 
 - authorize code, protobuf, configuration, certificate, key, service, or infrastructure changes;
 - create an HAC Process ID or place HAC beside P-03/P-04/P-04V;
-- redefine Entity, Entity Key, Entity-Key Worker, Process State, State Update, or existing QuanTRAM Process semantics;
+- redefine Entity, Entity Key, Entity-Key Worker, Process State, State Update, or existing Fin_FeedSat_1 Process semantics;
 - define a final external data product or promise existing internal event fields externally;
 - authorize human-facing identity or interactive access;
 - determine legal/regulatory applicability for a deployment;
@@ -1029,11 +1029,11 @@ For avoidance of doubt, this specification does not:
 
 | Date | Version | Status | Change |
 | :--- | :--- | :--- | :--- |
-| September 6, 2026 | V0.2 | PROPOSED FOR HUMAN REVIEW | Added formal Quantam HAC internal-layer architecture L0-L4; defined cross-cutting assurance capabilities, layer dependency semantics, Trust-Boundary relationship, assurance/failure cascade, QuanTRAM mapping, and Mermaid architecture diagram. No implementation authorized and no QuanTRAM Process semantics changed. |
-| September 6, 2026 | V0.1 | PROPOSED FOR HUMAN REVIEW | Initial domain-neutral Quantam HAC design. Defines HAC and Trust Boundary responsibilities, Zero Trust direction, machine workload identity, authorization, classification, controlled release, plane separation, cryptography, audit, resource protection, failure model, supply-chain requirements, current QuanTRAM relationship, 15 invariants, 18 threat categories, 20 failure cases, and 24 future validation requirements. No implementation authorized. |
+| September 6, 2026 | V0.2 | PROPOSED FOR HUMAN REVIEW | Added formal Quantam HAC internal-layer architecture L0-L4; defined cross-cutting assurance capabilities, layer dependency semantics, Trust-Boundary relationship, assurance/failure cascade, Fin_FeedSat_1 mapping, and Mermaid architecture diagram. No implementation authorized and no Fin_FeedSat_1 Process semantics changed. |
+| September 6, 2026 | V0.1 | PROPOSED FOR HUMAN REVIEW | Initial domain-neutral Quantam HAC design. Defines HAC and Trust Boundary responsibilities, Zero Trust direction, machine workload identity, authorization, classification, controlled release, plane separation, cryptography, audit, resource protection, failure model, supply-chain requirements, current Fin_FeedSat_1 relationship, 15 invariants, 18 threat categories, 20 failure cases, and 24 future validation requirements. No implementation authorized. |
 
 ## 30. Final Status Statement
 
 **Status: PROPOSED FOR HUMAN REVIEW. Implementation Status: NOT YET AUTHORIZED.**
 
-This V0.2 specification defines the proposed Quantam High-Assurance Core security and runtime foundation and makes its L0-L4 internal assurance architecture explicit. It does not modify or supersede the frozen QuanTRAM Process Model V2, does not establish an external supported API, and does not authorize implementation. Human review and explicit approval are required before any dependent Trust Boundary, external API, identity, authorization, compliance-profile, implementation, or deployment work begins.
+This V0.2 specification defines the proposed Quantam High-Assurance Core security and runtime foundation and makes its L0-L4 internal assurance architecture explicit. It does not modify or supersede the frozen Fin_FeedSat_1 Process Model V2, does not establish an external supported API, and does not authorize implementation. Human review and explicit approval are required before any dependent Trust Boundary, external API, identity, authorization, compliance-profile, implementation, or deployment work begins.

@@ -1,4 +1,4 @@
-package marketfeed
+﻿package marketfeed
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"quantram/internal/config"
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/config"
+	"fin_feedsat_1/internal/domain"
 
 	"github.com/gorilla/websocket"
 )
@@ -128,7 +128,7 @@ func (s *AlpacaStream) session(ctx context.Context, symbols []string, out chan<-
 		case t := <-ping.C:
 			lastPong = t
 			deadline := t.Add(config.HeartbeatInterval)
-			if err := conn.WriteControl(websocket.PingMessage, []byte("quantram"), deadline); err != nil {
+			if err := conn.WriteControl(websocket.PingMessage, []byte("Fin_FeedSat_1"), deadline); err != nil {
 				misses++
 				s.recordMiss(uint32(misses))
 				if misses >= config.HeartbeatMaxMisses {

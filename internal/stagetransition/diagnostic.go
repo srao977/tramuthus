@@ -1,4 +1,4 @@
-package stagetransition
+﻿package stagetransition
 
 import (
 	"bufio"
@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 const DefaultLogPath = "./stage_transitions.txt"

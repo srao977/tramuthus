@@ -1,6 +1,6 @@
-package pricing
+﻿package pricing
 
-import "quantram/internal/domain"
+import "fin_feedsat_1/internal/domain"
 
 type PriceEngine struct {
 	policy EmissionPolicy

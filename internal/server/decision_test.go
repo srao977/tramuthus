@@ -1,4 +1,4 @@
-package server
+﻿package server
 
 import (
 	"context"
@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	quantramv1 "quantram/gen/quantram/v1"
-	"quantram/internal/config"
-	"quantram/internal/domain"
-	"quantram/internal/ingestion"
-	"quantram/internal/modelhost"
+	finfeedsatv1 "fin_feedsat_1/gen/fin_feedsat/v1"
+	"fin_feedsat_1/internal/config"
+	"fin_feedsat_1/internal/domain"
+	"fin_feedsat_1/internal/ingestion"
+	"fin_feedsat_1/internal/modelhost"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -34,7 +34,7 @@ func TestToProtoDecisionEventOneof(t *testing.T) {
 		CompletedAt:      now.Add(2 * time.Millisecond),
 		Latency:          2 * time.Millisecond,
 		ModelVersion:     "0.2",
-		SchemaVersion:    "quantram.adaptive.v1",
+		SchemaVersion:    "Fin_FeedSat_1.adaptive.v1",
 		PreStateHash:     "pre",
 		PostStateHash:    "post",
 		Decision: &domain.Decision{
@@ -53,7 +53,7 @@ func TestToProtoDecisionEventOneof(t *testing.T) {
 	if out.GetSkip() != nil || out.GetDecision() == nil {
 		t.Fatalf("decision must set decision oneof only, skip=%v", out.GetSkip())
 	}
-	if out.GetDecision().GetSide() != quantramv1.Side_SIDE_HOLD {
+	if out.GetDecision().GetSide() != finfeedsatv1.Side_SIDE_HOLD {
 		t.Fatalf("HOLD is a decision, got %s", out.GetDecision().GetSide())
 	}
 	if out.GetDecision().GetH() != 1 || out.GetLatencyMs() != 2 {
@@ -70,17 +70,17 @@ func TestToProtoDecisionEventOneof(t *testing.T) {
 	if skipped.GetDecision() != nil || skipped.GetSkip() == nil {
 		t.Fatal("skip must set skip oneof only")
 	}
-	if skipped.GetSkip().GetReason() != quantramv1.SkipReason_SKIP_REASON_INITIALIZING {
+	if skipped.GetSkip().GetReason() != finfeedsatv1.SkipReason_SKIP_REASON_INITIALIZING {
 		t.Fatalf("got %s", skipped.GetSkip().GetReason())
 	}
 }
 
 func TestStreamDecisionsOffAndUnavailable(t *testing.T) {
 	pipeline := ingestion.NewPipeline(nil, nil, "TEST", []string{"AAPL"})
-	if err := New(pipeline, nil).StreamDecisions(&quantramv1.StreamDecisionsRequest{}, nil); status.Code(err) != codes.FailedPrecondition {
+	if err := New(pipeline, nil).StreamDecisions(&finfeedsatv1.StreamDecisionsRequest{}, nil); status.Code(err) != codes.FailedPrecondition {
 		t.Fatalf("off want FailedPrecondition, got %v", err)
 	}
-	if err := New(pipeline, modelhost.Unavailable{}).StreamDecisions(&quantramv1.StreamDecisionsRequest{}, nil); status.Code(err) != codes.Unavailable {
+	if err := New(pipeline, modelhost.Unavailable{}).StreamDecisions(&finfeedsatv1.StreamDecisionsRequest{}, nil); status.Code(err) != codes.Unavailable {
 		t.Fatalf("unavailable want Unavailable, got %v", err)
 	}
 }
@@ -101,7 +101,7 @@ func TestStreamDecisionsLive(t *testing.T) {
 
 	lis := bufconn.Listen(1024 * 1024)
 	grpcServer := grpc.NewServer()
-	quantramv1.RegisterModelServiceServer(grpcServer, New(pipeline, host))
+	finfeedsatv1.RegisterModelServiceServer(grpcServer, New(pipeline, host))
 	go func() { _ = grpcServer.Serve(lis) }()
 	t.Cleanup(func() {
 		grpcServer.Stop()
@@ -133,10 +133,10 @@ func TestStreamDecisionsLive(t *testing.T) {
 	})
 	waitUntil(t, 2*time.Second, func() bool { return len(host.LastEvents()) > 0 })
 
-	client := quantramv1.NewModelServiceClient(conn)
+	client := finfeedsatv1.NewModelServiceClient(conn)
 	streamCtx, streamCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer streamCancel()
-	stream, err := client.StreamDecisions(streamCtx, &quantramv1.StreamDecisionsRequest{MaxEvents: 1})
+	stream, err := client.StreamDecisions(streamCtx, &finfeedsatv1.StreamDecisionsRequest{MaxEvents: 1})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,14 +148,14 @@ func TestStreamDecisionsLive(t *testing.T) {
 		t.Fatalf("want skip for first bar, got %+v", ev)
 	}
 	reason := ev.GetSkip().GetReason()
-	if reason != quantramv1.SkipReason_SKIP_REASON_INITIALIZING && reason != quantramv1.SkipReason_SKIP_REASON_INFER_OFF {
+	if reason != finfeedsatv1.SkipReason_SKIP_REASON_INITIALIZING && reason != finfeedsatv1.SkipReason_SKIP_REASON_INFER_OFF {
 		t.Fatalf("unexpected skip %s", reason)
 	}
 }
 
 func TestStreamPriceEventsOffAndUnavailable(t *testing.T) {
 	pipeline := ingestion.NewPipeline(nil, nil, "TEST", []string{"AAPL"})
-	if err := New(pipeline, nil).StreamPriceEvents(&quantramv1.StreamPriceEventsRequest{}, nil); status.Code(err) != codes.FailedPrecondition {
+	if err := New(pipeline, nil).StreamPriceEvents(&finfeedsatv1.StreamPriceEventsRequest{}, nil); status.Code(err) != codes.FailedPrecondition {
 		t.Fatalf("off want FailedPrecondition, got %v", err)
 	}
 	adaptiveOnly, err := modelhost.New(pipeline, []string{"AAPL"}, modelhost.Options{
@@ -165,7 +165,7 @@ func TestStreamPriceEventsOffAndUnavailable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := New(pipeline, adaptiveOnly).StreamPriceEvents(&quantramv1.StreamPriceEventsRequest{}, nil); status.Code(err) != codes.FailedPrecondition {
+	if err := New(pipeline, adaptiveOnly).StreamPriceEvents(&finfeedsatv1.StreamPriceEventsRequest{}, nil); status.Code(err) != codes.FailedPrecondition {
 		t.Fatalf("pricing off want FailedPrecondition, got %v", err)
 	}
 }
@@ -190,7 +190,7 @@ func TestStreamPriceEventsLive(t *testing.T) {
 
 	lis := bufconn.Listen(1024 * 1024)
 	grpcServer := grpc.NewServer()
-	quantramv1.RegisterModelServiceServer(grpcServer, New(ingestion.NewPipeline(nil, nil, "TEST", []string{"AAPL"}), host))
+	finfeedsatv1.RegisterModelServiceServer(grpcServer, New(ingestion.NewPipeline(nil, nil, "TEST", []string{"AAPL"}), host))
 	go func() { _ = grpcServer.Serve(lis) }()
 	t.Cleanup(func() {
 		grpcServer.Stop()
@@ -221,10 +221,10 @@ func TestStreamPriceEventsLive(t *testing.T) {
 	}
 	waitUntil(t, 2*time.Second, func() bool { return len(host.LastPriceEvents()) > 0 })
 
-	client := quantramv1.NewModelServiceClient(conn)
+	client := finfeedsatv1.NewModelServiceClient(conn)
 	streamCtx, streamCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer streamCancel()
-	stream, err := client.StreamPriceEvents(streamCtx, &quantramv1.StreamPriceEventsRequest{MaxEvents: 1})
+	stream, err := client.StreamPriceEvents(streamCtx, &finfeedsatv1.StreamPriceEventsRequest{MaxEvents: 1})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -235,7 +235,7 @@ func TestStreamPriceEventsLive(t *testing.T) {
 	if ev.GetSymbol() != "AAPL" || ev.GetSkip() == nil {
 		t.Fatalf("want pricing skip for first bar, got %+v", ev)
 	}
-	if ev.GetStatus() != quantramv1.PricingStatus_PRICING_STATUS_WARMUP_DERIVATIVE {
+	if ev.GetStatus() != finfeedsatv1.PricingStatus_PRICING_STATUS_WARMUP_DERIVATIVE {
 		t.Fatalf("want WARMUP_DERIVATIVE, got %s", ev.GetStatus())
 	}
 }
@@ -259,7 +259,7 @@ func TestStreamVolumeEventsLive(t *testing.T) {
 
 	lis := bufconn.Listen(1024 * 1024)
 	grpcServer := grpc.NewServer()
-	quantramv1.RegisterModelServiceServer(grpcServer, New(ingestion.NewPipeline(nil, nil, "TEST", []string{"AAPL"}), host))
+	finfeedsatv1.RegisterModelServiceServer(grpcServer, New(ingestion.NewPipeline(nil, nil, "TEST", []string{"AAPL"}), host))
 	go func() { _ = grpcServer.Serve(lis) }()
 	t.Cleanup(func() {
 		grpcServer.Stop()
@@ -291,10 +291,10 @@ func TestStreamVolumeEventsLive(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = conn.Close() })
 
-	client := quantramv1.NewModelServiceClient(conn)
+	client := finfeedsatv1.NewModelServiceClient(conn)
 	streamCtx, streamCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer streamCancel()
-	stream, err := client.StreamVolumeEvents(streamCtx, &quantramv1.StreamVolumeEventsRequest{MaxEvents: 1})
+	stream, err := client.StreamVolumeEvents(streamCtx, &finfeedsatv1.StreamVolumeEventsRequest{MaxEvents: 1})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -305,7 +305,7 @@ func TestStreamVolumeEventsLive(t *testing.T) {
 	if ev.GetSymbol() != "AAPL" || ev.GetMarketSnapshotId() != "snap-v" {
 		t.Fatalf("want live VolumeEvent, got %+v", ev)
 	}
-	if ev.GetStatus() != quantramv1.VolumeStatus_VOLUME_STATUS_MATURING {
+	if ev.GetStatus() != finfeedsatv1.VolumeStatus_VOLUME_STATUS_MATURING {
 		t.Fatalf("want MATURING, got %s", ev.GetStatus())
 	}
 	if ev.GetAcceptedSequence() != 1 {
@@ -344,7 +344,7 @@ func TestToProtoPriceEventWarmup(t *testing.T) {
 	if out.GetEmission() != nil || out.GetSkip() == nil {
 		t.Fatal("warmup must carry skip without emission")
 	}
-	if out.GetStatus() != quantramv1.PricingStatus_PRICING_STATUS_WARMUP_DERIVATIVE {
+	if out.GetStatus() != finfeedsatv1.PricingStatus_PRICING_STATUS_WARMUP_DERIVATIVE {
 		t.Fatalf("status %s", out.GetStatus())
 	}
 }

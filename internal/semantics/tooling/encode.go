@@ -1,13 +1,13 @@
-package tooling
+﻿package tooling
 
 import (
 	"bytes"
 	"encoding/json"
 
-	"quantram/internal/semantics"
+	"fin_feedsat_1/internal/semantics"
 )
 
-const CanonicalJSONPath = "internal/semantics/data/quantram_semantics_v1.json"
+const CanonicalJSONPath = "internal/semantics/data/finfeedsat_semantics_v1.json"
 
 type publishedDocument struct {
 	SemanticContract semantics.Contract `json:"semantic_contract"`

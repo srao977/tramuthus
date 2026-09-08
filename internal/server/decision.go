@@ -1,17 +1,17 @@
-package server
+﻿package server
 
 import (
 	"time"
 
-	quantramv1 "quantram/gen/quantram/v1"
-	"quantram/internal/config"
-	"quantram/internal/domain"
+	finfeedsatv1 "fin_feedsat_1/gen/fin_feedsat/v1"
+	"fin_feedsat_1/internal/config"
+	"fin_feedsat_1/internal/domain"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (s *Server) StreamDecisions(request *quantramv1.StreamDecisionsRequest, stream quantramv1.ModelService_StreamDecisionsServer) error {
+func (s *Server) StreamDecisions(request *finfeedsatv1.StreamDecisionsRequest, stream finfeedsatv1.ModelService_StreamDecisionsServer) error {
 	if s.events == nil {
 		if s.host != nil {
 			return status.Error(codes.Unavailable, "model unavailable")
@@ -68,8 +68,8 @@ func (s *Server) StreamDecisions(request *quantramv1.StreamDecisionsRequest, str
 	}
 }
 
-func toProtoDecisionEvent(ev domain.DecisionEvent) *quantramv1.DecisionEvent {
-	out := &quantramv1.DecisionEvent{
+func toProtoDecisionEvent(ev domain.DecisionEvent) *finfeedsatv1.DecisionEvent {
+	out := &finfeedsatv1.DecisionEvent{
 		EventId:             ev.EventID,
 		SignalId:            ev.SignalID,
 		DecisionId:          ev.DecisionID,
@@ -88,15 +88,15 @@ func toProtoDecisionEvent(ev domain.DecisionEvent) *quantramv1.DecisionEvent {
 	}
 	switch {
 	case ev.IsDecision():
-		out.Outcome = &quantramv1.DecisionEvent_Decision{Decision: toProtoDecision(*ev.Decision)}
+		out.Outcome = &finfeedsatv1.DecisionEvent_Decision{Decision: toProtoDecision(*ev.Decision)}
 	case ev.IsSkip():
-		out.Outcome = &quantramv1.DecisionEvent_Skip{Skip: toProtoSkip(*ev.Skip)}
+		out.Outcome = &finfeedsatv1.DecisionEvent_Skip{Skip: toProtoSkip(*ev.Skip)}
 	}
 	return out
 }
 
-func toProtoDecision(d domain.Decision) *quantramv1.Decision {
-	return &quantramv1.Decision{
+func toProtoDecision(d domain.Decision) *finfeedsatv1.Decision {
+	return &finfeedsatv1.Decision{
 		Side:                 toProtoSide(d.Side),
 		Confidence:           d.Confidence,
 		H:                    int32(d.H),
@@ -116,8 +116,8 @@ func toProtoDecision(d domain.Decision) *quantramv1.Decision {
 	}
 }
 
-func toProtoSkip(s domain.Skip) *quantramv1.Skip {
-	return &quantramv1.Skip{
+func toProtoSkip(s domain.Skip) *finfeedsatv1.Skip {
+	return &finfeedsatv1.Skip{
 		Reason:      toProtoSkipReason(s.Reason),
 		Detail:      s.Detail,
 		ModelStatus: toProtoModelStatus(s.ModelStatus),
@@ -131,81 +131,81 @@ func unixMilli(t time.Time) int64 {
 	return t.UnixMilli()
 }
 
-func toProtoSide(value domain.Side) quantramv1.Side {
+func toProtoSide(value domain.Side) finfeedsatv1.Side {
 	switch value {
 	case domain.SideBuy:
-		return quantramv1.Side_SIDE_BUY
+		return finfeedsatv1.Side_SIDE_BUY
 	case domain.SideSell:
-		return quantramv1.Side_SIDE_SELL
+		return finfeedsatv1.Side_SIDE_SELL
 	case domain.SideHold:
-		return quantramv1.Side_SIDE_HOLD
+		return finfeedsatv1.Side_SIDE_HOLD
 	default:
-		return quantramv1.Side_SIDE_UNSPECIFIED
+		return finfeedsatv1.Side_SIDE_UNSPECIFIED
 	}
 }
 
-func toProtoPath(value domain.PathDirection) quantramv1.PathDirection {
+func toProtoPath(value domain.PathDirection) finfeedsatv1.PathDirection {
 	switch value {
 	case domain.PathUpward:
-		return quantramv1.PathDirection_PATH_DIRECTION_UPWARD
+		return finfeedsatv1.PathDirection_PATH_DIRECTION_UPWARD
 	case domain.PathDownward:
-		return quantramv1.PathDirection_PATH_DIRECTION_DOWNWARD
+		return finfeedsatv1.PathDirection_PATH_DIRECTION_DOWNWARD
 	case domain.PathFlat:
-		return quantramv1.PathDirection_PATH_DIRECTION_FLAT
+		return finfeedsatv1.PathDirection_PATH_DIRECTION_FLAT
 	default:
-		return quantramv1.PathDirection_PATH_DIRECTION_UNSPECIFIED
+		return finfeedsatv1.PathDirection_PATH_DIRECTION_UNSPECIFIED
 	}
 }
 
-func toProtoEmitter(value domain.EmitterPosition) quantramv1.EmitterPosition {
+func toProtoEmitter(value domain.EmitterPosition) finfeedsatv1.EmitterPosition {
 	switch value {
 	case domain.EmitterFlat:
-		return quantramv1.EmitterPosition_EMITTER_POSITION_FLAT
+		return finfeedsatv1.EmitterPosition_EMITTER_POSITION_FLAT
 	case domain.EmitterLong:
-		return quantramv1.EmitterPosition_EMITTER_POSITION_LONG
+		return finfeedsatv1.EmitterPosition_EMITTER_POSITION_LONG
 	case domain.EmitterShort:
-		return quantramv1.EmitterPosition_EMITTER_POSITION_SHORT
+		return finfeedsatv1.EmitterPosition_EMITTER_POSITION_SHORT
 	default:
-		return quantramv1.EmitterPosition_EMITTER_POSITION_UNSPECIFIED
+		return finfeedsatv1.EmitterPosition_EMITTER_POSITION_UNSPECIFIED
 	}
 }
 
-func toProtoModelStatus(value domain.ModelStatus) quantramv1.ModelStatus {
+func toProtoModelStatus(value domain.ModelStatus) finfeedsatv1.ModelStatus {
 	switch value {
 	case domain.StatusInitializing:
-		return quantramv1.ModelStatus_MODEL_STATUS_INITIALIZING
+		return finfeedsatv1.ModelStatus_MODEL_STATUS_INITIALIZING
 	case domain.StatusActionable:
-		return quantramv1.ModelStatus_MODEL_STATUS_ACTIONABLE
+		return finfeedsatv1.ModelStatus_MODEL_STATUS_ACTIONABLE
 	default:
-		return quantramv1.ModelStatus_MODEL_STATUS_UNSPECIFIED
+		return finfeedsatv1.ModelStatus_MODEL_STATUS_UNSPECIFIED
 	}
 }
 
-func toProtoSkipReason(value domain.SkipReason) quantramv1.SkipReason {
+func toProtoSkipReason(value domain.SkipReason) finfeedsatv1.SkipReason {
 	switch value {
 	case domain.SkipInferOff:
-		return quantramv1.SkipReason_SKIP_REASON_INFER_OFF
+		return finfeedsatv1.SkipReason_SKIP_REASON_INFER_OFF
 	case domain.SkipNotModelEligible:
-		return quantramv1.SkipReason_SKIP_REASON_NOT_MODEL_ELIGIBLE
+		return finfeedsatv1.SkipReason_SKIP_REASON_NOT_MODEL_ELIGIBLE
 	case domain.SkipInitializing:
-		return quantramv1.SkipReason_SKIP_REASON_INITIALIZING
+		return finfeedsatv1.SkipReason_SKIP_REASON_INITIALIZING
 	case domain.SkipDuplicateOrRegression:
-		return quantramv1.SkipReason_SKIP_REASON_DUPLICATE_OR_REGRESSION
+		return finfeedsatv1.SkipReason_SKIP_REASON_DUPLICATE_OR_REGRESSION
 	case domain.SkipInputGap:
-		return quantramv1.SkipReason_SKIP_REASON_INPUT_GAP
+		return finfeedsatv1.SkipReason_SKIP_REASON_INPUT_GAP
 	case domain.SkipQueueOverflow:
-		return quantramv1.SkipReason_SKIP_REASON_QUEUE_OVERFLOW
+		return finfeedsatv1.SkipReason_SKIP_REASON_QUEUE_OVERFLOW
 	case domain.SkipTimeout:
-		return quantramv1.SkipReason_SKIP_REASON_TIMEOUT
+		return finfeedsatv1.SkipReason_SKIP_REASON_TIMEOUT
 	case domain.SkipInvalidInput:
-		return quantramv1.SkipReason_SKIP_REASON_INVALID_INPUT
+		return finfeedsatv1.SkipReason_SKIP_REASON_INVALID_INPUT
 	case domain.SkipEngineError:
-		return quantramv1.SkipReason_SKIP_REASON_ENGINE_ERROR
+		return finfeedsatv1.SkipReason_SKIP_REASON_ENGINE_ERROR
 	case domain.SkipEnginePanic:
-		return quantramv1.SkipReason_SKIP_REASON_ENGINE_PANIC
+		return finfeedsatv1.SkipReason_SKIP_REASON_ENGINE_PANIC
 	case domain.SkipStateDiscontinuous:
-		return quantramv1.SkipReason_SKIP_REASON_STATE_DISCONTINUOUS
+		return finfeedsatv1.SkipReason_SKIP_REASON_STATE_DISCONTINUOUS
 	default:
-		return quantramv1.SkipReason_SKIP_REASON_UNSPECIFIED
+		return finfeedsatv1.SkipReason_SKIP_REASON_UNSPECIFIED
 	}
 }

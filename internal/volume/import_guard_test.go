@@ -1,4 +1,4 @@
-package volume
+﻿package volume
 
 import (
 	"os"
@@ -10,12 +10,12 @@ import (
 
 func TestA12NoPricingDependency(t *testing.T) {
 	t.Log("invariant: internal/volume must not import internal/pricing")
-	assertNoProductionImport(t, packageDir(t), `"quantram/internal/pricing"`)
+	assertNoProductionImport(t, packageDir(t), `"fin_feedsat_1/internal/pricing"`)
 }
 
 func TestA13NoAdaptiveDependency(t *testing.T) {
 	t.Log("invariant: internal/volume must not import Adaptive scientific implementation")
-	assertNoProductionImport(t, packageDir(t), `"quantram/internal/adaptive"`)
+	assertNoProductionImport(t, packageDir(t), `"fin_feedsat_1/internal/adaptive"`)
 }
 
 func TestA14NoProductionEntityHardcoding(t *testing.T) {
@@ -40,7 +40,7 @@ func TestA14NoProductionEntityHardcoding(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertNoImport(t, filepath.Join(repoRoot(t), "internal", "domain"), `"quantram/internal/volume"`, false)
+	assertNoImport(t, filepath.Join(repoRoot(t), "internal", "domain"), `"fin_feedsat_1/internal/volume"`, false)
 	domainVol := filepath.Join(repoRoot(t), "internal", "domain", "volume.go")
 	body, err := os.ReadFile(domainVol)
 	if err != nil {
@@ -56,7 +56,7 @@ func TestA14NoProductionEntityHardcoding(t *testing.T) {
 func TestA16NoIngestionVolumeImport(t *testing.T) {
 	t.Log("invariant: ingestion must not import internal/volume; Phase G authorizes modelhost")
 	root := repoRoot(t)
-	assertNoImport(t, filepath.Join(root, "internal", "ingestion"), `"quantram/internal/volume"`, false)
+	assertNoImport(t, filepath.Join(root, "internal", "ingestion"), `"fin_feedsat_1/internal/volume"`, false)
 }
 
 func packageDir(t *testing.T) string {

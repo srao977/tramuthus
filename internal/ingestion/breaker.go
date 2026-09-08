@@ -1,11 +1,11 @@
-package ingestion
+﻿package ingestion
 
 import (
 	"sync"
 	"time"
 
-	"quantram/internal/config"
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/config"
+	"fin_feedsat_1/internal/domain"
 )
 
 type CircuitBreaker struct {

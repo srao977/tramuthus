@@ -1,6 +1,6 @@
-package volume
+﻿package volume
 
-import "quantram/internal/domain"
+import "fin_feedsat_1/internal/domain"
 
 // Frozen Volume Interpretation Mathematics (P-04V Phase D).
 //

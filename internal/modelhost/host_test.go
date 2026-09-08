@@ -1,4 +1,4 @@
-package modelhost
+﻿package modelhost
 
 import (
 	"context"
@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"quantram/internal/adaptive"
-	"quantram/internal/config"
-	"quantram/internal/domain"
-	"quantram/internal/ingestion"
-	"quantram/internal/stagetransition"
+	"fin_feedsat_1/internal/adaptive"
+	"fin_feedsat_1/internal/config"
+	"fin_feedsat_1/internal/domain"
+	"fin_feedsat_1/internal/ingestion"
+	"fin_feedsat_1/internal/stagetransition"
 )
 
 type missingEligible struct {

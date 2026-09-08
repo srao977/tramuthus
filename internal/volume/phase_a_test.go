@@ -1,4 +1,4 @@
-package volume
+﻿package volume
 
 import (
 	"math"
@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 func testBar(symbol string, start time.Time, volume uint64, snapshot string) domain.Bar {
@@ -205,13 +205,13 @@ func TestA11CandidateCopyIsolation(t *testing.T) {
 
 func TestA15ConstantsAreNotEnvKnobs(t *testing.T) {
 	t.Log("invariant: frozen constants are not sourced from environment")
-	t.Setenv("QUANTRAM_VOLUME_RAW_WINDOW", "99")
-	t.Setenv("QUANTRAM_VOLUME_LOWER", "0.1")
+	t.Setenv("Fin_FeedSat_1_VOLUME_RAW_WINDOW", "99")
+	t.Setenv("Fin_FeedSat_1_VOLUME_LOWER", "0.1")
 	cfg := FrozenConfig("SYM1")
 	if cfg.RawWindow != 15 || cfg.LowerThreshold != 0.9 {
 		t.Fatal("environment overrode frozen science")
 	}
-	if os.Getenv("QUANTRAM_VOLUME_RAW_WINDOW") != "99" {
+	if os.Getenv("Fin_FeedSat_1_VOLUME_RAW_WINDOW") != "99" {
 		t.Fatal("test env setup failed")
 	}
 }

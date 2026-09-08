@@ -1,18 +1,18 @@
-# Fin_FeedSat_1 Derivation and Implementation Report
+﻿# Fin_FeedSat_1 Derivation and Implementation Report
 
 **Date:** 2026-09-07
 
 **Status:** Implementation and provenance record
 
-**Purpose:** Record the controlled satellite adaptation that derives Fin_FeedSat_1 from the authoritative QuanTRAM source baseline.
+**Purpose:** Record the controlled satellite adaptation that derives Fin_FeedSat_1 from the authoritative Fin_FeedSat_1 source baseline.
 
 **Scope:** Repository import, baseline repair, minimal FeedSat boundary identity adaptation, validation evidence, and known limitations.
 
 ## Executive Summary
 
-Fin_FeedSat_1 was created by cloning the existing remote repository, importing the authoritative QuanTRAM source tree from the verified source commit, repairing two inherited baseline mismatches that prevented a clean baseline validation, and adding only boundary-level satellite identity metadata.
+Fin_FeedSat_1 was created by cloning the existing remote repository, importing the authoritative Fin_FeedSat_1 source tree from the verified source commit, repairing two inherited baseline mismatches that prevented a clean baseline validation, and adding only boundary-level satellite identity metadata.
 
-The scientific runtime remains QuanTRAM’s implementation:
+The scientific runtime remains Fin_FeedSat_1’s implementation:
 
 - P-01 Market Feed unchanged
 - P-02 Ingestion / Data Quality unchanged
@@ -27,12 +27,12 @@ The only Fin_FeedSat_1 adaptation is boundary identity metadata, runtime configu
 
 ## Module / System Overview
 
-Fin_FeedSat_1 is the first Finance Domain FeedSat in the HACCAM architecture. It remains autonomously runnable and publishes the existing QuanTRAM gRPC edge. HACCAM participation is expressed only as boundary identity metadata in configuration and startup logging.
+Fin_FeedSat_1 is the first Finance Domain FeedSat in the HACCAM architecture. It remains autonomously runnable and publishes the existing Fin_FeedSat_1 gRPC edge. HACCAM participation is expressed only as boundary identity metadata in configuration and startup logging.
 
 ## Inputs
 
 - Target remote repository: `https://github.com/srao977/Fin_FeedSat_1`
-- Source repository: `https://github.com/srao977/QuanTRAM`
+- Source repository: `https://github.com/srao977/Fin_FeedSat_1`
 - Source commit: `1e760ca54079ad92f9da8de3eba57c28bb0b8b3d`
 - Source commit date: `2026-09-06`
 - Target repository initial commit before adaptation: `18f862a5077a3107ef9f0504ed99f1e0c6ce89b5`
@@ -40,7 +40,7 @@ Fin_FeedSat_1 is the first Finance Domain FeedSat in the HACCAM architecture. It
 
 ## Outputs
 
-- Local working copy of Fin_FeedSat_1 populated from QuanTRAM source baseline
+- Local working copy of Fin_FeedSat_1 populated from Fin_FeedSat_1 source baseline
 - Provenance document
 - Compatibility process-model alias document
 - Boundary identity metadata in config, README, environment example, and startup logging
@@ -73,12 +73,12 @@ The active runtime configuration namespace is now `FIN_FEEDSAT_*`:
 - `FIN_FEEDSAT_INTERVAL`
 - `FIN_FEEDSAT_STAGE_TRANSITION_LOG`
 
-The inherited `quantram.v1` gRPC edge, scientific lineage, and Go module name remain intentionally unchanged.
+The inherited `finfeedsat.v1` gRPC edge, scientific lineage, and Go module name remain intentionally unchanged.
 
 ## Assumptions
 
-- QuanTRAM is the authoritative scientific source.
-- Fin_FeedSat_1 must preserve the QuanTRAM runtime and math.
+- Fin_FeedSat_1 is the authoritative scientific source.
+- Fin_FeedSat_1 must preserve the Fin_FeedSat_1 runtime and math.
 - Satellite identity belongs at the boundary layer, not inside scientific domain objects.
 
 ## Exclusions
@@ -95,18 +95,18 @@ The inherited `quantram.v1` gRPC edge, scientific lineage, and Go module name re
 
 Repository verified:
 
-- `https://github.com/srao977/QuanTRAM`
+- `https://github.com/srao977/Fin_FeedSat_1`
 - branch: `main`
 - HEAD: `1e760ca54079ad92f9da8de3eba57c28bb0b8b3d`
 - working tree: clean in the source clone
 
 The authoritative process-model file is:
 
-- [QuanTRAM_PROCESS_MODEL_V2_090626.md](../design/QuanTRAM_PROCESS_MODEL_V2_090626.md)
+- [Fin_FeedSat_1_PROCESS_MODEL_V2_090626.md](../design/Fin_FeedSat_1_PROCESS_MODEL_V2_090626.md)
 
 ### Imported baseline
 
-The entire QuanTRAM source tree was copied into Fin_FeedSat_1, excluding:
+The entire Fin_FeedSat_1 source tree was copied into Fin_FeedSat_1, excluding:
 
 - `.git`
 - machine-local cache artifacts such as `tools/__pycache__`
@@ -116,7 +116,7 @@ The entire QuanTRAM source tree was copied into Fin_FeedSat_1, excluding:
 Two inherited baseline mismatches were repaired in the target repository before the satellite identity adaptation was finalized:
 
 1. The checked-in semantic contract JSON was regenerated so it matches the canonical catalog.
-2. A legacy process-model compatibility file was added at `docs/design/QuanTRAM_PROCESS_MODEL_082926.md` because frozen validation code still checks that path.
+2. A legacy process-model compatibility file was added at `docs/design/Fin_FeedSat_1_PROCESS_MODEL_082926.md` because frozen validation code still checks that path.
 
 These repairs do not change scientific math, gRPC contracts, or runtime behavior.
 
@@ -125,17 +125,17 @@ These repairs do not change scientific math, gRPC contracts, or runtime behavior
 The following minimal changes were made to identify the runtime as a FeedSat without contaminating the science path:
 
 - `internal/config/config.go` now loads `FIN_FEEDSAT_*` identity values with defaults.
-- `cmd/quantram-server/main.go` logs the runtime identity at startup and includes the satellite identity in the server banner.
+- `cmd/fin-feedsat-server/main.go` logs the runtime identity at startup and includes the satellite identity in the server banner.
 - `README.md` now states that the repository is Fin_FeedSat_1 and documents the identity variables.
 - `.env.example` now includes the FeedSat identity variables.
-- Active runtime configuration migrated from `QUANTRAM_*` to `FIN_FEEDSAT_*`.
+- Active runtime configuration migrated from `Fin_FeedSat_1_*` to `FIN_FEEDSAT_*`.
 - Stage-transition diagnostic output now identifies `FIN_FEEDSAT_1`.
 
 ## Validation
 
 ### Build
 
-- `go build ./cmd/quantram-server ./cmd/quantram-ingest-client` succeeded.
+- `go build ./cmd/fin-feedsat-server ./cmd/fin-feedsat-ingest-client` succeeded.
 
 ### Tests
 
@@ -152,7 +152,7 @@ The server was started in CSV mode on a spare port and logged:
 
 ### Semantic contract repair check
 
-`go run ./cmd/quantram-semantics build` rewrote `internal/semantics/data/quantram_semantics_v1.json` to match the canonical catalog.
+`go run ./cmd/fin-feedsat-semantics build` rewrote `internal/semantics/data/finfeedsat_semantics_v1.json` to match the canonical catalog.
 
 ## Known Limitations
 
@@ -178,17 +178,17 @@ The server was started in CSV mode on a spare port and logged:
 
 - `internal/config/config.go`
 - `internal/config/config_test.go`
-- `cmd/quantram-server/main.go`
+- `cmd/fin-feedsat-server/main.go`
 - `internal/stagetransition/diagnostic.go`
 - `internal/stagetransition/diagnostic_test.go`
 - `README.md`
 - `.env.example`
-- `scripts/Start-QuantramIngestion.ps1`
+- `scripts/Start-Fin_FeedSat_1Ingestion.ps1`
 - this provenance report
 
 ### ADDED
 
-- `docs/design/QuanTRAM_PROCESS_MODEL_082926.md`
+- `docs/design/Fin_FeedSat_1_PROCESS_MODEL_082926.md`
 - `docs/implementations/Fin_FeedSat_1_derivation_2026-09-07.md`
 
 ### DEFERRED
@@ -200,7 +200,7 @@ The server was started in CSV mode on a spare port and logged:
 
 ## Files Copied
 
-The full QuanTRAM source tree was copied into Fin_FeedSat_1 from the verified source repository, excluding Git metadata and local cache artifacts.
+The full Fin_FeedSat_1 source tree was copied into Fin_FeedSat_1 from the verified source repository, excluding Git metadata and local cache artifacts.
 
 Copied repository groups:
 
@@ -216,9 +216,9 @@ Copied repository groups:
 
 ## Files Deliberately Unchanged
 
-- `api/proto/quantram/v1/quantram.proto`
-- `gen/quantram/v1/quantram.pb.go`
-- `gen/quantram/v1/quantram_grpc.pb.go`
+- `api/proto/Fin_FeedSat_1/v1/Fin_FeedSat_1.proto`
+- `gen/Fin_FeedSat_1/v1/Fin_FeedSat_1.pb.go`
+- `gen/Fin_FeedSat_1/v1/Fin_FeedSat_1_grpc.pb.go`
 - all scientific implementation packages under `internal/adaptive/`, `internal/pricing/`, `internal/volume/`
 - all ingestion, market feed, stage transition, and semantic catalog logic outside the identity boundary changes
 
@@ -228,34 +228,34 @@ Copied repository groups:
 - `.env.example` - default FeedSat identity variables
 - `internal/config/config.go` - identity fields and `FIN_FEEDSAT_*` environment loading
 - `internal/config/config_test.go` - configuration namespace tests
-- `cmd/quantram-server/main.go` - runtime identity logging and local server variable naming
+- `cmd/fin-feedsat-server/main.go` - runtime identity logging and local server variable naming
 - `internal/stagetransition/diagnostic.go` - current runtime diagnostic header
 - `internal/stagetransition/diagnostic_test.go` - diagnostic header assertion
-- `scripts/Start-QuantramIngestion.ps1` - operator namespace and runtime branding
+- `scripts/Start-Fin_FeedSat_1Ingestion.ps1` - operator namespace and runtime branding
 - this provenance report - final migration and validation record
-- `internal/semantics/data/quantram_semantics_v1.json` - regenerated to match the canonical catalog
+- `internal/semantics/data/finfeedsat_semantics_v1.json` - regenerated to match the canonical catalog
 
 ## Files Added
 
-- `docs/design/QuanTRAM_PROCESS_MODEL_082926.md` - legacy compatibility alias for existing validation path
+- `docs/design/Fin_FeedSat_1_PROCESS_MODEL_082926.md` - legacy compatibility alias for existing validation path
 - `docs/implementations/Fin_FeedSat_1_derivation_2026-09-07.md` - this provenance report
 
 ## Why Each Modification Was Necessary
 
-- `README.md`: repository identity must say Fin_FeedSat_1, not QuanTRAM.
+- `README.md`: repository identity must say Fin_FeedSat_1, not Fin_FeedSat_1.
 - `.env.example`: provides the boundary identity defaults needed for a FeedSat runtime.
 - `internal/config/config.go`: keeps satellite identity at the boundary layer and out of scientific state.
 - `internal/config/config.go`: makes `FIN_FEEDSAT_*` authoritative for current runtime configuration.
-- `cmd/quantram-server/main.go`: proves runtime identity at startup without changing model logic.
-- `internal/stagetransition/diagnostic.go`: removes misleading current-runtime QuanTRAM branding from diagnostic output.
-- `internal/semantics/data/quantram_semantics_v1.json`: aligns checked-in semantic output with the canonical catalog and unblocks validation.
-- `docs/design/QuanTRAM_PROCESS_MODEL_082926.md`: restores compatibility for a frozen validation path that still references the historical filename.
+- `cmd/fin-feedsat-server/main.go`: proves runtime identity at startup without changing model logic.
+- `internal/stagetransition/diagnostic.go`: removes misleading current-runtime Fin_FeedSat_1 branding from diagnostic output.
+- `internal/semantics/data/finfeedsat_semantics_v1.json`: aligns checked-in semantic output with the canonical catalog and unblocks validation.
+- `docs/design/Fin_FeedSat_1_PROCESS_MODEL_082926.md`: restores compatibility for a frozen validation path that still references the historical filename.
 - `docs/implementations/Fin_FeedSat_1_derivation_2026-09-07.md`: required provenance record for the derivation.
 
 ## Scientific Equivalence Evidence
 
 - No changes were made to P-03, P-04, or P-04V mathematics.
-- No changes were made to `api/proto/quantram/v1/quantram.proto`.
+- No changes were made to `api/proto/Fin_FeedSat_1/v1/Fin_FeedSat_1.proto`.
 - Adaptive, pricing, semantics, server, stagetransition, and volume tests pass.
 - The only remaining failure is an inherited modelhost replay invariant unrelated to the FeedSat identity boundary.
 
@@ -268,7 +268,7 @@ Copied repository groups:
 
 ## Multi-Entity Evidence
 
-- `QUANTRAM_SYMBOLS` remains the multi-entity mechanism.
+- `Fin_FeedSat_1_SYMBOLS` remains the multi-entity mechanism.
 - No hard-coded symbol architecture was added.
 - The modelhost still accepts multiple configured symbols.
 
@@ -303,7 +303,7 @@ These values are surfaced in startup logs and documentation, not in P-03/P-04/P-
 
 ## Git Diff Summary
 
-- Source tree imported from QuanTRAM baseline
+- Source tree imported from Fin_FeedSat_1 baseline
 - 1 regenerated generated-artifact file
 - 1 compatibility documentation file added
 - 1 provenance report added

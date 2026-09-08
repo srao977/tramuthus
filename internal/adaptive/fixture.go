@@ -1,4 +1,4 @@
-package adaptive
+﻿package adaptive
 
 import (
 	"crypto/sha256"
@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 type UnitRunRow struct {

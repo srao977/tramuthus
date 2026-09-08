@@ -1,4 +1,4 @@
-module quantram
+module fin_feedsat_1
 
 go 1.25.3
 

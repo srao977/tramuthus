@@ -1,4 +1,4 @@
-package volume
+﻿package volume
 
 import (
 	"crypto/sha256"
@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 // Phase F frozen-equivalence helpers and Level-1 fixtures.

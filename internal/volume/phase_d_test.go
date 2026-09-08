@@ -1,11 +1,11 @@
-package volume
+﻿package volume
 
 import (
 	"math"
 	"path/filepath"
 	"testing"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 func qty(value float64, status FeatureStatus) Quantity {
@@ -424,18 +424,18 @@ func TestD34PhaseABCStillPass(t *testing.T) {
 
 func TestD35NoPricingImport(t *testing.T) {
 	t.Log("invariant: internal/volume must not import internal/pricing")
-	assertNoProductionImport(t, packageDir(t), `"quantram/internal/pricing"`)
+	assertNoProductionImport(t, packageDir(t), `"fin_feedsat_1/internal/pricing"`)
 }
 
 func TestD36NoAdaptiveImport(t *testing.T) {
 	t.Log("invariant: internal/volume must not import Adaptive implementation")
-	assertNoProductionImport(t, packageDir(t), `"quantram/internal/adaptive"`)
+	assertNoProductionImport(t, packageDir(t), `"fin_feedsat_1/internal/adaptive"`)
 }
 
 func TestD37NoRuntimeIntegration(t *testing.T) {
 	t.Log("invariant: ingestion must not import Phase D Volume code")
 	root := repoRoot(t)
-	assertNoImport(t, filepath.Join(root, "internal", "ingestion"), `"quantram/internal/volume"`, false)
+	assertNoImport(t, filepath.Join(root, "internal", "ingestion"), `"fin_feedsat_1/internal/volume"`, false)
 }
 
 // Frozen APTF confirmation sequences. Expected next.Color is the emitted

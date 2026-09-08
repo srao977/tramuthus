@@ -1,4 +1,4 @@
-package tooling
+﻿package tooling
 
 import (
 	"bytes"
@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"quantram/internal/semantics"
-	"quantram/internal/semantics/catalog"
+	"fin_feedsat_1/internal/semantics"
+	"fin_feedsat_1/internal/semantics/catalog"
 )
 
 var errDocumentsDiffer = errors.New("semantics: generated JSON differs from checked-in contract")

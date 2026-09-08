@@ -1,11 +1,11 @@
-package marketfeed
+﻿package marketfeed
 
 import (
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 type alpacaControl struct {

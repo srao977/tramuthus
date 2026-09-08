@@ -1,13 +1,13 @@
-package server
+﻿package server
 
 import (
 	"strings"
 	"testing"
 	"time"
 
-	quantramv1 "quantram/gen/quantram/v1"
-	"quantram/internal/domain"
-	"quantram/internal/ingestion"
+	finfeedsatv1 "fin_feedsat_1/gen/fin_feedsat/v1"
+	"fin_feedsat_1/internal/domain"
+	"fin_feedsat_1/internal/ingestion"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -16,17 +16,17 @@ import (
 )
 
 func TestC01C02VolumeProtoCompiles(t *testing.T) {
-	_ = (*quantramv1.VolumeEvent)(nil)
-	_ = quantramv1.VolumeStatus_VOLUME_STATUS_AVAILABLE
+	_ = (*finfeedsatv1.VolumeEvent)(nil)
+	_ = finfeedsatv1.VolumeStatus_VOLUME_STATUS_AVAILABLE
 }
 
 func TestC03VolumeStatusEnum(t *testing.T) {
-	want := map[quantramv1.VolumeStatus]int32{
-		quantramv1.VolumeStatus_VOLUME_STATUS_UNSPECIFIED:  0,
-		quantramv1.VolumeStatus_VOLUME_STATUS_MATURING:     1,
-		quantramv1.VolumeStatus_VOLUME_STATUS_AVAILABLE:    2,
-		quantramv1.VolumeStatus_VOLUME_STATUS_INVALID:      3,
-		quantramv1.VolumeStatus_VOLUME_STATUS_ENGINE_ERROR: 4,
+	want := map[finfeedsatv1.VolumeStatus]int32{
+		finfeedsatv1.VolumeStatus_VOLUME_STATUS_UNSPECIFIED:  0,
+		finfeedsatv1.VolumeStatus_VOLUME_STATUS_MATURING:     1,
+		finfeedsatv1.VolumeStatus_VOLUME_STATUS_AVAILABLE:    2,
+		finfeedsatv1.VolumeStatus_VOLUME_STATUS_INVALID:      3,
+		finfeedsatv1.VolumeStatus_VOLUME_STATUS_ENGINE_ERROR: 4,
 	}
 	for k, n := range want {
 		if int32(k) != n {
@@ -36,11 +36,11 @@ func TestC03VolumeStatusEnum(t *testing.T) {
 }
 
 func TestC04IndicatorEnum(t *testing.T) {
-	want := map[quantramv1.VolumeIndicator]int32{
-		quantramv1.VolumeIndicator_VOLUME_INDICATOR_UNSPECIFIED: 0,
-		quantramv1.VolumeIndicator_VOLUME_INDICATOR_GREEN:       1,
-		quantramv1.VolumeIndicator_VOLUME_INDICATOR_AMBER:       2,
-		quantramv1.VolumeIndicator_VOLUME_INDICATOR_RED:         3,
+	want := map[finfeedsatv1.VolumeIndicator]int32{
+		finfeedsatv1.VolumeIndicator_VOLUME_INDICATOR_UNSPECIFIED: 0,
+		finfeedsatv1.VolumeIndicator_VOLUME_INDICATOR_GREEN:       1,
+		finfeedsatv1.VolumeIndicator_VOLUME_INDICATOR_AMBER:       2,
+		finfeedsatv1.VolumeIndicator_VOLUME_INDICATOR_RED:         3,
 	}
 	for k, n := range want {
 		if int32(k) != n {
@@ -50,22 +50,22 @@ func TestC04IndicatorEnum(t *testing.T) {
 }
 
 func TestC05RawColorSharesIndicatorEnum(t *testing.T) {
-	fd := (*quantramv1.VolumeEmission)(nil).ProtoReflect().Descriptor().Fields().ByName("raw_color")
-	if fd.Enum().FullName() != "quantram.v1.VolumeIndicator" {
+	fd := (*finfeedsatv1.VolumeEmission)(nil).ProtoReflect().Descriptor().Fields().ByName("raw_color")
+	if fd.Enum().FullName() != "finfeedsat.v1.VolumeIndicator" {
 		t.Fatalf("raw_color enum %s", fd.Enum().FullName())
 	}
 }
 
 func TestC06ConfirmationTransitionEnum(t *testing.T) {
-	want := map[quantramv1.VolumeTransition]int32{
-		quantramv1.VolumeTransition_VOLUME_TRANSITION_UNSPECIFIED:     0,
-		quantramv1.VolumeTransition_VOLUME_TRANSITION_STABLE:          1,
-		quantramv1.VolumeTransition_VOLUME_TRANSITION_PENDING_GREEN:   2,
-		quantramv1.VolumeTransition_VOLUME_TRANSITION_PENDING_AMBER:   3,
-		quantramv1.VolumeTransition_VOLUME_TRANSITION_PENDING_RED:     4,
-		quantramv1.VolumeTransition_VOLUME_TRANSITION_CONFIRMED_GREEN: 5,
-		quantramv1.VolumeTransition_VOLUME_TRANSITION_CONFIRMED_AMBER: 6,
-		quantramv1.VolumeTransition_VOLUME_TRANSITION_CONFIRMED_RED:   7,
+	want := map[finfeedsatv1.VolumeTransition]int32{
+		finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_UNSPECIFIED:     0,
+		finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_STABLE:          1,
+		finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_PENDING_GREEN:   2,
+		finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_PENDING_AMBER:   3,
+		finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_PENDING_RED:     4,
+		finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_CONFIRMED_GREEN: 5,
+		finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_CONFIRMED_AMBER: 6,
+		finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_CONFIRMED_RED:   7,
 	}
 	for k, n := range want {
 		if int32(k) != n {
@@ -75,13 +75,13 @@ func TestC06ConfirmationTransitionEnum(t *testing.T) {
 }
 
 func TestC07PhaseEnum(t *testing.T) {
-	want := map[quantramv1.VolumePhase]int32{
-		quantramv1.VolumePhase_VOLUME_PHASE_UNSPECIFIED:                       0,
-		quantramv1.VolumePhase_VOLUME_PHASE_ACTIVITY_STATIONARY:              1,
-		quantramv1.VolumePhase_VOLUME_PHASE_ACTIVITY_INCREASING_ACCELERATING: 2,
-		quantramv1.VolumePhase_VOLUME_PHASE_ACTIVITY_INCREASING_DECELERATING: 3,
-		quantramv1.VolumePhase_VOLUME_PHASE_ACTIVITY_DECREASING_ACCELERATING: 4,
-		quantramv1.VolumePhase_VOLUME_PHASE_ACTIVITY_DECREASING_DECELERATING: 5,
+	want := map[finfeedsatv1.VolumePhase]int32{
+		finfeedsatv1.VolumePhase_VOLUME_PHASE_UNSPECIFIED:                      0,
+		finfeedsatv1.VolumePhase_VOLUME_PHASE_ACTIVITY_STATIONARY:              1,
+		finfeedsatv1.VolumePhase_VOLUME_PHASE_ACTIVITY_INCREASING_ACCELERATING: 2,
+		finfeedsatv1.VolumePhase_VOLUME_PHASE_ACTIVITY_INCREASING_DECELERATING: 3,
+		finfeedsatv1.VolumePhase_VOLUME_PHASE_ACTIVITY_DECREASING_ACCELERATING: 4,
+		finfeedsatv1.VolumePhase_VOLUME_PHASE_ACTIVITY_DECREASING_DECELERATING: 5,
 	}
 	for k, n := range want {
 		if int32(k) != n {
@@ -91,7 +91,7 @@ func TestC07PhaseEnum(t *testing.T) {
 }
 
 func TestC08ScientificQuantitiesPresent(t *testing.T) {
-	fields := (*quantramv1.VolumeEmission)(nil).ProtoReflect().Descriptor().Fields()
+	fields := (*finfeedsatv1.VolumeEmission)(nil).ProtoReflect().Descriptor().Fields()
 	for _, name := range []protoreflect.Name{"v_raw", "v_n", "v1", "v2", "interval_mean_vn", "predicted_next_v_n"} {
 		if fields.ByName(name) == nil {
 			t.Fatalf("missing %s", name)
@@ -157,13 +157,13 @@ func TestC09C12UnavailableVsZero(t *testing.T) {
 	if vn.Value != nil {
 		t.Fatal("C11: unavailable V_N must omit value")
 	}
-	if vn.GetStatus() != quantramv1.VolumeQuantityStatus_VOLUME_QUANTITY_STATUS_INSUFFICIENT {
+	if vn.GetStatus() != finfeedsatv1.VolumeQuantityStatus_VOLUME_QUANTITY_STATUS_INSUFFICIENT {
 		t.Fatalf("C11 status %s", vn.GetStatus())
 	}
 	if gotMissing.GetEmission().GetV1().Value != nil {
 		t.Fatal("C12: unavailable V1 must omit value")
 	}
-	if gotMissing.GetEmission().GetV2().GetStatus() != quantramv1.VolumeQuantityStatus_VOLUME_QUANTITY_STATUS_UNDEFINED {
+	if gotMissing.GetEmission().GetV2().GetStatus() != finfeedsatv1.VolumeQuantityStatus_VOLUME_QUANTITY_STATUS_UNDEFINED {
 		t.Fatal("C12: undefined V2")
 	}
 	if proto.Equal(gotZero.GetEmission().GetVN(), gotMissing.GetEmission().GetVN()) {
@@ -212,13 +212,13 @@ func TestC16C17StatusesDistinct(t *testing.T) {
 	if invalid.GetStatus() == errEv.GetStatus() {
 		t.Fatal("C17 INVALID must not equal ENGINE_ERROR")
 	}
-	if maturing.GetSkip().GetReason() != quantramv1.VolumeSkipReason_VOLUME_SKIP_REASON_MATURING {
+	if maturing.GetSkip().GetReason() != finfeedsatv1.VolumeSkipReason_VOLUME_SKIP_REASON_MATURING {
 		t.Fatal("MATURING skip")
 	}
-	if invalid.GetSkip().GetReason() != quantramv1.VolumeSkipReason_VOLUME_SKIP_REASON_INVALID {
+	if invalid.GetSkip().GetReason() != finfeedsatv1.VolumeSkipReason_VOLUME_SKIP_REASON_INVALID {
 		t.Fatal("INVALID skip")
 	}
-	if errEv.GetSkip().GetReason() != quantramv1.VolumeSkipReason_VOLUME_SKIP_REASON_ENGINE_ERROR {
+	if errEv.GetSkip().GetReason() != finfeedsatv1.VolumeSkipReason_VOLUME_SKIP_REASON_ENGINE_ERROR {
 		t.Fatal("ENGINE_ERROR skip")
 	}
 	if available.GetSkip() != nil || !available.GetEmitted() {
@@ -230,7 +230,7 @@ func TestC16C17StatusesDistinct(t *testing.T) {
 }
 
 func TestC18IndicatorIsNotTrading(t *testing.T) {
-	for _, name := range quantramv1.VolumeIndicator_name {
+	for _, name := range finfeedsatv1.VolumeIndicator_name {
 		upper := strings.ToUpper(name)
 		for _, tok := range []string{"BUY", "SELL", "HOLD"} {
 			if strings.Contains(upper, tok) {
@@ -255,20 +255,20 @@ func TestC19C21VolumeContractIsolation(t *testing.T) {
 			}
 		}
 	}
-	check((*quantramv1.VolumeEvent)(nil).ProtoReflect().Descriptor())
-	check((*quantramv1.VolumeEmission)(nil).ProtoReflect().Descriptor())
-	check((*quantramv1.VolumeSkip)(nil).ProtoReflect().Descriptor())
-	check((*quantramv1.VolumeQuantity)(nil).ProtoReflect().Descriptor())
+	check((*finfeedsatv1.VolumeEvent)(nil).ProtoReflect().Descriptor())
+	check((*finfeedsatv1.VolumeEmission)(nil).ProtoReflect().Descriptor())
+	check((*finfeedsatv1.VolumeSkip)(nil).ProtoReflect().Descriptor())
+	check((*finfeedsatv1.VolumeQuantity)(nil).ProtoReflect().Descriptor())
 }
 
 func TestC22C23ExistingContractsUnchanged(t *testing.T) {
-	decision := (*quantramv1.DecisionEvent)(nil).ProtoReflect().Descriptor()
+	decision := (*finfeedsatv1.DecisionEvent)(nil).ProtoReflect().Descriptor()
 	assertField(t, decision, "event_id", 1)
 	assertField(t, decision, "market_snapshot_id", 6)
 	assertField(t, decision, "decision", 16)
 	assertField(t, decision, "skip", 17)
 
-	price := (*quantramv1.PriceEvent)(nil).ProtoReflect().Descriptor()
+	price := (*finfeedsatv1.PriceEvent)(nil).ProtoReflect().Descriptor()
 	assertField(t, price, "event_id", 1)
 	assertField(t, price, "interval_start_unix_ms", 3)
 	assertField(t, price, "market_snapshot_id", 4)
@@ -278,16 +278,16 @@ func TestC22C23ExistingContractsUnchanged(t *testing.T) {
 	assertField(t, price, "skip", 13)
 	assertField(t, price, "cockpit", 14)
 
-	if int32(quantramv1.PricingStatus_PRICING_STATUS_EMITTED) != 4 {
+	if int32(finfeedsatv1.PricingStatus_PRICING_STATUS_EMITTED) != 4 {
 		t.Fatal("P-04 PricingStatus numeric values changed")
 	}
-	if int32(quantramv1.Side_SIDE_HOLD) != 3 {
+	if int32(finfeedsatv1.Side_SIDE_HOLD) != 3 {
 		t.Fatal("P-03 Side numeric values changed")
 	}
 }
 
 func TestC24C25ServiceExposure(t *testing.T) {
-	svc := quantramv1.File_quantram_v1_quantram_proto.Services().ByName("ModelService")
+	svc := finfeedsatv1.File_fin_feedsat_v1_Fin_FeedSat_1_proto.Services().ByName("ModelService")
 	if svc == nil {
 		t.Fatal("ModelService missing")
 	}
@@ -304,14 +304,14 @@ func TestC24C25ServiceExposure(t *testing.T) {
 	if vol.Input().Name() != "StreamVolumeEventsRequest" || vol.Output().Name() != "VolumeEvent" {
 		t.Fatalf("C25 signatures %s -> %s", vol.Input().Name(), vol.Output().Name())
 	}
-	if quantramv1.File_quantram_v1_quantram_proto.Services().ByName("VolumeService") != nil {
+	if finfeedsatv1.File_fin_feedsat_v1_Fin_FeedSat_1_proto.Services().ByName("VolumeService") != nil {
 		t.Fatal("do not invent a Volume microservice")
 	}
 }
 
 func TestStreamVolumeEventsUnwired(t *testing.T) {
 	err := New(ingestion.NewPipeline(nil, nil, "TEST", []string{"SPY"}), nil).
-		StreamVolumeEvents(&quantramv1.StreamVolumeEventsRequest{}, nil)
+		StreamVolumeEvents(&finfeedsatv1.StreamVolumeEventsRequest{}, nil)
 	if status.Code(err) != codes.FailedPrecondition {
 		t.Fatalf("unwired want FailedPrecondition, got %v", err)
 	}
@@ -334,22 +334,22 @@ func TestVolumeMapperInterpretationAndGV(t *testing.T) {
 	if em.GetRawColor() == em.GetIndicator() {
 		t.Fatal("raw color must remain distinct from Indicator")
 	}
-	if em.GetRawColor() != quantramv1.VolumeIndicator_VOLUME_INDICATOR_GREEN {
+	if em.GetRawColor() != finfeedsatv1.VolumeIndicator_VOLUME_INDICATOR_GREEN {
 		t.Fatal("raw color")
 	}
-	if em.GetIndicator() != quantramv1.VolumeIndicator_VOLUME_INDICATOR_AMBER {
+	if em.GetIndicator() != finfeedsatv1.VolumeIndicator_VOLUME_INDICATOR_AMBER {
 		t.Fatal("Indicator")
 	}
-	if em.GetTransition() != quantramv1.VolumeTransition_VOLUME_TRANSITION_PENDING_GREEN {
+	if em.GetTransition() != finfeedsatv1.VolumeTransition_VOLUME_TRANSITION_PENDING_GREEN {
 		t.Fatal("transition")
 	}
 	if em.GetPredictedNextVN().GetValue() != em.GetVN().GetValue() {
 		t.Fatal("G_V predicted_next_v_n must equal V_N")
 	}
-	if em.GetConfidence() != quantramv1.VolumeConfidence_VOLUME_CONFIDENCE_HIGH {
+	if em.GetConfidence() != finfeedsatv1.VolumeConfidence_VOLUME_CONFIDENCE_HIGH {
 		t.Fatal("confidence")
 	}
-	if em.GetDomainState() != quantramv1.VolumeDomainState_VOLUME_DOMAIN_STATE_CAUSAL_LOCAL_VOLUME {
+	if em.GetDomainState() != finfeedsatv1.VolumeDomainState_VOLUME_DOMAIN_STATE_CAUSAL_LOCAL_VOLUME {
 		t.Fatal("domain")
 	}
 	if ev.ProtoReflect().Descriptor().Fields().ByName("effective_time") != nil ||
@@ -359,7 +359,7 @@ func TestVolumeMapperInterpretationAndGV(t *testing.T) {
 }
 
 func TestVolumeDoesNotSerializeInternalState(t *testing.T) {
-	fields := (*quantramv1.VolumeEvent)(nil).ProtoReflect().Descriptor().Fields()
+	fields := (*finfeedsatv1.VolumeEvent)(nil).ProtoReflect().Descriptor().Fields()
 	for _, name := range []protoreflect.Name{
 		"pending_color", "pending_count", "raw_window", "vn_window", "generation",
 	} {

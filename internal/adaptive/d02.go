@@ -1,10 +1,10 @@
-package adaptive
+﻿package adaptive
 
 import (
 	"fmt"
 	"math"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 type ForwardSample struct {

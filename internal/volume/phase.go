@@ -1,9 +1,9 @@
-package volume
+﻿package volume
 
 import (
 	"math"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 // Frozen V1/V2 phase classification (P-04V Phase D).

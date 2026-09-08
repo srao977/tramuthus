@@ -1,11 +1,11 @@
-package stagetransition
+﻿package stagetransition
 
 import (
 	"fmt"
 	"sync"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 type stateKey struct {

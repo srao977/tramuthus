@@ -1,4 +1,4 @@
-// Package stagetransition publishes compact facts when a realtime stage's
+﻿// Package stagetransition publishes compact facts when a realtime stage's
 // meaningful categorical state changes.
 //
 // Purpose:
@@ -52,7 +52,7 @@ import (
 	"strings"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 const (

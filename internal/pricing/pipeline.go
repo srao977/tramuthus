@@ -1,4 +1,4 @@
-package pricing
+﻿package pricing
 
 import (
 	"crypto/sha256"
@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 type history struct {

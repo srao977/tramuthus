@@ -1,4 +1,4 @@
-package tooling
+﻿package tooling
 
 import (
 	"os"
@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"quantram/internal/semantics"
+	"fin_feedsat_1/internal/semantics"
 )
 
 type FindingKind string
@@ -137,7 +137,7 @@ func Audit(repoRoot string, extra []Candidate) (AuditReport, error) {
 		if t.Source.GoFile == "" || t.Source.GoSymbol == "" {
 			continue
 		}
-		if strings.HasPrefix(t.Source.GoFile, "quantram-dashboard/") {
+		if strings.HasPrefix(t.Source.GoFile, "Fin_FeedSat_1-dashboard/") {
 			continue
 		}
 		path := filepath.Join(repoRoot, filepath.FromSlash(t.Source.GoFile))
@@ -185,7 +185,7 @@ func collectCandidates(repoRoot string) ([]Candidate, error) {
 		"internal/domain/health.go",
 		"internal/domain/continuity.go",
 		"internal/domain/quality.go",
-		"api/proto/quantram/v1/quantram.proto",
+		"api/proto/Fin_FeedSat_1/v1/Fin_FeedSat_1.proto",
 	}
 	for _, rel := range files {
 		path := filepath.Join(repoRoot, filepath.FromSlash(rel))
@@ -212,7 +212,7 @@ func collectCandidates(repoRoot string) ([]Candidate, error) {
 		}
 	}
 	for _, id := range viewerSemanticIDs() {
-		out = append(out, Candidate{Token: id, Source: "quantram-dashboard/src/lib/semantics.ts"})
+		out = append(out, Candidate{Token: id, Source: "Fin_FeedSat_1-dashboard/src/lib/semantics.ts"})
 	}
 	return out, nil
 }

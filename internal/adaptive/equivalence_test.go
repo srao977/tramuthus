@@ -1,4 +1,4 @@
-package adaptive
+﻿package adaptive
 
 import (
 	"math"
@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 // Unit Run 001 fixture identity. Origin: SADE/output/unit_runs/001/observations.csv

@@ -1,4 +1,4 @@
-package adaptive
+﻿package adaptive
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"quantram/internal/domain"
+	"fin_feedsat_1/internal/domain"
 )
 
 // ObservationFromBar maps a P-02 bar to a D01 observation.

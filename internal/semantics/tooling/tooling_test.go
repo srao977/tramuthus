@@ -1,4 +1,4 @@
-package tooling
+﻿package tooling
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"quantram/internal/semantics"
+	"fin_feedsat_1/internal/semantics"
 )
 
 func TestCatalogMatchesBaselineSemantically(t *testing.T) {
@@ -59,7 +59,7 @@ func TestBuildCheckMatchesCanonicalAfterEncode(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !bytes.Equal(built, checked) {
-		t.Fatalf("generated JSON differs from checked-in contract; run go run ./cmd/quantram-semantics build")
+		t.Fatalf("generated JSON differs from checked-in contract; run go run ./cmd/fin-feedsat-semantics build")
 	}
 }
 
