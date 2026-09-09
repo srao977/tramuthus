@@ -41,7 +41,7 @@ param(
     [ValidateSet("stream", "decisions", "health", "ready", "source", "window", "gapfill")]
     [string]$Operation = "stream",
 
-    [int]$MaxBars = 1,
+    [int]$MaxBars = 0,
 
     [string]$Timeout = "4m"
 )
@@ -109,14 +109,6 @@ function Invoke-IngestClient {
     }
 }
 
-if (-not $SmokeTest) {
-    Write-Host "Starting server (Ctrl+C to stop). In another terminal run:"
-    Write-Host "  go run ./cmd/fin-feedsat-ingest-client -operation source"
-    Write-Host "  go run ./cmd/fin-feedsat-ingest-client -operation stream -symbols $symbolsCsv -max-bars $MaxBars -timeout $Timeout"
-    & go run ./cmd/fin-feedsat-server
-    exit $LASTEXITCODE
-}
-
 $server = $null
 try {
     $server = Start-Process -FilePath "go" -ArgumentList @("run", "./cmd/fin-feedsat-server") `
@@ -148,15 +140,31 @@ try {
         throw "server did not become HEALTHY within 30 seconds"
     }
 
-    Invoke-IngestClient -ClientOperation "ready" -ClientMaxBars $MaxBars -ClientTimeout $Timeout
-    Invoke-IngestClient -ClientOperation $Operation -ClientMaxBars $MaxBars -ClientTimeout $Timeout
-    Write-Host "Smoke test passed."
+    $clientMaxBars = $MaxBars
+    if ($SmokeTest -and $clientMaxBars -eq 0) {
+        $clientMaxBars = 1
+    }
+    $clientTimeout = $Timeout
+    if (-not $SmokeTest -and $clientMaxBars -eq 0) {
+        $clientTimeout = "24h"
+    }
+
+    Invoke-IngestClient -ClientOperation "ready" -ClientMaxBars $clientMaxBars -ClientTimeout $clientTimeout
+    Invoke-IngestClient -ClientOperation $Operation -ClientMaxBars $clientMaxBars -ClientTimeout $clientTimeout
+    if ($SmokeTest) {
+        Write-Host "Smoke test passed."
+    }
 }
 finally {
+    if ($null -ne $server) {
+        & taskkill.exe /PID $server.Id /T /F 2>$null | Out-Null
+    }
+    Get-CimInstance Win32_Process -Filter "Name = 'go.exe'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -match "fin-feedsat-server" } |
+        ForEach-Object { & taskkill.exe /PID $_.ProcessId /T /F 2>$null | Out-Null }
+    Get-CimInstance Win32_Process -Filter "Name = 'fin-feedsat-server.exe'" -ErrorAction SilentlyContinue |
+        ForEach-Object { & taskkill.exe /PID $_.ProcessId /T /F 2>$null | Out-Null }
     if ($null -ne $server -and -not $server.HasExited) {
         Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
-        Get-CimInstance Win32_Process -Filter "Name = 'go.exe'" -ErrorAction SilentlyContinue |
-            Where-Object { $_.CommandLine -match "fin-feedsat-server" } |
-            ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
     }
 }
