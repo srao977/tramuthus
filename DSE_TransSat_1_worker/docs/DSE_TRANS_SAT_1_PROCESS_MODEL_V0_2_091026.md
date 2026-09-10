@@ -3,12 +3,12 @@
 **Title:** DSE_TransSat_1 Process Model
 **Date:** 2026-09-10
 **Version:** V0.2
-**Status:** PROPOSED FOR HUMAN REVIEW
+**Status:** APPROVED
 **Implementation:** NOT YET AUTHORIZED
 **Engineering Artifact Type:** Functional Process Model
-**Supersedes for engineering lineage:** V0.1 remains a prior narrative draft; V0.2 is the proposed functional engineering authority
+**Supersedes for engineering lineage:** V0.1 remains a prior narrative draft; V0.2 is the APPROVED functional Process Model and upstream engineering authority for DSE_TransSat_1
 
-Process Identifiers in this document are **proposed**. They become immutable engineering lineage only after human approval.
+Process Identifiers **DSE-00 through DSE-09** are **APPROVED**. They are the immutable engineering lineage for DSE_TransSat_1. Their identifiers shall not be renumbered or reused. An approved Process Identifier shall not silently acquire a materially different responsibility. A retired process retains its identifier and is marked RETIRED. A materially different replacement receives a new Process Identifier. Hierarchical child identifiers remain reserved and are not created by this approval. Approval of this Process Model does not authorize implementation.
 
 Evidence classes used in this document:
 
@@ -26,7 +26,7 @@ Evidence classes used in this document:
 
 DSE_TransSat_1 is a HACCAM Transformer Satellite (`TransSat`, `PRODUCER_CONSUMER`). It consumes published Fin_FeedSat_1 information, maintains independent 0..N per-entity state, applies established Ehlers phase/cycle analysis, assembles that analysis with upstream Price and Volume evidence and portfolio state, and publishes **new** authoritative Decision Strategy information.
 
-This Process Model is the proposed upstream functional engineering authority. Later System Design, interface design, implementation, and validation shall reference Process Identifiers rather than redefine process meaning.
+This Process Model is the APPROVED upstream functional engineering authority for DSE_TransSat_1. Downstream engineering artifacts shall reference the approved Process IDs and shall not redefine their functional meaning.
 
 The causal system function is **DSE-00**. It decomposes into **DSE-01** through **DSE-09**. `DSE_TransSat_1_worker` realizes DSE-00. `DSE_TransSat_1_viewer` is a non-causal consumer of **DSE-07** / **DSE-09** outputs and is not a scientific process.
 
@@ -51,7 +51,7 @@ Intended engineering lineage:
 
 ```mermaid
 flowchart TD
-  PM["Process Model<br/>immutable Process IDs after approval"]
+  PM["Process Model<br/>approved immutable Process IDs"]
   SD["System / Architectural Design<br/>artifacts realize Process IDs"]
   IF["Interface / Protobuf Design<br/>exchanges realize process information"]
   IP["Implementation Plan<br/>work packages implement Process IDs"]
@@ -60,7 +60,7 @@ flowchart TD
   PM --> SD --> IF --> IP --> SC --> VAL
 ```
 
-Downstream artifacts shall not create an independent functional naming scheme.
+Downstream engineering artifacts shall reference the approved Process IDs, shall not redefine their functional meaning, and shall not create an independent functional naming scheme.
 
 ---
 
@@ -87,15 +87,29 @@ Approved Process IDs are the stable cross-reference among Process Model, System 
 
 ## 4. Process Identifier Governance
 
-Proposed identifier form: `DSE-nn`. Hierarchical IDs (`DSE-nn.m`) are reserved and are **not** assigned in V0.2.
+Approved identifier form: `DSE-nn`. Hierarchical IDs (`DSE-nn.m`) remain reserved and are **not** created by this approval.
 
 | Rule | Statement |
 | --- | --- |
-| Proposal | IDs in V0.2 are proposed until human approval |
-| Immutability | After approval, IDs are not casually renumbered or reused |
-| Meaning | An ID shall not silently acquire a materially different responsibility |
-| Retirement | Removed processes retain the ID and are marked RETIRED |
-| Supersession | Materially different replacement receives a new ID |
+| Approval | DSE-00 through DSE-09 are APPROVED Process Identifiers |
+| Immutability | Approved identifiers shall not be renumbered or reused |
+| Meaning | An approved Process Identifier shall not silently acquire a materially different responsibility |
+| Retirement | A retired process retains its identifier and is marked RETIRED |
+| Supersession | A materially different replacement receives a new Process Identifier |
+| Hierarchy | Hierarchical child identifiers remain reserved and are not created by this approval |
+
+Approved immutable Process Identifiers:
+
+- DSE-00 — DSE Decision Strategy Transformation
+- DSE-01 — Inbound Information Consumption
+- DSE-02 — Per-Entity State Coordination
+- DSE-03 — Established Phase / Cycle Analysis
+- DSE-04 — Evidence Assembly
+- DSE-05 — Strategy Maker
+- DSE-06 — Portfolio State Management
+- DSE-07 — Decision Strategy Publication
+- DSE-08 — Health / Lifecycle Management
+- DSE-09 — Diagnostics / Evidence Recording
 
 **DSE-00** is the top-level context function. **DSE-01** through **DSE-09** are its first-level decomposition.
 
@@ -180,7 +194,7 @@ flowchart TD
 
 ## 9. Functional Decomposition
 
-Proposed first-level decomposition of DSE-00:
+Approved first-level decomposition of DSE-00:
 
 | ID | Label | One-line purpose |
 | --- | --- | --- |
@@ -960,7 +974,7 @@ Implementation is **not authorized** by this document.
 
 Before implementation:
 
-1. Human approval of proposed Process IDs and boundaries
+1. Process Model approval completed on 2026-09-10. This completed precondition does not authorize implementation.
 2. Confirmation of the published inbound consumer contract (OE-01) without modifying Fin_FeedSat_1
 3. Separate System / Architectural Design mapped to Process IDs
 4. Separate Interface / Protobuf Design mapped to Process IDs
@@ -977,4 +991,4 @@ Do not proceed from this document directly to Go, protobuf, or viewer source.
 | Version | Date | Change |
 | --- | --- | --- |
 | V0.1 | 2026-09-10 | Prior narrative process-model draft retained at `DSE_TRANS_SAT_1_PROCESS_MODEL_V0_1_091026.md`. |
-| V0.2 | 2026-09-10 | Engineering-standard functional Process Model proposed for human review. Process IDs DSE-00 through DSE-09 proposed, not yet immutable. Final normalization before human approval: terminology cleanup, inbound-boundary neutralization, per-entity ordering clarification, interface-neutral evidence assembly, and portfolio-transition authorization clarification. |
+| V0.2 | 2026-09-10 | Engineering-standard functional Process Model. Human review completed on 2026-09-10. V0.2 APPROVED. DSE-00 through DSE-09 became immutable engineering Process Identifiers. OE-01 through OE-13 remain open. Implementation remains NOT YET AUTHORIZED. Prior final normalization before approval: terminology cleanup, inbound-boundary neutralization, per-entity ordering clarification, interface-neutral evidence assembly, and portfolio-transition authorization clarification. |
