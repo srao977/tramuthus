@@ -1,0 +1,10 @@
+# Node dependencies and generated frontend output
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Generated local binaries
+Bar_Sequence_Lab/phase_angle_series_generator/bin/
+DSE_JEH/bin/

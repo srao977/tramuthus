@@ -163,3 +163,20 @@ func TestMongoHostStripsCredentials(t *testing.T) {
 		t.Fatalf("got %q", got)
 	}
 }
+
+func TestLoadTargetBarsPerSymbol(t *testing.T) {
+	t.Setenv("BAR_SEQ_LAB_MONGO_ENABLED", "false")
+	t.Setenv("ALPACA_API_KEY", "k")
+	t.Setenv("ALPACA_API_SECRET", "s")
+	t.Setenv("BAR_SEQ_LAB_FEED", "test")
+	t.Setenv("BAR_SEQ_LAB_SELECTED_GROUPS", "A")
+	t.Setenv("BAR_SEQ_LAB_GROUP_A", "FAKEPACA")
+	t.Setenv("BAR_SEQ_LAB_TARGET_BARS_PER_SYMBOL", "120")
+	cfg, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.TargetBarsPerSymbol != 120 {
+		t.Fatalf("target=%d", cfg.TargetBarsPerSymbol)
+	}
+}

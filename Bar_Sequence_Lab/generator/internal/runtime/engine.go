@@ -112,14 +112,24 @@ func (e *Engine) Run(ctx context.Context, source LiveSource) error {
 	}
 
 	var acceptedTotal uint64
+	acceptedBySymbol := make(map[string]uint64, len(e.cfg.SubscribeSymbols))
+	for _, symbol := range e.cfg.SubscribeSymbols {
+		acceptedBySymbol[symbol] = 0
+	}
+	stopReason := "SOURCE_ENDED"
 	dispatching := true
 	for dispatching {
 		select {
 		case <-ctx.Done():
+			stopReason = "SIGNAL_OR_CONTEXT"
 			srcCancel()
 			dispatching = false
 		case <-deadline:
-			log.Printf("duration reached; shutting down")
+			stopReason = "DURATION_LIMIT"
+			if e.cfg.Duration == 2*time.Hour {
+				stopReason = "TWO_HOUR_LIMIT"
+			}
+			log.Printf("duration reached; stop_reason=%s; shutting down", stopReason)
 			srcCancel()
 			dispatching = false
 		case <-metrics.C:
@@ -136,8 +146,19 @@ func (e *Engine) Run(ctx context.Context, source LiveSource) error {
 				dispatching = false
 			}
 			acceptedTotal++
+			if _, configured := acceptedBySymbol[obs.Symbol]; configured {
+				acceptedBySymbol[obs.Symbol]++
+			}
+			if e.cfg.TargetBarsPerSymbol > 0 && allSymbolsReached(acceptedBySymbol, uint64(e.cfg.TargetBarsPerSymbol)) {
+				stopReason = fmt.Sprintf("ALL_SYMBOLS_REACHED_%d", e.cfg.TargetBarsPerSymbol)
+				log.Printf("target_bars_per_symbol=%d reached; stop_reason=%s; shutting down", e.cfg.TargetBarsPerSymbol, stopReason)
+				srcCancel()
+				dispatching = false
+				break
+			}
 			if e.cfg.MaxBars > 0 && int(acceptedTotal) >= e.cfg.MaxBars {
-				log.Printf("max_bars=%d reached; shutting down", e.cfg.MaxBars)
+				stopReason = "MAX_BARS_REACHED"
+				log.Printf("max_bars=%d reached; stop_reason=%s; shutting down", e.cfg.MaxBars, stopReason)
 				srcCancel()
 				dispatching = false
 			}
@@ -161,6 +182,7 @@ func (e *Engine) Run(ctx context.Context, source LiveSource) error {
 		_ = e.parts[g].CloseWriter()
 	}
 	e.printShutdown(source)
+	log.Printf("SHUTDOWN stop_reason=%s", stopReason)
 	if e.mongo != nil {
 		_ = e.mongo.Close(context.Background())
 		e.mongo = nil
@@ -169,6 +191,18 @@ func (e *Engine) Run(ctx context.Context, source LiveSource) error {
 		return srcErr
 	}
 	return nil
+}
+
+func allSymbolsReached(counts map[string]uint64, target uint64) bool {
+	if target == 0 || len(counts) == 0 {
+		return false
+	}
+	for _, count := range counts {
+		if count < target {
+			return false
+		}
+	}
+	return true
 }
 
 func (e *Engine) dispatch(ctx context.Context, obs types.Observation) error {
@@ -188,6 +222,9 @@ func (e *Engine) printMetrics(source LiveSource) {
 	log.Printf("ALPACA state=%s last_error=%q heartbeat_misses=%d last_pong_rtt=%s", h.State, h.LastError, h.HeartbeatMisses, h.LastPongRTT)
 	reg, dup, latest := e.seq.Stats()
 	log.Printf("SEQUENCE source_time_regressions=%d duplicate_arrivals=%d latest=%v", reg, dup, latest)
+	minimum, maximum, at63, at72, at90, at120 := readinessSummary(e.cfg.SubscribeSymbols, latest)
+	log.Printf("PHASE_READINESS symbols=%d min=%d max=%d at_least_63=%d at_least_72=%d at_least_90=%d at_least_120=%d",
+		len(e.cfg.SubscribeSymbols), minimum, maximum, at63, at72, at90, at120)
 	for _, g := range e.cfg.SelectedGroups {
 		p := e.parts[g]
 		acc, per, crit := p.Counts()
@@ -201,6 +238,31 @@ func (e *Engine) printMetrics(source LiveSource) {
 		ms := p.MongoSnapshot()
 		log.Printf("MONGO %s attempted=%d persisted=%d failed=%d pending=%d", g, ms.Attempted, ms.Persisted, ms.Failed, ms.Pending)
 	}
+}
+
+func readinessSummary(symbols []string, counts map[string]uint64) (minimum, maximum uint64, at63, at72, at90, at120 int) {
+	if len(symbols) == 0 {
+		return 0, 0, 0, 0, 0, 0
+	}
+	minimum = ^uint64(0)
+	for _, symbol := range symbols {
+		count := counts[symbol]
+		minimum = min(minimum, count)
+		maximum = max(maximum, count)
+		if count >= 63 {
+			at63++
+		}
+		if count >= 72 {
+			at72++
+		}
+		if count >= 90 {
+			at90++
+		}
+		if count >= 120 {
+			at120++
+		}
+	}
+	return minimum, maximum, at63, at72, at90, at120
 }
 
 func (e *Engine) printShutdown(source LiveSource) {

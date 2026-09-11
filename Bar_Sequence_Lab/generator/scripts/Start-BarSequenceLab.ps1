@@ -26,6 +26,9 @@ param(
 
     [int]$MaxBars = 0,
 
+    [ValidateRange(0, [int]::MaxValue)]
+    [int]$TargetBarsPerSymbol = 0,
+
     [string]$Duration = "",
 
     [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
@@ -51,6 +54,8 @@ Options:
   -Feed iex|test     Alpaca feed (default test)
   -DataDir <path>    JSONL output root (default data)
   -MaxBars <n>       Stop after n accepted bars (0 = unlimited)
+    -TargetBarsPerSymbol <n>
+                                         Stop when every configured symbol reaches n accepted bars (0 = disabled)
   -Duration <dur>    Go duration, e.g. 2m (optional)
 
 Examples:
@@ -109,6 +114,7 @@ $env:BAR_SEQ_LAB_FEED = $Feed
 $env:BAR_SEQ_LAB_DATA_DIR = $DataDir
 $env:BAR_SEQ_LAB_SELECTED_GROUPS = ($selected -join ",")
 $env:BAR_SEQ_LAB_MAX_BARS = "$MaxBars"
+$env:BAR_SEQ_LAB_TARGET_BARS_PER_SYMBOL = "$TargetBarsPerSymbol"
 if ($Duration) {
     $env:BAR_SEQ_LAB_DURATION = $Duration
 }
@@ -122,7 +128,7 @@ if ($mongoOn -match '^(1|true|yes|on)$') {
 Write-Host "Does not print credentials. Does not start Fin_FeedSat_1."
 
 if ($env:BAR_SEQ_LAB_PARSE_ONLY -eq "1") {
-    Write-Host "PARSE_OK feed=$Feed groups=$($selected -join ',') data_dir=$DataDir max_bars=$MaxBars duration=$Duration"
+    Write-Host "PARSE_OK feed=$Feed groups=$($selected -join ',') data_dir=$DataDir max_bars=$MaxBars target_bars_per_symbol=$TargetBarsPerSymbol duration=$Duration"
     exit 0
 }
 

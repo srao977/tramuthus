@@ -26,27 +26,28 @@ const (
 )
 
 type Config struct {
-	Feed              string
-	StreamURL         string
-	APIKey            string
-	APISecret         string
-	DataDir           string
-	SelectedGroups    []string
-	GroupA            []string
-	GroupB            []string
-	GroupC            []string
-	SymbolToPartition map[string]string
-	SubscribeSymbols  []string
-	BufferCapacity    int
-	FlushCount        int
-	FlushInterval     time.Duration
-	MetricsInterval   time.Duration
-	MaxBars           int
-	Duration          time.Duration
-	MongoEnabled      bool
-	MongoURI          string
-	MongoDB           string
-	MongoCollection   string
+	Feed                string
+	StreamURL           string
+	APIKey              string
+	APISecret           string
+	DataDir             string
+	SelectedGroups      []string
+	GroupA              []string
+	GroupB              []string
+	GroupC              []string
+	SymbolToPartition   map[string]string
+	SubscribeSymbols    []string
+	BufferCapacity      int
+	FlushCount          int
+	FlushInterval       time.Duration
+	MetricsInterval     time.Duration
+	MaxBars             int
+	TargetBarsPerSymbol int
+	Duration            time.Duration
+	MongoEnabled        bool
+	MongoURI            string
+	MongoDB             string
+	MongoCollection     string
 }
 
 func Load() (Config, error) {
@@ -68,25 +69,26 @@ func Load() (Config, error) {
 	groupC := splitSymbols(environmentOrDefault("BAR_SEQ_LAB_GROUP_C", defaultGroupC(feed)))
 
 	cfg := Config{
-		Feed:            feed,
-		StreamURL:       streamURL(feed),
-		APIKey:          trimCredential(firstEnv("ALPACA_API_KEY")),
-		APISecret:       trimCredential(firstEnv("ALPACA_API_SECRET", "ALPACA_SECRET_KEY")),
-		DataDir:         environmentOrDefault("BAR_SEQ_LAB_DATA_DIR", "data"),
-		SelectedGroups:  selected,
-		GroupA:          groupA,
-		GroupB:          groupB,
-		GroupC:          groupC,
-		BufferCapacity:  envInt("BAR_SEQ_LAB_BUFFER_CAP", DefaultBufferCap),
-		FlushCount:      envInt("BAR_SEQ_LAB_FLUSH_COUNT", DefaultFlushCount),
-		FlushInterval:   envDuration("BAR_SEQ_LAB_FLUSH_INTERVAL", DefaultFlushTime),
-		MetricsInterval: envDuration("BAR_SEQ_LAB_METRICS_INTERVAL", DefaultMetricsEvery),
-		MaxBars:         envInt("BAR_SEQ_LAB_MAX_BARS", 0),
-		Duration:        envDuration("BAR_SEQ_LAB_DURATION", 0),
-		MongoEnabled:    envBool("BAR_SEQ_LAB_MONGO_ENABLED", false),
-		MongoURI:        strings.TrimSpace(os.Getenv("BAR_SEQ_LAB_MONGO_URI")),
-		MongoDB:         strings.TrimSpace(os.Getenv("BAR_SEQ_LAB_MONGO_DB")),
-		MongoCollection: environmentOrDefault("BAR_SEQ_LAB_MONGO_COLLECTION", "bar_sequence"),
+		Feed:                feed,
+		StreamURL:           streamURL(feed),
+		APIKey:              trimCredential(firstEnv("ALPACA_API_KEY")),
+		APISecret:           trimCredential(firstEnv("ALPACA_API_SECRET", "ALPACA_SECRET_KEY")),
+		DataDir:             environmentOrDefault("BAR_SEQ_LAB_DATA_DIR", "data"),
+		SelectedGroups:      selected,
+		GroupA:              groupA,
+		GroupB:              groupB,
+		GroupC:              groupC,
+		BufferCapacity:      envInt("BAR_SEQ_LAB_BUFFER_CAP", DefaultBufferCap),
+		FlushCount:          envInt("BAR_SEQ_LAB_FLUSH_COUNT", DefaultFlushCount),
+		FlushInterval:       envDuration("BAR_SEQ_LAB_FLUSH_INTERVAL", DefaultFlushTime),
+		MetricsInterval:     envDuration("BAR_SEQ_LAB_METRICS_INTERVAL", DefaultMetricsEvery),
+		MaxBars:             envInt("BAR_SEQ_LAB_MAX_BARS", 0),
+		TargetBarsPerSymbol: envInt("BAR_SEQ_LAB_TARGET_BARS_PER_SYMBOL", 0),
+		Duration:            envDuration("BAR_SEQ_LAB_DURATION", 0),
+		MongoEnabled:        envBool("BAR_SEQ_LAB_MONGO_ENABLED", false),
+		MongoURI:            strings.TrimSpace(os.Getenv("BAR_SEQ_LAB_MONGO_URI")),
+		MongoDB:             strings.TrimSpace(os.Getenv("BAR_SEQ_LAB_MONGO_DB")),
+		MongoCollection:     environmentOrDefault("BAR_SEQ_LAB_MONGO_COLLECTION", "bar_sequence"),
 	}
 	if cfg.BufferCapacity <= 0 {
 		return Config{}, fmt.Errorf("BAR_SEQ_LAB_BUFFER_CAP must be > 0")
@@ -96,6 +98,12 @@ func Load() (Config, error) {
 	}
 	if cfg.FlushInterval <= 0 {
 		return Config{}, fmt.Errorf("BAR_SEQ_LAB_FLUSH_INTERVAL must be > 0")
+	}
+	if cfg.MaxBars < 0 {
+		return Config{}, fmt.Errorf("BAR_SEQ_LAB_MAX_BARS must be >= 0")
+	}
+	if cfg.TargetBarsPerSymbol < 0 {
+		return Config{}, fmt.Errorf("BAR_SEQ_LAB_TARGET_BARS_PER_SYMBOL must be >= 0")
 	}
 	if cfg.APIKey == "" || cfg.APISecret == "" {
 		return Config{}, fmt.Errorf("ALPACA_API_KEY and ALPACA_API_SECRET (or ALPACA_SECRET_KEY) are required")
@@ -211,6 +219,7 @@ func StartupLines(cfg Config) []string {
 	lines = append(lines,
 		fmt.Sprintf("buffer_capacity=%d (A1-A3/B1-B3/C1-C3 as selected)", cfg.BufferCapacity),
 		fmt.Sprintf("flush_count=%d flush_interval=%s", cfg.FlushCount, cfg.FlushInterval),
+		fmt.Sprintf("max_bars=%d target_bars_per_symbol=%d duration=%s duration_basis=engine_dispatch_start", cfg.MaxBars, cfg.TargetBarsPerSymbol, cfg.Duration),
 		"dropped_valid target=0",
 	)
 	return lines

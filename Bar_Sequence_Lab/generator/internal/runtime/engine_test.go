@@ -34,6 +34,26 @@ func (f fakeSource) Health() alpaca.Health {
 	return alpaca.Health{State: "healthy"}
 }
 
+type blockingSource struct {
+	bars []types.Observation
+}
+
+func (source blockingSource) Run(ctx context.Context, symbols []string, out chan<- types.Observation) error {
+	for _, bar := range source.bars {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case out <- bar:
+		}
+	}
+	<-ctx.Done()
+	return ctx.Err()
+}
+
+func (blockingSource) Health() alpaca.Health {
+	return alpaca.Health{State: "healthy"}
+}
+
 func testCfg(t *testing.T, groups []string, mapping map[string]string, subscribe []string) config.Config {
 	t.Helper()
 	return config.Config{
@@ -118,6 +138,53 @@ func TestIndependentPersistenceProgress(t *testing.T) {
 	b := countLines(t, filepath.Join(cfg.DataDir, eng.runID, "partition_B.jsonl"))
 	if a != 5 || b != 5 {
 		t.Fatalf("independent persist A=%d B=%d", a, b)
+	}
+}
+
+func TestTargetBarsPerSymbolWaitsForEveryConfiguredSymbol(t *testing.T) {
+	t0 := time.Now().UTC()
+	cfg := testCfg(t, []string{"A", "B"}, map[string]string{"AAPL": "A", "MSFT": "B"}, []string{"AAPL", "MSFT"})
+	cfg.TargetBarsPerSymbol = 2
+	eng, err := NewEngine(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := blockingSource{bars: []types.Observation{
+		obs("AAPL", t0),
+		obs("AAPL", t0.Add(time.Minute)),
+		obs("AAPL", t0.Add(2*time.Minute)),
+		obs("MSFT", t0),
+		obs("MSFT", t0.Add(time.Minute)),
+	}}
+	if err := eng.Run(context.Background(), src); err != nil {
+		t.Fatal(err)
+	}
+	if got := countLines(t, filepath.Join(cfg.DataDir, eng.runID, "partition_A.jsonl")); got != 3 {
+		t.Fatalf("A lines=%d, want 3 while waiting for MSFT", got)
+	}
+	if got := countLines(t, filepath.Join(cfg.DataDir, eng.runID, "partition_B.jsonl")); got != 2 {
+		t.Fatalf("B lines=%d, want 2 at all-symbol target", got)
+	}
+}
+
+func TestAllSymbolsReached(t *testing.T) {
+	counts := map[string]uint64{"AAPL": 120, "MSFT": 119}
+	if allSymbolsReached(counts, 120) {
+		t.Fatal("one symbol below target must not stop the run")
+	}
+	counts["MSFT"] = 120
+	if !allSymbolsReached(counts, 120) {
+		t.Fatal("all symbols at target must stop the run")
+	}
+}
+
+func TestReadinessSummaryIncludesZeroCountSymbols(t *testing.T) {
+	minimum, maximum, at63, at72, at90, at120 := readinessSummary(
+		[]string{"AAPL", "MSFT", "NVDA"},
+		map[string]uint64{"AAPL": 120, "MSFT": 72},
+	)
+	if minimum != 0 || maximum != 120 || at63 != 2 || at72 != 2 || at90 != 1 || at120 != 1 {
+		t.Fatalf("summary min=%d max=%d >=63=%d >=72=%d >=90=%d >=120=%d", minimum, maximum, at63, at72, at90, at120)
 	}
 }
 
