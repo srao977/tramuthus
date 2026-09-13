@@ -5,8 +5,8 @@
 | Filename | `DSE_JEH_TRANS_SAT_1_SYSTEM_DESIGN_V0_1_091226.md` |
 | Date | 2026-09-12 |
 | Version | V0.1 |
-| Status | PROPOSED FOR HUMAN REVIEW |
-| Implementation status | NOT YET AUTHORIZED |
+| Status | APPROVED |
+| Implementation status | PHASE 1 IMPLEMENTED - PENDING HUMAN REVIEW |
 | Architectural identity | `DSE_JEH_TransSat_1` |
 | Physical documentation location | `DSE_JEH/docs` |
 | Relationship to `DSE_JEH_provers` | Experimental proving and regression apparatus; not a TransSat and not operational runtime code |
@@ -210,7 +210,9 @@ Malformed input, missing prerequisites, or an unobservable phase MUST produce ex
 
 ## 7. BarEvent Semantics and Ordering
 
-The fundamental event is **NEW ACCEPTED BAR FOR ENTITY S**. Required bar fields and the exact contract remain open, but identity, entity, values required by the solver, event/provenance times, source, entity-scoped order, and deterministic evidence identity must be representable.
+The fundamental event is **NEW ACCEPTED BAR FOR ENTITY S**. The JEH mathematics requires only finite `high` and `low` values to derive Median Price. Open, close, volume, timestamps, interval, and provider fields are not solver inputs. The common event still requires separately approved typed identity, ordering, provenance, and validation fields; those concerns MUST NOT be inferred from the mathematical minimum.
+
+Repository evidence establishes that an OFFLINE observation is identified at least by `(collection_run_id, symbol, generator_sequence_no)`. Its `generator_sequence_no` is scoped to one symbol within one collection run. The stored source also preserves source timestamp text, received and persisted times, payload hash, provider message type, and duplicate/regression indicators. ONLINE currently exposes both `symbol` and `instrument_id`, uses `(symbol, interval_start)` for deduplication, and supplies no accepted sequence or resume cursor. The canonical DSE_JEH entity identity and cross-mode source-observation identity therefore remain human decisions.
 
 Bars can arrive asynchronously:
 
@@ -220,9 +222,11 @@ AAPL, AAPL, NVDA, SPY, AAPL, QQQ, NVDA
 
 There is no required synchronized 30-symbol frame. `generator_sequence_no` represents accepted arrival order for one entity and is not a global market clock. The universe-level pipeline observes the latest valid state currently known for every entity.
 
-Common admission requires explicit policy for duplicates, conflicts, gaps, missing bars, and out-of-order bars. No policy may silently rewrite accepted history or fabricate bars. A cross-entity deterministic OFFLINE replay requires actual available event/provenance timestamps or other accepted-arrival evidence. If stored evidence cannot reconstruct a unique total arrival order, replay ordering is unresolved and MUST be declared in the validation configuration; bars MUST NOT be globally sorted by `generator_sequence_no`.
+Common admission requires explicit policy for duplicates, conflicts, gaps, missing bars, and out-of-order bars. No policy may silently rewrite accepted history or fabricate bars. These conditions can coexist and MUST NOT be collapsed into one mutually exclusive admission enum unless a precedence rule is approved. A terminal admission disposition and detected input conditions are distinct concepts. Rejected input MUST NOT mutate solver state.
 
-The exact `Fin_Feed_Sat_1` service and method binding is not established by this design and remains an interface-design question. ONLINE delivery semantics for ordering, duplicate and gap detection, dropped/lost bars, reconnect, recovery, resumption, provenance, backpressure, and consumer lag MUST be defined before implementation. The Dynamic Execution Pipeline MUST NOT silently continue across an undetected missing accepted bar if doing so could alter solver state, phase, crossover, state transition, ranking, or decision behavior.
+The stored OFFLINE evidence cannot reconstruct a unique source-authentic cross-entity total arrival order: partition writers persist concurrently, `received_time` can tie, and `persisted_time` can be batch-assigned. OFFLINE replay therefore preserves authoritative entity-scoped order and requires an explicit versioned deterministic replay-order policy that distinguishes replay order from source order. Bars MUST NOT be globally sorted by `generator_sequence_no`.
+
+The repository's current ONLINE candidate is `finfeedsat.v1.IngestionService.StreamBars(StreamBarsRequest) returns (stream Bar)`. Its implementation sends per-symbol chronological catch-up from process-local windows and then live accepted events, but does not provide a global order, accepted sequence, gap marker, resume cursor, or loss notification. Its bounded subscriber queue can discard the oldest queued bar for a slow consumer. Catch-up/live handoff can repeat a bar, and same-interval partial updates may be replaced or suppressed. These are observed interface semantics, not approval to bind DSE_JEH to that RPC. Ordering, finalized-bar meaning, duplicate/conflict handling, loss detection, reconnect/resumption, warm-up, backpressure, and lag policy MUST be approved or added upstream before ONLINE implementation. The Dynamic Execution Pipeline MUST NOT silently continue across an undetected missing accepted bar if doing so could alter solver state or evidence.
 
 ---
 
@@ -241,12 +245,18 @@ The current approved-reference behavior uses ordered median price, $P[n]=(High[n
 For the proven current configuration:
 
 - sequence 1..63: `INITIALIZING`;
-- sequence 64: first possible observable phase;
+- sequence 64: first possible observable and production-eligible phase;
 - all initializing bars are processed and advance analytical state;
 - unavailable phase is represented explicitly, never as 0 degrees; and
-- `phase_observable != strategy_execution_eligible`.
+- production eligibility permits a Phase Angle to enter future Dynamic Execution processing but does not itself authorize a strategy action.
 
 No valid strategy action may be generated from unobservable phase.
+
+### 8.1 Rule #1 - 63-Contiguous-Bar Eligibility
+
+Each symbol owns an independent causal bar sequence and JEH state. A symbol's first 63 admitted contiguous valid bars update JEH state and emit `INITIALIZING` without an eligible Phase Angle. The next valid contiguous bar, sequence 64, updates JEH state and may emit `OBSERVABLE`; its Phase Angle is then eligible to enter Dynamic Execution processing. Every later admitted contiguous bar follows the same observable path.
+
+Continuity is sequence integrity within the symbol's sequence scope, not elapsed wall-clock time. Irregular or long intervals between successive valid bars do not reset analytical history. Duplicate, conflicting, gapped, out-of-order, and invalid candidates retain their deterministic admission disposition and do not mutate JEH state. No missing bar is synthesized or interpolated. If causal sequence integrity is not restored, later candidates cannot advance the solver or regain production eligibility.
 
 ---
 
@@ -422,6 +432,8 @@ The host/startup layer reads `DSE_JEH_MODE` and selects one producer/input compo
 
 **ONLINE** maps bars from the `Fin_Feed_Sat_1` gRPC bar stream through an internal gRPC consumer into the common `BarEvent` boundary. The transport is not JEH mathematics, and the pipeline MUST NOT depend on Fin protobuf types or gRPC semantics. This design neither invents nor freezes a Fin service or protobuf contract.
 
+The inspected candidate binding is `finfeedsat.v1.IngestionService.StreamBars`; the request is `finfeedsat.v1.StreamBarsRequest` and the server-streamed response is `finfeedsat.v1.Bar`. The DSE_JEH adapter would require adapter-local identity mapping, sequencing/continuity validation, and duplicate handling. The candidate is not approved for binding because its current contract cannot expose queue loss, guarantee finalized bars, or resume from an acknowledged position.
+
 **OFFLINE** uses an internal stream producer to read `bar_sequence_db.bar_sequence` in an approved deterministic order and emit one stored observation at a time into the common `BarEvent` boundary. OFFLINE remains a stream, not a batch strategy processor. The producer MUST NOT calculate phase, phase motion, crossover, JEH strategy region, ranking, decisions, or `ExecutionIntent`, and MUST NOT invoke `phase_angle_series_generator`.
 
 For equivalent admitted bars and ordering, both modes execute identical solver, motion, crossover, state, universe, ranking, decision, and intent logic. Source provenance may differ; strategy behavior must not. A separate offline or backtest strategy implementation is prohibited. Optional future OFFLINE pacing is a producer/runtime concern and MUST NOT change bar interpretation or pipeline behavior.
@@ -443,7 +455,7 @@ flowchart TD
   DB --> O --> R --> E --> D --> M
 ```
 
-The OFFLINE producer must preserve entity-scoped `generator_sequence_no` and use established timestamp/provenance evidence for cross-entity order. If available fields cannot reconstruct a unique total accepted-arrival order, that limitation is an explicit open question and the chosen deterministic replay policy must be versioned. It is incorrect to treat equal sequence numbers as frames or sort all entities globally by `generator_sequence_no`.
+The OFFLINE producer must preserve entity-scoped `generator_sequence_no`. Available timestamp and persistence fields do not reconstruct a unique source-authentic total accepted-arrival order, so the chosen deterministic replay policy must be explicit, deterministic, versioned, and carried in replay/evidence configuration. It is incorrect to treat equal sequence numbers as frames or sort all entities globally by `generator_sequence_no`.
 
 Bars 1 through 63 for an entity still enter the pipeline and advance solver state. They are not discarded merely because phase is initializing.
 
@@ -467,7 +479,7 @@ flowchart TD
   DB --> REP --> BAR --> DEP --> RUN --> CMP
 ```
 
-For matching observations, runtime phase behavior should equal the approved reference behavior by entity/symbol, collection run or equivalent source lineage, `generator_sequence_no`, solver identity/version, and input-series definition. Exact numeric tolerance/precision remains open. Required mathematical equivalence does not imply code reuse.
+For matching observations, runtime phase behavior should equal the approved reference behavior by entity/symbol, collection run or equivalent source lineage, `generator_sequence_no`, solver identity/version, and input-series definition. The current reference test uses absolute tolerance `1e-9`; that is repository evidence, not an approved DSE_JEH production tolerance. Exact DSE_JEH numeric tolerance/precision remains open. Required mathematical equivalence does not imply code reuse.
 
 The existing phase CSV and `DSE_JEH_provers` remain regression/reference evidence for `precomputed PhaseEvidence -> zone/transition` behavior. They are not the runtime input architecture and are not discarded or promoted as the runtime.
 
@@ -572,27 +584,41 @@ Promotion requires explicit acceptance criteria. The dataset and existing prover
 
 ## 22. Open Questions and Blocking Decisions
 
-No answer is invented where evidence does not yet exist.
+No answer is invented where evidence does not yet exist. `RESOLVED` below closes the design question stated, not implementation authorization.
 
-1. What is the exact common internal `BarEvent` contract?
-2. What exact existing `Fin_Feed_Sat_1` gRPC service, method, and bar contract bind to the ONLINE consumer?
-3. What bar-ordering guarantees does the ONLINE stream provide?
-4. What are the ONLINE duplicate identity and delivery semantics?
-5. How does ONLINE detect gaps and dropped/lost accepted bars?
-6. What reconnect and resumption semantics does ONLINE provide?
-7. What backpressure and consumer-lag behavior is required ONLINE?
-8. What recovery and warm-up behavior applies after ONLINE interruption?
-9. What deterministic cross-entity OFFLINE order can available provenance support?
-10. Is configurable OFFLINE replay pacing needed, and how is it kept outside strategy semantics?
-11. What proves ONLINE/OFFLINE semantic equivalence for matching admitted bars and ordering?
-12. How are source and provenance identities represented consistently across modes?
-13. How is solver warm-up handled when ONLINE starts?
-14. Are historical bars required to prime a newly started ONLINE solver?
-15. What happens when ONLINE starts without sufficient phase history?
-16. What minimum bar fields does the JEH solver require?
-17. What bounded representation is sufficient for solver state?
-18. What establishes exact solver equivalence with `phase_angle_series_generator`?
-19. What numeric tolerance and precision apply to phase equivalence?
+### 22.1 Phase 1 contract decision register
+
+| OQ | Classification | Decision, evidence, and reason | Initial proto consequence |
+| --- | --- | --- | --- |
+| OQ 1 | REQUIRES HUMAN DECISION | The mathematical minimum and OFFLINE identity are evidenced, but canonical entity identity, cross-mode observation identity, optionality, timestamp representation, and admission shape are not approved. | **BLOCKER:** do not freeze `BarEvent`, `SourceProvenance`, or admission evidence. |
+| OQ 2 | REQUIRES HUMAN DECISION | Repository evidence identifies `finfeedsat.v1.IngestionService.StreamBars(StreamBarsRequest) returns (stream Bar)`. Existing code establishes only candidate behavior; approval must determine whether DSE_JEH binds it or requires an upstream revision. | Does not require Fin types in the DSE proto; blocks an approved ONLINE mapping. |
+| OQ 3 | REQUIRES HUMAN DECISION | Current code provides chronological catch-up within each symbol, separate symbol traversal, then live delivery. It provides no global order or accepted sequence. | Define order scope independently; do not claim stronger ONLINE ordering. |
+| OQ 4 | REQUIRES HUMAN DECISION | Fin deduplicates by `(symbol, interval_start)`, may replace/suppress partials, and can repeat a bar across catch-up/live handoff. DSE_JEH duplicate identity and handling are not approved. | **BLOCKER:** duplicate/conflict findings and disposition cannot be frozen. |
+| OQ 5 | REQUIRES HUMAN DECISION | The stream carries no predecessor sequence, gap marker, or slow-consumer loss notification. | **BLOCKER:** continuity claims require an upstream contract or approved fail-closed adapter policy. |
+| OQ 6 | REQUIRES HUMAN DECISION | No resume token or cursor exists; reconnect creates a new subscription over current process-local windows. | Resume fields MUST NOT be invented; recovery remains blocked. |
+| OQ 7 | REQUIRES HUMAN DECISION | Current subscriber queues are bounded and lossy, dropping the oldest queued bar before retrying the newest. | **BLOCKER:** approve loss/backpressure behavior before ONLINE analytical use. |
+| OQ 8 | REQUIRES HUMAN DECISION | Current catch-up may help prime from a retained window, but restart, loss, duplicates, and state compatibility are not guaranteed. | Recovery/warm-up fields remain undefined. |
+| OQ 9 | REQUIRES HUMAN DECISION | Repository evidence proves no unique source-authentic cross-entity total order. Entity-local `(collection_run_id, symbol, generator_sequence_no)` order is authoritative; a versioned deterministic replay policy must be selected. | **BLOCKER:** represent entity order now only after replay-policy identity and evidence placement are approved. |
+| OQ 10 | DEFERRED - NOT REQUIRED FOR INITIAL PHASE 1 PROTO | Pacing is producer control and cannot alter event semantics. No current evidence requires it. | Omit pacing declarations. |
+| OQ 11 | RESOLVED BY EXISTING SYSTEM DESIGN | Equivalence compares outputs for the same admitted bars and order under the same solver/configuration/initial state and causal lineage. | Evidence must support typed joins; exact acceptance tolerance remains OQ 19. |
+| OQ 12 | REQUIRES HUMAN DECISION | OFFLINE and ONLINE expose different identity schemes; source identity, runtime identity, evidence identity, entity identity, and order-policy identity must remain distinct. | **BLOCKER:** `SourceProvenance` identity fields cannot be frozen. |
+| OQ 13 | REQUIRES HUMAN DECISION | A current Fin subscriber can receive a retained per-symbol window, but this is not a guaranteed compatible warm-up contract. | No warm-up source declaration is approved. |
+| OQ 14 | RESOLVED BY EXISTING SYSTEM DESIGN | A fresh solver requires 63 ordered observations before observation 64 can first expose phase, unless compatible state restoration is separately approved. | Initialization count belongs in solver identity/configuration, not an availability sentinel. |
+| OQ 15 | RESOLVED BY EXISTING SYSTEM DESIGN | Insufficient history yields explicit `INITIALIZING`; each admitted bar advances state and no strategy action is allowed. | `PhaseStatus` requires `UNSPECIFIED`, `INITIALIZING`, and `OBSERVABLE`; phase value requires presence. |
+| OQ 16 | RESOLVED FROM REPOSITORY EVIDENCE | `phase.go` computes Median Price solely from finite `High` and `Low`: `P[n]=(High[n]+Low[n])/2`. Other bar fields are provenance/admission concerns, not JEH inputs. | Solver-value fields are `high` and `low`; this does not resolve the complete `BarEvent`. |
+| OQ 17 | DEFERRED - NOT REQUIRED FOR INITIAL PHASE 1 PROTO | `phase.go` demonstrates bounded recurrence state, but checkpoint serialization is not approved and need not cross the initial contract. | Keep solver state internal; add no checkpoint message. |
+| OQ 18 | RESOLVED FROM REPOSITORY EVIDENCE | The scientific definition, `phase.go`, and frozen vectors in `phase_test.go` establish the independent TA-Lib-compatible equivalence basis and exact current mathematics. | `SolverIdentity` must distinguish family/name, version, algorithm/reference version, input series, initialization requirement, and configuration identity; build identity belongs on production evidence if approved. |
+| OQ 19 | REQUIRES HUMAN DECISION | The reference test uses absolute tolerance `1e-9`, but no DSE_JEH production precision/tolerance is approved. | Does not require a tolerance field in analytical evidence; blocks final equivalence acceptance. |
+| OQ 31 | REQUIRES HUMAN DECISION | OFFLINE entity-sequence gaps are detectable; ONLINE gaps are not reliably detectable. The reference processor tolerates gaps, which is not authority for runtime admission. | **BLOCKER:** missing-predecessor finding and terminal effect are not approved. |
+| OQ 32 | REQUIRES HUMAN DECISION | Generator, Fin, and prover behaviors differ for exact and conflicting duplicates. No DSE_JEH policy controls. | **BLOCKER:** duplicate/conflict identity, findings, and mutation rules are not fully defined beyond rejected input not mutating state. |
+| OQ 33 | REQUIRES HUMAN DECISION | Generator preserves source-time regressions, Fin inserts/replaces chronologically, and the prover rejects non-increasing new positions. | **BLOCKER:** out-of-order finding and disposition are not approved. |
+| OQ 45 | DEFERRED - NOT REQUIRED FOR INITIAL PHASE 1 PROTO | Checkpoint storage, compatibility, restart, and reconciliation mechanisms are not approved. | Omit checkpoint/recovery declarations; fresh initialization remains valid. |
+| OQ 46 | DEFERRED - NOT REQUIRED FOR INITIAL PHASE 1 PROTO | DSE_JEH durability, retention, and publication boundaries are not approved. | Define no persistence API or service. |
+| OQ 49 | DEFERRED - NOT REQUIRED FOR INITIAL PHASE 1 PROTO | The design identifies health dimensions but no lifecycle state machine or external operations consumer. | Omit `RuntimeStatus`, `RuntimeHealthEvidence`, and operations service/RPC. |
+| OQ 50 | DEFERRED - NOT REQUIRED FOR INITIAL PHASE 1 PROTO | Promotion criteria require later validated OFFLINE evidence and safe ONLINE delivery semantics. | No promotion declaration belongs in the proto. |
+
+### 22.2 Phase 2 open questions preserved unchanged
+
 20. What is the exact signed circular $\Delta\phi$ definition, including tie behavior?
 21. What is the exact Phase Velocity ($\omega$) definition in degrees per bar?
 22. Does $\omega$ use one-bar or multi-bar estimation?
@@ -604,9 +630,6 @@ No answer is invented where evidence does not yet exist.
 28. What are robust 360/0 crossover semantics?
 29. How is reverse phase movement interpreted and processed?
 30. How are large or abnormal phase jumps classified?
-31. How are missing bars detected and handled after the common boundary?
-32. How are exact duplicate and conflicting bars identified and handled?
-33. How are out-of-order bars handled without rewriting accepted history?
 34. How is entity-state staleness measured and exposed?
 35. What are universe snapshot semantics under asynchronous arrivals?
 36. What candidate ranking mathematics, tie-breaking, and validity rules are approved?
@@ -618,12 +641,12 @@ No answer is invented where evidence does not yet exist.
 42. What atomicity and reconciliation govern liquidation-before-allocation sequencing?
 43. What are mock execution acceptance, rejection, fill, latency, and failure semantics?
 44. Is a trailing-stop policy part of V0.1, and what mathematics would govern it?
-45. What are recovery, checkpoint, compatibility, and intent-reconciliation semantics?
-46. Which evidence requires persistence, at what durability and retention?
 47. What is the exact versioned `ExecutionIntent` contract?
 48. What is the exact versioned `ExecutionEvent` contract?
-49. What runtime health, lifecycle, readiness, and degradation model applies?
-50. What acceptance criteria permit promotion from 4,519-bar OFFLINE proving to ONLINE feed testing?
+
+### 22.3 Stage A proto gate
+
+**PASSED BY EXPLICIT HUMAN IMPLEMENTATION DIRECTION ON 2026-09-12.** Phase 1 uses normalized symbol as canonical entity identity; typed source provenance keeps ONLINE and OFFLINE observation identities distinct; OFFLINE replay uses versioned `(collection_run_id, symbol, generator_sequence_no, payload_hash)` ordering; and admission conservatively rejects invalid, duplicate, conflicting, missing-predecessor, and out-of-order candidates without mutating solver state. ONLINE binds the current `finfeedsat.v1.IngestionService.StreamBars` contract with bounded reconnect and documents the upstream continuity limitations. These deterministic implementation choices do not claim stronger upstream guarantees or resolve Phase 2 semantics.
 
 ---
 
@@ -666,13 +689,15 @@ This revision does not authorize or perform:
 | V0.1 | 2026-09-12 | Initial proposed system design for `DSE_JEH_TransSat_1`. |
 | V0.1 pre-approval revision | 2026-09-12 | Revised in place before approval to establish the Dynamic Execution Pipeline as the central inner decision engine; make `BarEvent` the common engine input; place JEH/Ehlers phase calculation, event-driven crossover processing, phase-motion analysis, four-region rules, universe state, and ranking inside the V0.1 runtime; and retain `phase_angle_series_generator` as an independent analytical reference. Refined before approval to establish two V0.1 bar-stream modes selected by proposed `DSE_JEH_MODE`: ONLINE through an internal `Fin_Feed_Sat_1` gRPC bar consumer and OFFLINE through an internal stream producer reading the verified 4,519-bar `bar_sequence` collection. Both modes converge at common `BarEvent` admission and use identical Dynamic Execution Pipeline behavior; DSE_JEH consumes bar streams rather than databases; ONLINE delivery semantics remain open interface-design questions. |
 | V0.1 terminology refinement | 2026-09-12 | Aligned the Dynamic Execution Pipeline with the supplied Hop On Hop Off strategy artifact: established `DISREGARD`, `ALLOCATE`, `HOLD & TRAIL`, and `LIQUIDATE` as the four canonical persistent strategy region/action terms; defined `HOP-ON` and `HOP-OFF` as 270° and 90° crossover events rather than states; retained Phase Velocity ($\omega$) as the intended ranking quantity; and preserved unresolved crossover, velocity, ranking, trailing-stop, and capital-allocation mathematics. |
+| V0.1 Phase 1 contract review | 2026-09-12 | Recorded repository evidence for source contracts, ordering, JEH inputs, and ONLINE delivery; classified Phase 1 OQs; and held the initial proto at the Stage A gate pending approved identity, provenance, admission, replay-order, and ONLINE continuity decisions. |
+| V0.1 Phase 1 implementation authorization | 2026-09-12 | Human direction authorized deterministic Phase 1 implementation choices, the single authoritative proto, generated bindings, ONLINE and OFFLINE adapters, common admission, JEH analytical processing, executable validation, and reports while preserving all Phase 2 boundaries. |
 
 ---
 
 ## 26. Authorization Statement
 
-This document is **PROPOSED FOR HUMAN REVIEW**.
+This document is **APPROVED** as the Phase 1 architectural authority.
 
-**Implementation remains NOT YET AUTHORIZED.**
+**Phase 1 is implemented and pending human review of validation evidence.**
 
-Approval of this document would authorize only separately governed follow-on design and validation planning. It would not authorize source code, protobuf creation, replay execution, persistence implementation, execution integration, deployment, or trading.
+This approval and the explicit 2026-09-12 implementation direction authorize Phase 1 contract, runtime, test, replay-validation, and reporting work only. They do not authorize Phase 2 implementation, deployment, execution integration, or trading.

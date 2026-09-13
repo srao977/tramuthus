@@ -7,8 +7,8 @@
 | Filename | `DSE_JEH_TRANS_SAT_1_IMPLEMENTATION_PLAN_V0_1_091226.md` |
 | Date | 2026-09-12 |
 | Version | V0.1 |
-| Status | PROPOSED FOR HUMAN REVIEW |
-| Implementation status | NOT YET AUTHORIZED |
+| Status | APPROVED |
+| Implementation status | PHASE 1 IMPLEMENTED - PENDING HUMAN REVIEW |
 | Architectural authority | `DSE_JEH_TRANS_SAT_1_SYSTEM_DESIGN_V0_1_091226.md` |
 | Scope | Implementation planning for `DSE_JEH_TransSat_1` |
 
@@ -129,16 +129,16 @@ These implementation phases do not replace the System Design's DEP-01 through DE
 
 ## 6. Single Authoritative Proto Strategy
 
-### 6.1 Proposed physical contract
+### 6.1 Reviewed physical contract
 
-Repository convention in `Fin_FeedSat_1` uses Buf v2, proto sources under `api/proto/<package>/v1`, source-relative Go/gRPC generation into `gen`, and a single evolving proto for that runtime. Following that convention, this plan proposes:
+Repository convention in `Fin_FeedSat_1` uses Buf v2, proto sources under `api/proto/<package>/v1`, source-relative Go/gRPC generation into `gen`, and a single evolving proto for that runtime. Human review on 2026-09-12 approved the planned physical path and package below. This approval does not pass the System Design §22.3 contract gate or authorize proto creation.
 
-| Item | Proposed value | Governance |
+| Item | Reviewed value | Governance |
 | --- | --- | --- |
-| Sole proto source | `DSE_JEH/api/proto/dse_jeh/v1/DSE_JEH_TransSat_1.proto` | Exact filename and package require human approval before creation |
-| Proto package | `dsejeh.v1` | Human approval required |
-| Proposed Go module | `tramuthus/dse-jeh-transsat-1` rooted at `DSE_JEH` | Confirm before `go.mod` creation |
-| Proposed `go_package` | `tramuthus/dse-jeh-transsat-1/gen/dse_jeh/v1;dsejehv1` | Confirm with module decision |
+| Sole proto source | `DSE_JEH/api/proto/dse_jeh/v1/DSE_JEH_TransSat_1.proto` | Approved planning value; creation blocked by System Design §22.3 |
+| Proto package | `dsejeh.v1` | Approved planning value; creation blocked by System Design §22.3 |
+| Proposed Go module | `tramuthus/dse-jeh-transsat-1` rooted at `DSE_JEH` | Deferred until Go implementation authorization |
+| Proposed `go_package` | `tramuthus/dse-jeh-transsat-1/gen/dse_jeh/v1;dsejehv1` | Approved planning value contingent on the future module decision |
 | Buf module config | `DSE_JEH/buf.yaml` | Match repository Buf v2 convention |
 | Generation config | `DSE_JEH/buf.gen.yaml` | Go and gRPC plugins, source-relative paths |
 | Generated output | `DSE_JEH/gen/dse_jeh/v1` | Confirm generated-code commit policy before generation |
@@ -147,7 +147,7 @@ No other DSE_JEH proto is planned. Phase 1 creates the approved initial declarat
 
 ### 6.2 Service boundary policy
 
-The upstream ONLINE contract is owned by `Fin_Feed_Sat_1`; repository evidence currently shows `finfeedsat.v1.IngestionService.StreamBars`, but binding it is blocked by OQ 2-8 and requires interface review. DSE_JEH MUST import/map only the approved upstream contract at its transport adapter and MUST NOT copy the upstream bar message into its own proto as an ersatz transport API.
+The upstream ONLINE contract is owned by `Fin_Feed_Sat_1`. Repository evidence establishes the current candidate as `finfeedsat.v1.IngestionService.StreamBars(StreamBarsRequest) returns (stream Bar)`, but binding it is blocked by OQ 2-8 and requires interface review. Its current implementation does not expose accepted sequence, detectable queue loss, finalized-bar guarantee, or resumable position. DSE_JEH MUST import/map only an approved upstream contract at its transport adapter and MUST NOT copy the upstream bar message into its own proto as an ersatz transport API.
 
 A DSE_JEH service belongs in the proto only if a genuine process boundary is approved, such as governed evidence publication, health/readiness access, or external execution-intent exchange. The JEH Phase Solver, Phase Motion Analyzer, Boundary Crossover Detector, Strategy Region / Rules Engine, Universe State Coordinator, and Candidate Ranking Engine are expected to be ordinary in-process Go components. Their evidence may be governed proto messages without making each component a gRPC service.
 
@@ -155,24 +155,21 @@ A DSE_JEH service belongs in the proto only if a genuine process boundary is app
 
 ## 7. Proto-First Development Workflow
 
-### 7.1 Proposed proto artifact plan
+### 7.1 Reviewed proto artifact plan
 
-Names below are proposals for human review, not approved contracts.
+Names below are planning outcomes from System Design §22. Required declarations remain blocked until their complete semantics are approved. Deferred declarations are omitted from the initial Phase 1 proto rather than guessed.
 
 | Phase | Kind | Proposed name | Purpose | System Design authority | Contract role | Blocking OQ | Approval |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | ENUM | `RuntimeMode` | Represent ONLINE/OFFLINE in governed configuration evidence | §14 Online and Offline Stream Modes | Governed configuration | None; values fixed by design | Required |
-| 1 | ENUM | `PhaseStatus` | Distinguish unspecified, initializing, observable, and invalid states without a numeric sentinel | §8 Phase Calculation Inside V0.1; DEP-04 | Governed evidence | OQ 1, 19 | Required |
-| 1 | ENUM | `BarAdmissionStatus` | Record admitted, duplicate, conflict, gap, out-of-order, or rejected disposition | §7 BarEvent Semantics and Ordering; DEP-01 | Governed evidence | OQ 1, 3-8, 31-33 | Required |
-| 1 | ENUM | `RuntimeStatus` | Runtime lifecycle/readiness/degradation vocabulary | §19 Portability, Persistence, and Failure Isolation | Governed operations | OQ 49 | Required |
-| 1 | MESSAGE | `SourceProvenance` | Identify source mode, producer, observation, order scope, and source times | §7; §17 Determinism, Mode Equivalence, and Evidence Identity | Governed evidence | OQ 1, 12 | Required |
-| 1 | MESSAGE | `BarEvent` | Common source-independent accepted-bar candidate at the internal boundary | §4 Overall System Context; §6 One BarEvent Lifecycle; §7; DEP-01 | Governed internal boundary | OQ 1, 16 | Required |
-| 1 | MESSAGE | `BarAdmissionEvidence` | Record deterministic admission identity, disposition, and causal input | §7; §17; DEP-01 | Governed evidence | OQ 1, 31-33 | Required |
-| 1 | MESSAGE | `SolverIdentity` | Identify solver name/version, input series, and configuration | §8; §17 | Governed evidence | OQ 18-19 | Required |
-| 1 | MESSAGE | `PhaseEvidence` | Carry explicit phase status/value, entity order, solver identity, and lineage | §8; §16; DEP-03/04 | Governed evidence | OQ 18-19 | Required |
-| 1 | MESSAGE | `RuntimeHealthEvidence` | Report lifecycle, source health, initialization, lag, and degradation | §19 | Governed operations | OQ 7-8, 49 | Required |
-| 1 | SERVICE | `RuntimeOperationsService` | Optional external health/readiness boundary only if operations access is approved | §19 | External service | OQ 49 | Required before inclusion |
-| 1 | RPC | `GetRuntimeHealth` | Read current governed runtime health without controlling strategy | §19 | External RPC | OQ 49 | Required before inclusion |
+| 1 | ENUM | `RuntimeMode` | Represent ONLINE/OFFLINE in governed configuration evidence | §14 Online and Offline Stream Modes | Governed configuration | None; values fixed by design | APPROVED DECLARATION |
+| 1 | ENUM | `PhaseStatus` | Distinguish unspecified, initializing, and observable states without a numeric sentinel; do not add an unapproved `INVALID` lifecycle | §8 Phase Calculation Inside V0.1; DEP-04 | Governed evidence | OQ 15 resolved | APPROVED DECLARATION |
+| 1 | ENUM / FINDINGS | Admission disposition and input findings | Separate terminal admitted/rejected disposition from potentially coexisting duplicate, conflict, gap, malformed, and out-of-order findings | §7 BarEvent Semantics and Ordering; DEP-01 | Governed evidence | OQ 1, 3-8, 31-33 | BLOCKED; exact shape and precedence require approval |
+| 1 | MESSAGE | `SourceProvenance` | Distinguish source observation, producer/provider, source mode, entity order scope, replay policy, and defined source times | §7; §17 Determinism, Mode Equivalence, and Evidence Identity | Governed evidence | OQ 1, 9, 12 | BLOCKED |
+| 1 | MESSAGE | `BarEvent` | Common source-independent accepted-bar candidate containing finite `high`/`low` plus approved identity/order/provenance | §4 Overall System Context; §6 One BarEvent Lifecycle; §7; DEP-01 | Governed internal boundary | OQ 1, 12; OQ 16 resolved | BLOCKED |
+| 1 | MESSAGE | `BarAdmissionEvidence` | Record deterministic admission identity, terminal disposition, findings, and causal input without state mutation for rejection | §7; §17; DEP-01 | Governed evidence | OQ 1, 31-33 | BLOCKED |
+| 1 | MESSAGE | `SolverIdentity` | Identify solver family/name, solver and algorithm/reference versions, median-price input series, initialization requirement, and configuration identity | §8; §17 | Governed evidence | OQ 18 resolved | APPROVED DECLARATION; exact field encoding reviewed with containing evidence |
+| 1 | MESSAGE | `PhaseEvidence` | Carry explicit phase status/value, entity order, solver identity, and causal admission lineage | §8; §16; DEP-03/04 | Governed evidence | OQ 1, 12; OQ 15, 18 resolved; OQ 19 affects acceptance | BLOCKED by unresolved identity/lineage |
+| 1 | ENUM / MESSAGE / SERVICE / RPC | Runtime health and operations declarations | No external operations boundary or lifecycle state machine is approved | §19 | Governed operations | OQ 49 deferred | OMIT FROM INITIAL PROTO |
 | 2 | ENUM | `JehStrategyRegion` | Represent initializing/unavailable and the canonical persistent regions `DISREGARD`, `ALLOCATE`, `HOLD_AND_TRAIL`, and `LIQUIDATE` | §9; §10; DEP-07 | Governed evidence | OQ 25-28 | Required |
 | 2 | ENUM | `DecisionType` | Represent no-action, `ALLOCATE`, `HOLD_AND_TRAIL`, `LIQUIDATE`, or `DISREGARD` decisions as approved | §12; §13; DEP-10 | Governed evidence | OQ 36-44 | Required |
 | 2 | ENUM | `ExecutionOutcomeStatus` | Represent mock/external acceptance, rejection, action, failure, and reconciliation | §13 | External/governed outcome | OQ 43, 48 | Required |
@@ -236,7 +233,7 @@ Fin_Feed_Sat_1 gRPC bar stream
   -> PhaseEvidence
 ```
 
-The repository currently exposes a candidate `finfeedsat.v1.IngestionService.StreamBars` server stream in `Fin_FeedSat_1/api/proto/fin_feedsat/v1/Fin_FeedSat_1.proto`. This is evidence for interface analysis, not approval of exact binding. Before implementation, OQ 2-8 must resolve service/method compatibility, finalized-bar semantics, ordering, duplicates, gaps/loss, reconnect/resumption, provenance, backpressure, lag, and warm-up. Fin transport types terminate in the ONLINE adapter and do not enter solver or strategy packages.
+The repository currently exposes the candidate `finfeedsat.v1.IngestionService.StreamBars(StreamBarsRequest) returns (stream Bar)` in `Fin_FeedSat_1/api/proto/fin_feedsat/v1/Fin_FeedSat_1.proto`. Server code supplies per-symbol chronological process-local catch-up followed by live delivery, with bounded queues that can discard an older queued bar. The contract has no accepted sequence, gap/loss notification, finalized-bar guarantee, or resume cursor. This is evidence for interface analysis, not approval of exact binding. Before implementation, OQ 2-8 must resolve service/method compatibility, finalized-bar semantics, ordering, duplicates, gaps/loss, reconnect/resumption, provenance, backpressure, lag, and warm-up. Fin transport types terminate in the ONLINE adapter and do not enter solver or strategy packages.
 
 ### 8.5 OFFLINE Input
 
@@ -251,15 +248,15 @@ bar_sequence_db.bar_sequence
   -> same DEP-02/03/04 analytical path
 ```
 
-The verified proving source contains 4,519 observations. MongoDB remains behind the producer; the analytical path consumes `BarEvent`, not a database. The producer does no phase, motion, crossover, state, ranking, decision, or intent work and never invokes `phase_angle_series_generator`. It is neither a batch JEH processor nor a separate backtest/strategy engine. OQ 9 governs deterministic cross-entity ordering because `generator_sequence_no` is entity-scoped. Any future replay pacing is producer control under OQ 10 and cannot alter event semantics.
+The verified proving source contains 4,519 observations across multiple collection runs. MongoDB remains behind the producer; the analytical path consumes `BarEvent`, not a database. The producer does no phase, motion, crossover, state, ranking, decision, or intent work and never invokes `phase_angle_series_generator`. It is neither a batch JEH processor nor a separate backtest/strategy engine. Repository evidence establishes entity-scoped order by `(collection_run_id, symbol, generator_sequence_no)` but no unique source-authentic cross-entity total order. OQ 9 therefore requires a human-approved, explicit, versioned deterministic replay-order policy. Any future replay pacing is deferred producer control under OQ 10 and cannot alter event semantics.
 
 ### 8.6 Common BarEvent Admission
 
-Both adapters call the same admission API. DEP-01 validates required values, entity and source identity, entity-scoped order, provenance, duplicate/conflict identity, gap/out-of-order policy, and deterministic evidence identity before any state mutation. Rejected input produces evidence and cannot mutate solver state. An undetected missing accepted bar must not be silently crossed when it can change downstream behavior. Contract and policy are blocked by OQ 1, 3-8, 12, 16, and 31-33.
+Both adapters call the same admission API. DEP-01 validates required values, entity and source identity, entity-scoped order, provenance, duplicate/conflict identity, gap/out-of-order policy, and deterministic evidence identity before any state mutation. Rejected input produces evidence and cannot mutate solver state. Terminal admission disposition must be modeled separately from potentially coexisting input findings unless a precedence rule is approved. An undetected missing accepted bar must not be silently crossed when it can change downstream behavior. Solver-required values are resolved by OQ 16; the complete contract and policy remain blocked by OQ 1, 3-8, 12, and 31-33.
 
 ### 8.7 Per-Entity Analytical State
 
-DEP-02 owns entity identity, current bar identity, accepted order, initialization, bounded solver state, prior/current circular phase presence, phase validity, lineage, and solver/configuration identity. No valid number, including zero, is a sentinel. State representation is blocked by OQ 17 and recovery/checkpoint decisions by OQ 45-46.
+DEP-02 owns entity identity, current bar identity, accepted order, initialization, bounded solver state, prior/current circular phase presence, phase validity, lineage, and solver/configuration identity. No valid number, including zero, is a sentinel. OQ 17 bounded checkpoint representation and OQ 45-46 recovery/persistence are deferred from the initial proto; solver state remains internal.
 
 ### 8.8 JEH/Ehlers Mathematics
 
@@ -298,7 +295,7 @@ Exact queueing, backpressure, drain, checkpoint, and recovery behavior remains b
 
 ### 8.11 Diagnostics and Health
 
-Structured evidence/logging must include runtime/configuration identity, source mode and provenance, entity, bar identity/order, admission result, solver/status identity, initialization/phase result, latency without changing semantics, error classification, and causal IDs. Secrets and full unnecessary payloads are excluded. Phase 1 health distinguishes process lifecycle, selected mode, source connectivity, lag/backpressure where known, per-entity initialization/readiness, solver failures, evidence publication, drain/recovery, and version identity. OQ 49 blocks the final lifecycle vocabulary.
+Structured evidence/logging must include runtime/configuration identity, source mode and provenance, entity, bar identity/order, admission result, solver/status identity, initialization/phase result, latency without changing semantics, error classification, and causal IDs. Secrets and full unnecessary payloads are excluded. Phase 1 health concerns include process lifecycle, selected mode, source connectivity, lag/backpressure where known, per-entity initialization/readiness, solver failures, evidence publication, drain/recovery, and version identity. OQ 49 defers the final lifecycle vocabulary and any `RuntimeStatus`, `RuntimeHealthEvidence`, or external operations service from the initial proto.
 
 ### 8.12 Go Module and File Plan
 
@@ -591,20 +588,20 @@ The following gates summarize, but do not replace, System Design §22:
 
 | Gate | System Design OQ | Required resolution |
 | --- | --- | --- |
-| Common input contract | 1, 12, 16 | `BarEvent`, required solver fields, provenance and identity |
+| Common input contract | 1, 12, 16 | OQ 16 resolves finite `high`/`low` as solver inputs; OQ 1/12 still block canonical entity, provenance, source-observation identity, optionality, and timestamp representation |
 | ONLINE binding/delivery | 2-8, 13-15 | Exact upstream binding, ordering, duplicates, gaps/loss, reconnect, backpressure, recovery and warm-up |
-| OFFLINE stream | 9-10 | Deterministic cross-entity order and optional pacing |
-| Mode equivalence | 11 | Proof method and compared evidence |
-| Solver/state | 17-19 | Bounded state, reference equivalence, numeric tolerance |
+| OFFLINE stream | 9-10 | OQ 9 requires a versioned deterministic cross-entity replay-order policy; OQ 10 pacing is deferred |
+| Mode equivalence | 11 | RESOLVED by comparison over matching admitted bars/order, identity, versions, configuration, and initial state |
+| Solver/state | 17-19 | OQ 17 checkpoint representation is deferred; OQ 18 equivalence basis is resolved; OQ 19 production numeric tolerance remains open |
 | Motion | 20-24, 29-30 | Signed delta, Phase Velocity ($\omega$) basis, smoothing, acceleration, direction, large jumps |
 | Crossovers | 25-30 | Exact 90° `HOP-OFF`, 270° `HOP-ON`, 180°, and unnamed 360°/0° behavior under direction and jumps |
 | Admission continuity | 31-33 | Missing, duplicate/conflicting, and out-of-order behavior |
 | Universe/ranking | 34-41 | Staleness, snapshots, ranking/ties, candidate timing/expiry, capacity, holdings, capital |
 | Decision/execution | 42-44, 47-48 | Sequencing, mock semantics, trailing policy, intent/event contracts |
-| Operations | 45-46, 49 | Recovery/checkpoints, persistence, health/lifecycle |
-| Promotion | 50 | Criteria from OFFLINE proving to ONLINE testing |
+| Operations | 45-46, 49 | DEFERRED from the initial proto; no checkpoint, persistence, runtime-health, or operations-service declarations |
+| Promotion | 50 | DEFERRED; criteria from OFFLINE proving to ONLINE testing remain required before promotion |
 
-No implementation convenience closes these questions. Affected work remains `BLOCKED` until the authoritative design decision and associated proto review are complete.
+System Design §22.3 records the explicit human direction that passed the Phase 1 implementation gate. The implementation uses normalized symbol identity, typed mode-specific provenance, versioned deterministic OFFLINE ordering, conservative admission with mutation only for `ADMITTED`, and the current Fin `StreamBars` contract with bounded reconnect. Upstream ONLINE loss detection, resumable position, and live market validation remain documented limitations rather than claims. Phase 2 gates remain unchanged.
 
 ---
 
@@ -629,13 +626,15 @@ This plan does not authorize or perform:
 | --- | --- | --- |
 | V0.1 | 2026-09-12 | Initial implementation plan subordinate to `DSE_JEH_TransSat_1` System Design V0.1. Establishes exactly two implementation phases, one authoritative proto strategy, proto-first workflow, Go package and concurrency ownership plans, independent JEH phase equivalence, formal phase gates, traceability, build governance, and planned evidence reports. |
 | V0.1 terminology and gate refinement | 2026-09-12 | Aligned Phase 2 planning with canonical `DISREGARD`, `ALLOCATE`, `HOLD & TRAIL`/`HOLD_AND_TRAIL`, and `LIQUIDATE` persistent regions/actions; treated `HOP-ON` and `HOP-OFF` only as 270° and 90° crossover events; retained Phase Velocity ($\omega$) as the intended ranking input without defining unresolved mathematics; and required implemented, validated ONLINE and OFFLINE paths before the Phase 1 Acceptance Gate can approve Phase 2. |
+| V0.1 Phase 1 contract review | 2026-09-12 | Synchronized the plan to the System Design decision register, approved the planned single-proto path/package without authorizing creation, removed deferred runtime-health and operations declarations from the initial proto, and recorded the failed Stage A gate pending identity, provenance, admission, replay-order, and ONLINE continuity decisions. |
+| V0.1 Phase 1 implementation | 2026-09-12 | Implemented the single Phase 1 proto and generated binding, Go runtime, Mongo OFFLINE producer, Fin gRPC ONLINE consumer, common admission, entity-isolated JEH solver, PhaseEvidence output, normal executable, deterministic replay and reference comparison, generated-contract integration tests, and validation reports. Phase 2 remains unimplemented. |
 
 ---
 
 ## 17. Authorization Statement
 
-This implementation plan is **PROPOSED FOR HUMAN REVIEW**.
+This implementation plan is **APPROVED** for Phase 1.
 
-**Implementation remains NOT YET AUTHORIZED.**
+**Phase 1 is implemented and pending human review of its completion and validation reports.**
 
-Approval of this plan does not itself authorize proto creation, code generation, Go implementation, build, test execution, replay, integration, deployment, or execution. Phase 1 and Phase 2 require separate explicit authorization, and Phase 2 cannot begin before the Phase 1 Acceptance Gate is approved.
+The explicit 2026-09-12 implementation direction authorized Phase 1 proto creation, code generation, Go implementation, build, tests, OFFLINE replay, and contract-level ONLINE integration. It does not authorize deployment, execution, trading, or any Phase 2 implementation. Phase 2 cannot begin before the Phase 1 Acceptance Gate is reviewed and approved.

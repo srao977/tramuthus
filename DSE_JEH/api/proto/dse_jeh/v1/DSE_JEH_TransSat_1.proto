@@ -1,0 +1,135 @@
+syntax = "proto3";
+
+package dsejeh.v1;
+
+option go_package = "tramuthus/dse-jeh-transsat-1/gen/dse_jeh/v1;dsejehv1";
+
+// RuntimeMode identifies the selected producer. Runtime configuration accepts
+// ONLINE or OFFLINE only; UNSPECIFIED exists for protobuf evolution safety.
+enum RuntimeMode {
+  RUNTIME_MODE_UNSPECIFIED = 0;
+  RUNTIME_MODE_ONLINE = 1;
+  RUNTIME_MODE_OFFLINE = 2;
+}
+
+// PhaseStatus states whether an admitted observation has an available phase.
+// A legitimate zero-degree phase is OBSERVABLE and is never a sentinel.
+enum PhaseStatus {
+  PHASE_STATUS_UNSPECIFIED = 0;
+  PHASE_STATUS_INITIALIZING = 1;
+  PHASE_STATUS_OBSERVABLE = 2;
+  PHASE_STATUS_INVALID = 3;
+}
+
+// BarAdmissionStatus is the deterministic primary disposition assigned before
+// analytical state mutation. Only ADMITTED permits mutation. GAP identifies a
+// rejected missing-predecessor condition; REJECTED is reserved for a policy
+// rejection not represented by a more specific status.
+enum BarAdmissionStatus {
+  BAR_ADMISSION_STATUS_UNSPECIFIED = 0;
+  BAR_ADMISSION_STATUS_ADMITTED = 1;
+  BAR_ADMISSION_STATUS_DUPLICATE = 2;
+  BAR_ADMISSION_STATUS_CONFLICT = 3;
+  BAR_ADMISSION_STATUS_GAP = 4;
+  BAR_ADMISSION_STATUS_OUT_OF_ORDER = 5;
+  BAR_ADMISSION_STATUS_INVALID = 6;
+  BAR_ADMISSION_STATUS_REJECTED = 7;
+}
+
+// SourceProvenance identifies the observation supplied by an ONLINE or OFFLINE
+// adapter. It is source-independent evidence, not a Fin transport message or a
+// MongoDB document. Source identity is distinct from runtime evidence identity.
+//
+// Identity is source_observation_id. OFFLINE adapters construct it from
+// collection_run_id, symbol, and entity_sequence. ONLINE adapters preserve the
+// upstream market snapshot identifier. entity_sequence is scoped by
+// entity_sequence_scope and is never a global market sequence.
+message SourceProvenance {
+  RuntimeMode source_mode = 1;
+  string source_id = 2;
+  string source_observation_id = 3;
+  string collection_run_id = 4;
+  string partition_id = 5;
+  uint64 entity_sequence = 6;
+  string entity_sequence_scope = 7;
+  string replay_order_policy = 8;
+  // Exact provider timestamp text when supplied; no extra timing semantics are inferred.
+  string source_timestamp = 9;
+  // Source event time in Unix milliseconds when the source provides one.
+  int64 source_event_unix_ms = 10;
+  // Adapter or upstream receipt time in Unix milliseconds when available.
+  int64 received_unix_ms = 11;
+  bool is_final = 12;
+  bool is_backfilled = 13;
+  string payload_hash = 14;
+}
+
+// BarEvent is the source-independent candidate produced by either input adapter
+// and consumed by common admission. It is not a Fin transport message, MongoDB
+// document, or PhaseEvidence. event_id is a deterministic runtime identity made
+// from typed source identity fields. entity_id is the canonical analytical key;
+// Phase 1 uses the normalized symbol. Prices use source quote units, volume uses
+// source units, and interval times use Unix milliseconds.
+message BarEvent {
+  string event_id = 1;
+  string entity_id = 2;
+  string symbol = 3;
+  string instrument_id = 4;
+  string interval = 5;
+  int64 interval_start_unix_ms = 6;
+  int64 interval_end_unix_ms = 7;
+  double open = 8;
+  double high = 9;
+  double low = 10;
+  double close = 11;
+  optional uint64 volume = 12;
+  optional uint32 event_count = 13;
+  SourceProvenance provenance = 14;
+}
+
+// BarAdmissionEvidence is produced by common admission for every candidate.
+// admission_id deterministically identifies the decision for bar_event_id.
+// entity_sequence retains its source-defined entity scope. Rejected statuses do
+// not mutate solver state. reason is diagnostic and not part of identity.
+message BarAdmissionEvidence {
+  string admission_id = 1;
+  string bar_event_id = 2;
+  string entity_id = 3;
+  uint64 entity_sequence = 4;
+  BarAdmissionStatus status = 5;
+  string reason = 6;
+  int64 produced_unix_ms = 7;
+}
+
+// SolverIdentity identifies the exact analytical behavior that produced phase.
+// It is stable configuration identity, not mutable solver state. Phase 1 uses
+// EHLERS_DOMINANT_CYCLE_PHASE V0.1, TA_LIB_HT_DCPHASE, MEDIAN_PRICE, and a
+// 63-observation initialization requirement.
+message SolverIdentity {
+  string solver_name = 1;
+  string solver_version = 2;
+  string algorithm_reference = 3;
+  string input_series_type = 4;
+  uint32 initialization_observations = 5;
+  string configuration_id = 6;
+  string implementation_id = 7;
+}
+
+// PhaseEvidence is the analytical result caused by one admitted ordered
+// BarEvent. It is produced by the per-entity solver and consumed by validation
+// and future Phase 2 processing. INITIALIZING omits phase_degrees; OBSERVABLE
+// requires phase_degrees normalized to [0,360), including legitimate 0 degrees.
+// INVALID represents a solver failure and also omits phase_degrees. This message
+// is analytical evidence, not strategy eligibility, a decision, or execution.
+message PhaseEvidence {
+  string evidence_id = 1;
+  string bar_event_id = 2;
+  string admission_id = 3;
+  string entity_id = 4;
+  uint64 entity_sequence = 5;
+  PhaseStatus status = 6;
+  optional double phase_degrees = 7;
+  SolverIdentity solver_identity = 8;
+  SourceProvenance source_provenance = 9;
+  int64 produced_unix_ms = 10;
+}

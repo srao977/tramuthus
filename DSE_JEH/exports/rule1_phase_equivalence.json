@@ -1,0 +1,10 @@
+{
+  "tolerance": 1e-9,
+  "reference_rows": 3480,
+  "matched_rows": 3300,
+  "missing_runtime_rows": 180,
+  "status_mismatches": 0,
+  "observable_compared": 1272,
+  "numeric_mismatches": 0,
+  "max_difference": 0
+}

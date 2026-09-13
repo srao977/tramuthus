@@ -1,0 +1,11 @@
+version: v2
+modules:
+  - path: api/proto
+deps: []
+lint:
+  use:
+    - STANDARD
+  except:
+    # The approved contract path and filename intentionally preserve the project name.
+    - FILE_LOWER_SNAKE_CASE
+    - PACKAGE_DIRECTORY_MATCH
