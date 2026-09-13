@@ -5,10 +5,10 @@
 | Document control | Value |
 | --- | --- |
 | Filename | `DSE_JEH_TRANS_SAT_1_IMPLEMENTATION_PLAN_V0_1_091226.md` |
-| Date | 2026-09-12 |
+| Date | 2026-09-13 |
 | Version | V0.1 |
 | Status | APPROVED |
-| Implementation status | PHASE 1 IMPLEMENTED - PENDING HUMAN REVIEW |
+| Implementation status | DEP-01 through DEP-04 implemented and validated; complete application architecture not implemented |
 | Architectural authority | `DSE_JEH_TRANS_SAT_1_SYSTEM_DESIGN_V0_1_091226.md` |
 | Scope | Implementation planning for `DSE_JEH_TransSat_1` |
 
@@ -20,10 +20,10 @@ This is an implementation plan subordinate to the System Design. It is not a rep
 
 Implementation is sequenced in exactly two phases:
 
-1. **PHASE 1 - BAR INPUT AND JEH ANALYTICAL PATH** implements startup, ONLINE and OFFLINE bar-stream acquisition, common `BarEvent` admission, per-entity analytical state, the approved JEH/Ehlers solver, circular phase state, and validated `PhaseEvidence`.
-2. **PHASE 2 - DYNAMIC EXECUTION PIPELINE** begins only after the Phase 1 Acceptance Gate and implements Phase Velocity ($\omega$), boundary crossover, the four-region rules engine, universe state, candidate ranking, strategy decisions, `ExecutionIntent`, and a mock external execution boundary.
+1. **PHASE 1 - BAR INPUT AND JEH ANALYTICAL PATH** has implemented ONLINE and OFFLINE bar-stream acquisition, common `BarEvent` admission, per-entity analytical state, the approved JEH/Ehlers solver, circular phase state, and validated `PhaseEvidence`. Its current lifecycle, health, telemetry, evidence completeness, and persistence behavior are only partial relative to the complete application design.
+2. **PHASE 2 - COMPLETE GOVERNED APPLICATION PATH** begins only after its proto and unresolved-design gates. It first makes the Production Eligibility Controller and common Governed Rule Engine explicit, then implements Phase Velocity ($\omega$), boundary crossover, four-region strategy rules, universe state, candidate ranking, strategy decisions, `ExecutionIntent`, mock execution, and `ExecutionEvent`, together with complete lifecycle, telemetry, and bar accountability.
 
-The plan is proto-first. One authoritative DSE_JEH proto is introduced in Phase 1 and extended in Phase 2. Proto contracts govern cross-process or durable evidence boundaries; ordinary in-process Go interfaces implement internal mathematical and coordination responsibilities. No component is made a service merely because it is a named System Design component.
+The plan is proto-first. The existing single authoritative DSE_JEH proto is extended in place before each governed behavior is implemented. It governs all operationally or financially meaningful inbound, internal-processing, outbound, lifecycle, telemetry, rule-outcome, and execution-boundary vocabulary, whether execution is in-process or distributed. Generated Go represents those contracts; Go interfaces implement component mechanics; deterministic Go algorithms implement approved mathematics and state mechanics; `github.com/antonmedv/expr` evaluates governed conditions; typed proto outcomes authorize routing/state transitions; and evidence records every result. No component requires a network hop merely because its operational responsibility is proto-governed.
 
 ---
 
@@ -58,7 +58,22 @@ The governing order within each phase is:
 8. Produce completion and validation evidence.
 9. Obtain separate human authorization before the next phase or deployment step.
 
-Governed runtime contracts MUST NOT first emerge as accidental independent Go types and later be retrofitted into proto. Internal solver state, algorithms, locks, queues, and helper interfaces remain Go implementation details unless they cross a process, publication, persistence, or governed evidence boundary.
+Governed runtime contracts MUST NOT first emerge as accidental independent Go types and later be retrofitted into proto. Internal solver buffers, algorithms, locks, queues, and helper interfaces may remain Go implementation details. Governed or financially meaningful states, statuses, events, decisions, outcomes, execution meanings, lifecycle meanings, and evidence MUST NOT exist only as parallel Go vocabulary, even when they remain in-process.
+
+### 4.1 Canonical Implementation Relationship
+
+```text
+authoritative proto typed input/evidence
+      -> component-scoped context
+      -> identified/versioned precompiled expr rule
+      -> raw evaluator result
+      -> rule-specific typed proto outcome
+      -> Go orchestration and authorized state transition
+      -> RuleEvaluationEvidence
+      -> next governed component or attributable termination
+```
+
+For deterministic work the sequence is `typed input -> approved Go algorithm -> typed proto evidence -> governed rule/routing`. For financial execution it is `crossover event -> strategy region -> universe/ranking -> StrategyDecision -> ExecutionIntent -> Executor -> ExecutionEvent`. Implementation MUST NOT collapse these stages.
 
 Future implementation documentation for every authored Go file must identify package purpose, architectural responsibility, System Design cross-reference, inputs, outputs, state ownership, configuration, failures, concurrency assumptions, and non-trivial function behavior. Proto declarations must document semantic purpose, field meaning, identity, units, presence, status lifecycle, and source/causal lineage.
 
@@ -96,6 +111,14 @@ PHASE 2 - DYNAMIC EXECUTION PIPELINE
                  PhaseEvidence
                        |
                        v
+             Production Eligibility
+                   Controller
+                       |
+             +---------+---------+
+             |                   |
+       BLOCK + evidence      ELIGIBLE
+                                 |
+                                 v
                   Phase Motion
                        |
                        v
@@ -149,7 +172,11 @@ No other DSE_JEH proto is planned. Phase 1 creates the approved initial declarat
 
 The upstream ONLINE contract is owned by `Fin_Feed_Sat_1`. Repository evidence establishes the current candidate as `finfeedsat.v1.IngestionService.StreamBars(StreamBarsRequest) returns (stream Bar)`, but binding it is blocked by OQ 2-8 and requires interface review. Its current implementation does not expose accepted sequence, detectable queue loss, finalized-bar guarantee, or resumable position. DSE_JEH MUST import/map only an approved upstream contract at its transport adapter and MUST NOT copy the upstream bar message into its own proto as an ersatz transport API.
 
-A DSE_JEH service belongs in the proto only if a genuine process boundary is approved, such as governed evidence publication, health/readiness access, or external execution-intent exchange. The JEH Phase Solver, Phase Motion Analyzer, Boundary Crossover Detector, Strategy Region / Rules Engine, Universe State Coordinator, and Candidate Ranking Engine are expected to be ordinary in-process Go components. Their evidence may be governed proto messages without making each component a gRPC service.
+The proto MUST describe the complete satellite's operational services and responsibilities, including governed in-process work. This does not require each DEP component to be a separately deployed gRPC server or create an artificial network hop. The JEH Phase Solver, Production Eligibility Controller, Phase Motion Analyzer, Boundary Crossover Detector, Strategy Region / Rules Engine, Universe State Coordinator, and Candidate Ranking Engine may remain in-process Go components while their governed contracts, typed outcomes, and evidence are proto-defined. RPC declarations are added only for approved callable network boundaries.
+
+The same file MUST ultimately cover lifecycle/mode/health, source/subscription state, bar reception/admission, analytical state and JEH evidence, production eligibility, motion, crossover, regions, universe/candidates/ranking, decision, intent, execution event, rule identity/evaluation/evidence, telemetry/activity, diagnostics/degradation, and outbound publication. No additional DSE_JEH proto may be created.
+
+The existing proto has been inspected and implements only the Phase 1 analytical vocabulary. The next authorized contract task must expand this same file; it must not split the contract. Complete operational services may be represented without turning every internal responsibility into a network RPC.
 
 ---
 
@@ -169,7 +196,10 @@ Names below are planning outcomes from System Design §22. Required declarations
 | 1 | MESSAGE | `BarAdmissionEvidence` | Record deterministic admission identity, terminal disposition, findings, and causal input without state mutation for rejection | §7; §17; DEP-01 | Governed evidence | OQ 1, 31-33 | BLOCKED |
 | 1 | MESSAGE | `SolverIdentity` | Identify solver family/name, solver and algorithm/reference versions, median-price input series, initialization requirement, and configuration identity | §8; §17 | Governed evidence | OQ 18 resolved | APPROVED DECLARATION; exact field encoding reviewed with containing evidence |
 | 1 | MESSAGE | `PhaseEvidence` | Carry explicit phase status/value, entity order, solver identity, and causal admission lineage | §8; §16; DEP-03/04 | Governed evidence | OQ 1, 12; OQ 15, 18 resolved; OQ 19 affects acceptance | BLOCKED by unresolved identity/lineage |
-| 1 | ENUM / MESSAGE / SERVICE / RPC | Runtime health and operations declarations | No external operations boundary or lifecycle state machine is approved | §19 | Governed operations | OQ 49 deferred | OMIT FROM INITIAL PROTO |
+| Complete app | ENUM / MESSAGE / SERVICE / RPC | Runtime lifecycle, health, activity and operations declarations | Persistent liveness, start/drain/stop, zero-input validity, source health, degradation, activity, and final state | §19 | Governed operations, whether in-process or externally queried | Exact shape remains OQ 49 | REQUIRED BEFORE IMPLEMENTATION OF COMPLETE LIFECYCLE |
+| 2 | MESSAGE / ENUM | Production eligibility input, outcome, state and evidence | Govern Rule #1 as an event-flow gate after DEP-04 and before DEP-05 | §8.2; Production Eligibility Controller | Governed internal contract/evidence | Bar-64/bar-65 motion question does not block the eligibility outcome itself | REQUIRED |
+| 2 | MESSAGE / ENUM | Rule identity, evaluation status, typed outcome and `RuleEvaluationEvidence` | Attribute every identified/versioned rule evaluation and component-specific outcome | §13.1-13.3 | Governed internal contract/evidence | Exact descriptive names require proto review | REQUIRED |
+| 2 | MESSAGE / ENUM | Runtime activity and per-bar processing outcome | Distinguish reception, admission, rejection, initialization, phase eligibility, motion, crossover, hop events, decisions, intents, events, and terminal processing result | §19.1 | Governed telemetry/evidence | Counter/reset and exact outcome taxonomy require review | REQUIRED |
 | 2 | ENUM | `JehStrategyRegion` | Represent initializing/unavailable and the canonical persistent regions `DISREGARD`, `ALLOCATE`, `HOLD_AND_TRAIL`, and `LIQUIDATE` | §9; §10; DEP-07 | Governed evidence | OQ 25-28 | Required |
 | 2 | ENUM | `DecisionType` | Represent no-action, `ALLOCATE`, `HOLD_AND_TRAIL`, `LIQUIDATE`, or `DISREGARD` decisions as approved | §12; §13; DEP-10 | Governed evidence | OQ 36-44 | Required |
 | 2 | ENUM | `ExecutionOutcomeStatus` | Represent mock/external acceptance, rejection, action, failure, and reconciliation | §13 | External/governed outcome | OQ 43, 48 | Required |
@@ -212,13 +242,15 @@ No service/RPC row is authorization to create that boundary. Human review may re
 
 ### 8.2 Scope
 
-Phase 1 delivers the path from bar-stream acquisition through validated `PhaseEvidence`: runtime startup/lifecycle; `DSE_JEH_MODE`; ONLINE and OFFLINE input boundaries; common `BarEvent`; admission; per-entity ordered analytical state; JEH/Ehlers phase calculation; circular phase state; provenance and deterministic identity; diagnostics, health, build, validation, and acceptance evidence. Phase Motion is not in Phase 1.
+Phase 1 delivered the implemented path from bar-stream acquisition through validated `PhaseEvidence`: `DSE_JEH_MODE`; ONLINE and OFFLINE input boundaries; common `BarEvent`; admission; per-entity ordered analytical state; JEH/Ehlers phase calculation; circular phase state; provenance and deterministic identity; build and validation evidence. Its lifecycle, health, telemetry, persistence, stop mechanism, and per-bar outcome evidence are partial and remain work required by the complete target application. Phase Motion is not in Phase 1.
 
 ### 8.3 Runtime and Startup
 
 The future host reads `DSE_JEH_MODE` exactly once during startup, accepts only `ONLINE` or `OFFLINE`, validates mode-specific configuration, constructs one producer/input component, wires it to common admission, reports lifecycle status, and owns cancellation, drain, and shutdown. The Dynamic Execution Pipeline never reads the environment variable.
 
-The proposed executable is `dse-jeh-transsat-1`, built from `DSE_JEH/cmd/dse-jeh-transsat-1`. Exact name requires human approval but follows existing lowercase hyphenated `cmd` convention. A future `DSE_JEH/scripts/Start-DSEJEHTransSat1.ps1` may set validated configuration and launch the built binary; it is planned, not created here.
+The existing executable is `dse-jeh-transsat-1`, built from `DSE_JEH/cmd/dse-jeh-transsat-1`. The existing `DSE_JEH/scripts/Start-DSEJEHTransSat1.ps1` validates mode/selector basics and launches the built binary; it does not use `go run`. The complete lifecycle requires an approved `Stop-DSEJEHTransSat1.ps1` or equivalent governed process-stop mechanism, proto-defined lifecycle/health evidence, startup dependency ordering, graceful drain/cancel, evidence flush, and final status publication.
+
+ONLINE must remain running while connected and no bars arrive; zero input is valid activity-at-zero, not completion, disconnection, failure, or stop. OFFLINE end-of-selection behavior must be explicitly governed rather than accidentally defining application lifecycle. Existing configuration must be reviewed before normalization; currently implemented names include `DSE_JEH_MODE`, `DSE_JEH_OFFLINE_COLLECTION_RUN_ID`, `DSE_JEH_GRPC_ADDRESS`, `DSE_JEH_SYMBOLS`, `DSE_JEH_FINALIZED_ONLY`, `DSE_JEH_MAX_BARS`, `DSE_JEH_OUTPUT`, `DSE_JEH_REFERENCE_CSV`, and `DSE_JEH_COMPARISON_REPORT`, plus Mongo adapter settings.
 
 ### 8.4 ONLINE Input
 
@@ -279,7 +311,7 @@ The reference artifacts, not duplicated prose in this plan, control the complete
 
 ### 8.9 PhaseEvidence
 
-DEP-03/04 produce one attributable initializing or observable result for each admitted bar. `PhaseEvidence` records entity and source-observation identity, entity order, explicit status/presence, normalized angle when observable, solver identity/version, input-series definition, configuration identity, causal admission evidence, and production identity/time as approved. It does not imply strategy eligibility.
+DEP-03/04 produce one attributable initializing or observable result for each admitted bar. `PhaseEvidence` records entity and source-observation identity, entity order, explicit status/presence, normalized angle when observable, solver identity/version, input-series definition, configuration identity, causal admission evidence, and production identity/time as approved. Existing code embeds Rule #1 behavior by withholding `OBSERVABLE` until contiguous valid bar 64; it does not implement the separately governed Production Eligibility Controller or authorize downstream routing.
 
 ### 8.10 Concurrency and State Ownership
 
@@ -381,7 +413,21 @@ Gate failure returns work to Phase 1 or to System Design resolution. It cannot b
 
 ### 9.2 Scope
 
-Phase 2 consumes validated Phase 1 `PhaseEvidence` and implements one coherent Dynamic Execution Pipeline: Phase Motion Analyzer, Boundary Crossover Detector, Four-Region JEH Rules Engine, Universe State Coordinator, Candidate Ranking Engine, Strategy Decision Engine, and `ExecutionIntent` Publisher. The separately bounded initial executor is mock/simulated only and produces `ExecutionEvent` evidence. No broker or live execution is authorized.
+Phase 2 consumes validated Phase 1 `PhaseEvidence` and first implements the proto-governed Production Eligibility Controller and common Governed Rule Engine. Only typed production-eligible outcomes route to Phase Motion Analyzer, Boundary Crossover Detector, Four-Region JEH Rules Engine, Universe State Coordinator, Candidate Ranking Engine, Strategy Decision Engine, and `ExecutionIntent` Publisher. Blocked results terminate with evidence and activity accounting. The separately bounded initial executor is mock/simulated only and produces `ExecutionEvent` evidence. No broker or live execution is authorized.
+
+### 9.2.1 Production Eligibility and Bar-64/Bar-65 Gate
+
+The controller implements Rule #1 as event-flow control using only its approved component context. Bars 1 through 63 still update JEH mathematics but map to a typed initializing/blocked outcome and cannot reach DEP-05. Bar 64 is the first possible production-eligible phase. Whether motion/crossover requires prior and current production-eligible phases, making bar 65 earliest, remains unresolved and blocks DEP-05/06 implementation; the plan MUST NOT guess.
+
+### 9.2.2 Common Governed Rule Engine
+
+Before any rule-governed component implementation, extend the single proto with descriptive rule identity/version, evaluation status, typed component outcomes, rule-set/configuration identity, and `RuleEvaluationEvidence`. Then add one common facility containing a Rule Registry, `github.com/antonmedv/expr` compiler, compiled-program cache, evaluator, typed-outcome mapper, and evidence producer.
+
+Rules compile once at startup or approved rule-set load/reload, not per bar. Compilation failure is a governed visible failure. Each component builds its own typed context and exposes only approved dynamic variables; there is no unrestricted global `PipelineContext`. Raw expr results have no global business meaning and MUST map through the owning rule to a typed proto outcome before Go orchestration mutates state or routes evidence.
+
+The Production Eligibility, motion eligibility, crossover, strategy region, universe, ranking eligibility, decision, and intent-eligibility contexts remain separated as specified by System Design §13.3. `expr` governs conditions, eligibility, policy, routing, and outcome selection. JEH/Hilbert recurrence and approved circular delta, velocity, ranking, sizing, and identity calculations remain deterministic Go algorithms where appropriate. No expression may call Alpaca, submit an order, mutate authoritative holding/cash/broker state, bypass decision/intent, or create an `ExecutionEvent`.
+
+Activity contracts must separately represent `bars_received`, `bars_admitted`, `bars_rejected`, `bars_initializing`, `bars_phase_eligible`, `phase_motion_evaluations`, `boundary_crossovers`, `hop_on_events`, `hop_off_events`, `strategy_decisions`, `execution_intents`, and `execution_events`, subject to exact proto naming review. Each bar must finish with typed evidence for rejection, initialization block, motion unavailable, no crossover/no action, or the complete decision-to-execution path.
 
 ### 9.3 Scientific and Policy Blockers
 
@@ -395,6 +441,7 @@ Phase 2 consumes validated Phase 1 `PhaseEvidence` and implements one coherent D
 | Strategy Decision Engine | OQ 36-44 | Ranking, capacity/holdings, liquidation-before-allocation, mock behavior, trailing policy |
 | ExecutionIntent Publisher | OQ 42-43, 47 | Sequencing, idempotency, validity, correlation, and exact contract |
 | Mock execution/reconciliation | OQ 43, 45, 48 | Outcome semantics, recovery/reconciliation, exact `ExecutionEvent` contract |
+| Production-valid motion start | OQ 51 | Decide whether two eligible observations are required and therefore whether bar 65 is earliest |
 
 Blocked components may receive compile-time interfaces and approved contract scaffolding only if separately authorized; their mathematical or policy behavior MUST NOT be guessed.
 
@@ -430,6 +477,8 @@ DEP-11 emits a governed, deterministic, idempotent `ExecutionIntent` only when e
 
 Initial proving uses an external in-process or process-separated mock adapter selected by approved boundary design. It receives intents without holding internal strategy locks and emits attributable `ExecutionEvent` outcomes for reconciliation. No live adapter is in scope. OQ 43, 45, and 48 block final behavior and contract.
 
+The approved interface is substitutable: `MockExecutor` is implemented first; a future `AlpacaPaperExecutor` requires separate approval and consumes/produces the same proto-governed intent/event meanings. The rule engine and analytical engine do not depend on Alpaca. No live-money endpoint or order is permitted.
+
 ### 9.12 Concurrency and State Ownership
 
 - The per-entity strategy owner serializes that entity's phase-motion, crossover, and state transition.
@@ -445,6 +494,8 @@ Initial proving uses an external in-process or process-separated mock adapter se
 | Phase | Package / file group | Proposed path | Responsibility | Inputs / outputs | Proto / internal interfaces | State and concurrency | Authority | Validation / blockers |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2 | Motion | `internal/motion` | DEP-05 signed circular motion evidence | `PhaseEvidence` to `PhaseMotionEvidence` | Internal `MotionAnalyzer` | Entity-owned update context | §11; DEP-05 | Vector/property tests; OQ 20-24, 29-30 |
+| 2 | Production eligibility | `internal/eligibility` | Explicit Rule #1 event-flow gate | Phase/admission evidence to typed eligibility outcome/evidence | Proto-governed input/outcome; internal controller | Entity update context | §8.2 | Bars 1-65, continuity, invalid-phase tests; OQ 51 affects downstream motion only |
+| 2 | Governed rule engine | `internal/rules` | Registry, expr compilation/cache/evaluation, typed outcome mapping and evidence | Component context/rule identity to typed outcome and `RuleEvaluationEvidence` | Proto-governed rule contracts; internal evaluator | Immutable compiled registry after startup unless approved reload | §13.1-13.3 | Compilation, authorization, mapping, evidence tests |
 | 2 | Crossover | `internal/crossover` | DEP-06 circular boundary detection | Phase/motion to crossover evidence | Internal `CrossoverDetector` | Stateless or entity context | §10; DEP-06 | Boundary/direction tests; OQ 25-30 |
 | 2 | Rules | `internal/strategy` | DEP-07 four-region membership/transitions with crossover events kept distinct | Phase/crossover to entity strategy state | Internal `RulesEngine` | Entity strategy state | §10; DEP-07 | Transition/persistence tests; OQ 25-33 |
 | 2 | Universe | `internal/universe` | DEP-08 latest views, holdings, candidates, capacity, pending work | Entity evidence/outcomes to universe versions | Internal command API | Sole owner of mutable universe state | §9.2; DEP-08 | Concurrency/staleness tests; OQ 34-35, 38-42 |
@@ -455,6 +506,7 @@ Initial proving uses an external in-process or process-separated mock adapter se
 | 2 | Pipeline orchestration | `internal/pipeline` | Connect DEP-05 through DEP-11 after Phase 1 | Phase evidence to intent/evidence | Internal component interfaces | Coordinates without owning adapter transport | §5, §6, §18 | End-to-end deterministic tests; all Phase 2 blockers |
 | 2 | Diagnostics extension | `internal/diagnostics` | Add motion/crossover/state/rank/decision/intent/outcome evidence | Pipeline evidence to approved sinks | Governed messages/publisher ports | Non-causal observer | §17, §19, §20 | Lineage/failure tests; OQ 46-49 |
 | 2 | Health extension | `internal/health` | Add universe, ranking, intent, executor, reconciliation status | Component states to health evidence | Existing Phase 1 health contract extension | Health owner only | §19 | Degradation tests; OQ 43, 45, 49 |
+| Complete app | Activity/accountability | `internal/telemetry` and pipeline orchestration | Distinct counters and terminal outcome for every received bar | All governed evidence to runtime activity/state | Proto-defined telemetry and processing outcomes | Non-authoritative aggregation over causal evidence | §19.1 | Zero-input, counter-separation, no-silent-drop E2E tests |
 
 ### 9.14 Validation Plan
 
@@ -468,6 +520,8 @@ Initial proving uses an external in-process or process-separated mock adapter se
 8. Repeated complete-pipeline deterministic OFFLINE runs over the approved dataset.
 9. Full ONLINE/OFFLINE semantic equivalence for matching admitted bars and order.
 10. End-to-end causal identity from `BarEvent` through mock `ExecutionEvent`.
+11. Every rejection, initialization block, motion-unavailable result, no-crossover/no-action result, and execution path ends with typed attributable evidence.
+12. Persistent zero-input operation reports healthy liveness with flat bar activity until explicit stop or a separate health failure.
 
 ### 9.15 Phase 2 Acceptance Gate
 
@@ -488,6 +542,8 @@ Completion requires approved blocker resolutions, proto review, passing unit/com
 | 1 | Circular phase state | Go component/evidence | §8 | DEP-04 | Explicit initialization/value presence and $[0,360)$ | `PhaseStatus`, `PhaseEvidence` | `internal/phase` | Initialization/zero/boundary suite | OQ 19 | PLANNED |
 | 1 | Evidence identity | Go component | §17 | DEP-01/03/04 | Deterministic causal and source identity | `SourceProvenance`, Phase 1 evidence | `internal/evidence` | Repeatability report | OQ 1, 12, 46 | BLOCKED |
 | 1 | Health/lifecycle | Runtime/evidence | §19 | - | Explicit readiness/degradation/drain | `RuntimeHealthEvidence` | `internal/runtime`, `internal/health` | Lifecycle/failure report | OQ 49 | BLOCKED |
+| 2 | Production eligibility | Rule component/evidence | §8.2 | Gate before DEP-05 | Rule #1 typed block/eligible routing | Eligibility context/outcome/evidence; rule evidence | `internal/eligibility`, `internal/rules` | Bars 1-65 and continuity report | OQ 51 for first motion | NOT IMPLEMENTED |
+| 2 | Common rule facility | Shared component | §13.1-13.3 | Cross-cutting | Registry, compiled expr, scoped contexts, typed mappings and evidence | Rule identity/outcome/evidence contracts | `internal/rules` | Compile/map/scope/evidence suite | Exact proto names | NOT IMPLEMENTED |
 | 2 | Phase motion | Go component/evidence | §11 | DEP-05 | Approved signed motion in degrees/bar | `PhaseMotionEvidence` | `internal/motion` | Motion vector report | OQ 20-24, 29-30 | BLOCKED |
 | 2 | Boundary crossover | Go component/evidence | §10 | DEP-06 | Circular crossover distinct from membership | `BoundaryCrossoverEvidence` | `internal/crossover` | Boundary report | OQ 25-30 | BLOCKED |
 | 2 | Four-region rules | Go component/evidence | §10 | DEP-07 | Canonical persistent strategy regions and genuine crossover events | `JehStrategyRegion`, `EntityStrategyState` | `internal/strategy` | Region/crossover report | OQ 25-33 | BLOCKED |
@@ -497,6 +553,20 @@ Completion requires approved blocker resolutions, proto review, passing unit/com
 | 2 | Execution intent | Contract/component | §13 | DEP-11 | Deterministic governed request with causal identity | `ExecutionIntent` | `internal/intent` | Idempotency/publication report | OQ 42, 47 | BLOCKED |
 | 2 | Mock execution | Adapter/evidence | §13 | - | Simulated outcome outside strategy locks | `ExecutionEvent`, `ExecutionOutcomeStatus` | `internal/execution/mock` | Mock reconciliation report | OQ 43, 45, 48 | BLOCKED |
 | 2 | Complete pipeline | Integration | §5, §6, §17, §21 | DEP-05-11 | Deterministic source-mode-independent behavior | All approved Phase 2 evidence | `internal/pipeline` | Dynamic Execution Pipeline and mode-equivalence reports | OQ 20-50 as applicable | BLOCKED |
+
+Existing implementation status is authoritative as follows: DEP-01, DEP-02, DEP-03, and DEP-04 are implemented and validated; Rule #1 behavior is embedded in current analytical status handling; the explicit Production Eligibility Controller, DEP-05 through DEP-11, common rule engine, complete proto vocabulary, complete lifecycle/telemetry, stop mechanism, and complete execution adapter/event path are not implemented.
+
+### 10.1 Reconciled Implementation Invariants
+
+- The complete target is one independently startable and stoppable persistent built application; startup and stop are governed, `go run` is prohibited, and zero input is a valid running state.
+- **Mode convergence:** ONLINE and exactly one selected OFFLINE `collection_run_id` converge at the same `BarEvent` boundary and use one E2E runtime path.
+- The single proto is authoritative for governed internal and external vocabulary while in-process implementation does not require artificial RPC hops.
+- Rule #1 processes bars 1 through 63 as `INITIALIZING`; bar 64 is the first possible eligible phase; mathematical calculability is not production eligibility; and whether bar 65 is earliest for production-valid motion/crossover remains unresolved.
+- `expr` programs are identified/versioned and compiled once per startup or governed load; a raw boolean has no global business meaning and maps to a rule-specific typed proto outcome before Go routing.
+- **Every-bar accountability and named metrics:** every received bar ends with attributable typed evidence. Activity separately tracks `bars_received`, `bars_admitted`, `bars_rejected`, `bars_initializing`, `bars_phase_eligible`, `phase_motion_evaluations`, `boundary_crossovers`, `hop_on_events`, `hop_off_events`, `strategy_decisions`, `execution_intents`, and `execution_events`.
+- **Event semantic separation:** `HOP_ON` and `HOP_OFF` are crossover events. Strategy region, `StrategyDecision`, `ExecutionIntent`, and `ExecutionEvent` are separate meanings and implementation stages.
+- Signed circular delta, Phase Velocity basis/window/smoothing/acceleration, reverse motion, abnormal jumps, 0/90/180/270 crossover mathematics, ranking formula, stale-candidate policy, capacity/holding policy, capital representation, trailing-stop mathematics, quantity sizing, execution reconciliation, and bar-64/bar-65 motion eligibility remain intentionally unresolved.
+- This documentation task authorizes no changes to proto, generated code, Go implementation, startup/stop scripts, tests, or broker integration.
 
 The matrix is maintained during authorized work so every contract and component has a direct `System Design -> proto -> Go -> test -> acceptance evidence` chain.
 
@@ -565,20 +635,22 @@ OFFLINE-first and ONLINE-later describe implementation order within Phase 1 only
 ### 13.2 Phase 2 sequence
 
 1. Resolve and approve all applicable mathematical, crossover, universe, ranking, decision, and execution blockers.
-2. Extend the same authoritative proto with approved Phase 2 artifacts.
-3. Regenerate Go bindings/stubs and run compatibility checks.
-4. Implement DEP-05 Phase Motion Analyzer.
-5. Implement DEP-06 Boundary Crossover Detector.
-6. Implement DEP-07 Four-Region JEH Rules Engine with distinct crossover-event evidence.
-7. Implement DEP-08 Universe State Coordinator.
-8. Implement DEP-09 Candidate Ranking Engine.
-9. Implement DEP-10 Strategy Decision Engine.
-10. Implement DEP-11 `ExecutionIntent` generation/publication.
-11. Implement the mock external execution adapter.
-12. Implement `ExecutionEvent` and reconciliation evidence.
-13. Validate the deterministic complete Dynamic Execution Pipeline.
-14. Validate full ONLINE/OFFLINE equivalence.
-15. Produce Phase 2 completion and validation reports for human review.
+2. Resolve the bar-64/bar-65 motion/crossover decision and approve component-scoped variables and typed outcomes.
+3. Extend the same authoritative proto with complete lifecycle, activity, eligibility, rule, DEP-05 through DEP-11, and execution-boundary vocabulary.
+4. Regenerate Go bindings/stubs and run compatibility checks.
+5. Implement lifecycle/health, governed start/stop, zero-input operation, and per-bar accountability.
+6. Implement the common Rule Registry, expr compiler/cache/evaluator, typed outcome mapper, and rule evidence.
+7. Implement the explicit Production Eligibility Controller.
+8. Implement DEP-05 Phase Motion Analyzer.
+9. Implement DEP-06 Boundary Crossover Detector.
+10. Implement DEP-07 Four-Region JEH Rules Engine with distinct crossover-event evidence.
+11. Implement DEP-08 Universe State Coordinator.
+12. Implement DEP-09 Candidate Ranking Engine.
+13. Implement DEP-10 Strategy Decision Engine.
+14. Implement DEP-11 `ExecutionIntent` generation/publication.
+15. Implement the mock external execution adapter and `ExecutionEvent` reconciliation.
+16. Validate deterministic complete-pipeline behavior, full bar accountability, and ONLINE/OFFLINE equivalence.
+17. Produce completion and validation reports for human review.
 
 ---
 
@@ -598,7 +670,8 @@ The following gates summarize, but do not replace, System Design §22:
 | Admission continuity | 31-33 | Missing, duplicate/conflicting, and out-of-order behavior |
 | Universe/ranking | 34-41 | Staleness, snapshots, ranking/ties, candidate timing/expiry, capacity, holdings, capital |
 | Decision/execution | 42-44, 47-48 | Sequencing, mock semantics, trailing policy, intent/event contracts |
-| Operations | 45-46, 49 | DEFERRED from the initial proto; no checkpoint, persistence, runtime-health, or operations-service declarations |
+| Operations | 45-46, 49 | Exact recovery/persistence and lifecycle contract shapes remain unresolved; complete runtime lifecycle, health, zero-input liveness, activity, stop, and evidence responsibilities are mandatory and proto-first |
+| Production eligibility | 51 | Decide whether bar 65 is earliest possible production-valid motion/crossover; do not guess |
 | Promotion | 50 | DEFERRED; criteria from OFFLINE proving to ONLINE testing remain required before promotion |
 
 System Design §22.3 records the explicit human direction that passed the Phase 1 implementation gate. The implementation uses normalized symbol identity, typed mode-specific provenance, versioned deterministic OFFLINE ordering, conservative admission with mutation only for `ADMITTED`, and the current Fin `StreamBars` contract with bounded reconnect. Upstream ONLINE loss detection, resumable position, and live market validation remain documented limitations rather than claims. Phase 2 gates remain unchanged.
@@ -607,14 +680,14 @@ System Design §22.3 records the explicit human direction that passed the Phase 
 
 ## 15. Non-Goals
 
-This plan does not authorize or perform:
+This reconciliation does not authorize or perform:
 
-- Go implementation, proto creation/modification, code generation, service/RPC implementation, build, or tests;
-- ONLINE consumer or OFFLINE producer implementation;
-- JEH solver or Dynamic Execution Pipeline implementation;
+- Go implementation, proto modification, code generation, service/RPC implementation, build, or new tests;
+- changes to existing ONLINE/OFFLINE, admission, JEH, circular-state, runtime, or script implementation;
+- Production Eligibility Controller, rule engine, or DEP-05 through DEP-11 implementation;
 - MongoDB mutation or execution of the 4,519-bar replay/phase comparison;
 - modification of `Fin_Feed_Sat_1`, `phase_angle_series_generator`, or `DSE_JEH_provers`;
-- startup-script creation, ad-hoc runtime execution, live execution, or viewer modification;
+- startup/stop-script changes, ad-hoc runtime execution, broker integration, live execution, or viewer modification;
 - repository restructuring, staging, commit, or push; or
 - broader architecture outside `DSE_JEH_TransSat_1`.
 
@@ -628,13 +701,14 @@ This plan does not authorize or perform:
 | V0.1 terminology and gate refinement | 2026-09-12 | Aligned Phase 2 planning with canonical `DISREGARD`, `ALLOCATE`, `HOLD & TRAIL`/`HOLD_AND_TRAIL`, and `LIQUIDATE` persistent regions/actions; treated `HOP-ON` and `HOP-OFF` only as 270° and 90° crossover events; retained Phase Velocity ($\omega$) as the intended ranking input without defining unresolved mathematics; and required implemented, validated ONLINE and OFFLINE paths before the Phase 1 Acceptance Gate can approve Phase 2. |
 | V0.1 Phase 1 contract review | 2026-09-12 | Synchronized the plan to the System Design decision register, approved the planned single-proto path/package without authorizing creation, removed deferred runtime-health and operations declarations from the initial proto, and recorded the failed Stage A gate pending identity, provenance, admission, replay-order, and ONLINE continuity decisions. |
 | V0.1 Phase 1 implementation | 2026-09-12 | Implemented the single Phase 1 proto and generated binding, Go runtime, Mongo OFFLINE producer, Fin gRPC ONLINE consumer, common admission, entity-isolated JEH solver, PhaseEvidence output, normal executable, deterministic replay and reference comparison, generated-contract integration tests, and validation reports. Phase 2 remains unimplemented. |
+| V0.1 complete-application reconciliation | 2026-09-13 | Revised in place for the complete persistent Transformation Satellite: authoritative single-proto coverage for internal and external governed meanings; explicit Production Eligibility Controller; common outcome-based `expr` rule facility with scoped contexts, typed outcomes and evidence; lifecycle/zero-input/activity/accountability work; truthful implementation status; execution separation; and preserved unresolved mathematics/policy including bar 64 versus bar 65. |
 
 ---
 
 ## 17. Authorization Statement
 
-This implementation plan is **APPROVED** for Phase 1.
+This implementation plan is **APPROVED** as the V0.1 plan for the complete application architecture.
 
-**Phase 1 is implemented and pending human review of its completion and validation reports.**
+**DEP-01 through DEP-04 are implemented and validated by existing reports. The explicit Production Eligibility Controller, DEP-05 through DEP-11, common rule engine, complete proto vocabulary, and complete lifecycle/telemetry/execution path are not implemented.**
 
-The explicit 2026-09-12 implementation direction authorized Phase 1 proto creation, code generation, Go implementation, build, tests, OFFLINE replay, and contract-level ONLINE integration. It does not authorize deployment, execution, trading, or any Phase 2 implementation. Phase 2 cannot begin before the Phase 1 Acceptance Gate is reviewed and approved.
+This in-place reconciliation authorizes no proto, generated-code, Go, startup/stop-script, broker-integration, deployment, or trading changes. Future work follows the proto-first gates in this plan and cannot invent unresolved mathematics or financial policy.

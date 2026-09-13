@@ -36,6 +36,351 @@ enum BarAdmissionStatus {
   BAR_ADMISSION_STATUS_REJECTED = 7;
 }
 
+// RuntimeLifecycleStatus is the governed process lifecycle. RUNNING does not
+// imply that bars are arriving: a live, connected runtime with zero input is a
+// valid RUNNING state. UNSPECIFIED means no lifecycle assertion was supplied.
+enum RuntimeLifecycleStatus {
+  RUNTIME_LIFECYCLE_STATUS_UNSPECIFIED = 0;
+  RUNTIME_LIFECYCLE_STATUS_STARTING = 1;
+  RUNTIME_LIFECYCLE_STATUS_INITIALIZING = 2;
+  RUNTIME_LIFECYCLE_STATUS_RUNNING = 3;
+  RUNTIME_LIFECYCLE_STATUS_DRAINING = 4;
+  RUNTIME_LIFECYCLE_STATUS_STOPPED = 5;
+  RUNTIME_LIFECYCLE_STATUS_DEGRADED = 6;
+  RUNTIME_LIFECYCLE_STATUS_FAILED = 7;
+  RUNTIME_LIFECYCLE_STATUS_STARTED = 8;
+  RUNTIME_LIFECYCLE_STATUS_STOPPING = 9;
+}
+
+// RuntimeHealthStatus summarizes operational health independently of lifecycle
+// and input activity. UNSPECIFIED means health has not been evaluated.
+enum RuntimeHealthStatus {
+  RUNTIME_HEALTH_STATUS_UNSPECIFIED = 0;
+  RUNTIME_HEALTH_STATUS_HEALTHY = 1;
+  RUNTIME_HEALTH_STATUS_DEGRADED = 2;
+  RUNTIME_HEALTH_STATUS_UNHEALTHY = 3;
+}
+
+// SourceConnectionStatus describes the selected input adapter without copying
+// Fin_FeedSat_1 transport messages into the DSE_JEH contract. COMPLETED applies
+// only to a bounded OFFLINE selection and does not itself stop the runtime.
+enum SourceConnectionStatus {
+  SOURCE_CONNECTION_STATUS_UNSPECIFIED = 0;
+  SOURCE_CONNECTION_STATUS_CONNECTING = 1;
+  SOURCE_CONNECTION_STATUS_CONNECTED = 2;
+  SOURCE_CONNECTION_STATUS_IDLE = 3;
+  SOURCE_CONNECTION_STATUS_RECONNECTING = 4;
+  SOURCE_CONNECTION_STATUS_COMPLETED = 5;
+  SOURCE_CONNECTION_STATUS_DEGRADED = 6;
+  SOURCE_CONNECTION_STATUS_FAILED = 7;
+  SOURCE_CONNECTION_STATUS_STOPPED = 8;
+  SOURCE_CONNECTION_STATUS_LISTENING = 9;
+  SOURCE_CONNECTION_STATUS_SUBSCRIBED = 10;
+}
+
+// BarAdmissionFinding records independently coexisting observations about an
+// inbound candidate. The primary BarAdmissionStatus remains a single terminal
+// disposition, while findings preserve all detected conditions.
+enum BarAdmissionFinding {
+  BAR_ADMISSION_FINDING_UNSPECIFIED = 0;
+  BAR_ADMISSION_FINDING_MALFORMED = 1;
+  BAR_ADMISSION_FINDING_DUPLICATE = 2;
+  BAR_ADMISSION_FINDING_CONFLICT = 3;
+  BAR_ADMISSION_FINDING_MISSING_PREDECESSOR = 4;
+  BAR_ADMISSION_FINDING_OUT_OF_ORDER = 5;
+}
+
+// SequenceIntegrityStatus states whether the symbol-specific causal sequence
+// is currently valid. It does not describe wall-clock minute adjacency.
+enum SequenceIntegrityStatus {
+  SEQUENCE_INTEGRITY_STATUS_UNSPECIFIED = 0;
+  SEQUENCE_INTEGRITY_STATUS_VALID = 1;
+  SEQUENCE_INTEGRITY_STATUS_BROKEN = 2;
+  SEQUENCE_INTEGRITY_STATUS_REESTABLISHING = 3;
+  SEQUENCE_INTEGRITY_STATUS_UNKNOWN = 4;
+}
+
+// ProductionEligibilityOutcome is the typed result of the unnumbered
+// Production Eligibility Controller between DEP-04 and DEP-05. It does not
+// decide whether bar 64 or bar 65 can first produce valid motion/crossover.
+enum ProductionEligibilityOutcome {
+  PRODUCTION_ELIGIBILITY_OUTCOME_UNSPECIFIED = 0;
+  PRODUCTION_ELIGIBILITY_OUTCOME_INITIALIZING = 1;
+  PRODUCTION_ELIGIBILITY_OUTCOME_PRODUCTION_ELIGIBLE = 2;
+  PRODUCTION_ELIGIBILITY_OUTCOME_BLOCKED_CONTINUITY = 3;
+  PRODUCTION_ELIGIBILITY_OUTCOME_BLOCKED_INVALID_PHASE = 4;
+  PRODUCTION_ELIGIBILITY_OUTCOME_ERROR = 5;
+}
+
+// RuleOwningComponent identifies the governed responsibility that owns a rule.
+// It is not a deployment or RPC topology.
+enum RuleOwningComponent {
+  RULE_OWNING_COMPONENT_UNSPECIFIED = 0;
+  RULE_OWNING_COMPONENT_PRODUCTION_ELIGIBILITY = 1;
+  RULE_OWNING_COMPONENT_PHASE_MOTION = 2;
+  RULE_OWNING_COMPONENT_BOUNDARY_CROSSOVER = 3;
+  RULE_OWNING_COMPONENT_STRATEGY_REGION = 4;
+  RULE_OWNING_COMPONENT_UNIVERSE = 5;
+  RULE_OWNING_COMPONENT_CANDIDATE_RANKING = 6;
+  RULE_OWNING_COMPONENT_STRATEGY_DECISION = 7;
+  RULE_OWNING_COMPONENT_EXECUTION_INTENT = 8;
+}
+
+// RuleEvaluationStatus describes evaluation completion, not a financial action.
+// UNSPECIFIED means no evaluation status was supplied.
+enum RuleEvaluationStatus {
+  RULE_EVALUATION_STATUS_UNSPECIFIED = 0;
+  RULE_EVALUATION_STATUS_PASSED = 1;
+  RULE_EVALUATION_STATUS_BLOCKED = 2;
+  RULE_EVALUATION_STATUS_NOT_APPLICABLE = 3;
+  RULE_EVALUATION_STATUS_NO_ACTION = 4;
+  RULE_EVALUATION_STATUS_ERROR = 5;
+}
+
+// RuleRawResultType identifies the implementation-level expr result type. A raw
+// value has no business meaning until the owning rule maps it to a typed outcome.
+enum RuleRawResultType {
+  RULE_RAW_RESULT_TYPE_UNSPECIFIED = 0;
+  RULE_RAW_RESULT_TYPE_BOOLEAN = 1;
+  RULE_RAW_RESULT_TYPE_INTEGER = 2;
+  RULE_RAW_RESULT_TYPE_NUMBER = 3;
+  RULE_RAW_RESULT_TYPE_STRING = 4;
+}
+
+// PhaseMotionStatus reports availability and validity without defining the
+// unresolved signed-delta or Phase Velocity algorithm.
+enum PhaseMotionStatus {
+  PHASE_MOTION_STATUS_UNSPECIFIED = 0;
+  PHASE_MOTION_STATUS_UNAVAILABLE = 1;
+  PHASE_MOTION_STATUS_VALID = 2;
+  PHASE_MOTION_STATUS_INVALID = 3;
+  PHASE_MOTION_STATUS_ERROR = 4;
+}
+
+// PhaseMotionDirection describes an approved algorithm's directional result.
+// STATIONARY is distinct from unavailable or invalid motion.
+enum PhaseMotionDirection {
+  PHASE_MOTION_DIRECTION_UNSPECIFIED = 0;
+  PHASE_MOTION_DIRECTION_FORWARD = 1;
+  PHASE_MOTION_DIRECTION_REVERSE = 2;
+  PHASE_MOTION_DIRECTION_STATIONARY = 3;
+  PHASE_MOTION_DIRECTION_INDETERMINATE = 4;
+}
+
+// BoundaryCrossoverStatus separates detection validity from the crossover type.
+enum BoundaryCrossoverStatus {
+  BOUNDARY_CROSSOVER_STATUS_UNSPECIFIED = 0;
+  BOUNDARY_CROSSOVER_STATUS_UNAVAILABLE = 1;
+  BOUNDARY_CROSSOVER_STATUS_NO_CROSSOVER = 2;
+  BOUNDARY_CROSSOVER_STATUS_VALID = 3;
+  BOUNDARY_CROSSOVER_STATUS_INVALID = 4;
+  BOUNDARY_CROSSOVER_STATUS_ERROR = 5;
+}
+
+// BoundaryCrossoverType identifies a governed transition event. HOP_ON and
+// HOP_OFF are events, never persistent strategy regions.
+enum BoundaryCrossoverType {
+  BOUNDARY_CROSSOVER_TYPE_UNSPECIFIED = 0;
+  BOUNDARY_CROSSOVER_TYPE_NONE = 1;
+  BOUNDARY_CROSSOVER_TYPE_CROSS_0 = 2;
+  BOUNDARY_CROSSOVER_TYPE_HOP_OFF_CROSS_90 = 3;
+  BOUNDARY_CROSSOVER_TYPE_CROSS_180 = 4;
+  BOUNDARY_CROSSOVER_TYPE_HOP_ON_CROSS_270 = 5;
+}
+
+// StrategyRegion is persistent strategy-region membership. Region membership
+// is not a crossover, decision, intent, or execution result.
+enum StrategyRegion {
+  STRATEGY_REGION_UNSPECIFIED = 0;
+  STRATEGY_REGION_DISREGARD = 1;
+  STRATEGY_REGION_ALLOCATE = 2;
+  STRATEGY_REGION_HOLD_AND_TRAIL = 3;
+  STRATEGY_REGION_LIQUIDATE = 4;
+}
+
+// StrategyRegionStatus identifies whether region evidence initializes,
+// persists, transitions, is unavailable, or fails.
+enum StrategyRegionStatus {
+  STRATEGY_REGION_STATUS_UNSPECIFIED = 0;
+  STRATEGY_REGION_STATUS_INITIALIZED = 1;
+  STRATEGY_REGION_STATUS_PERSISTED = 2;
+  STRATEGY_REGION_STATUS_TRANSITIONED = 3;
+  STRATEGY_REGION_STATUS_UNAVAILABLE = 4;
+  STRATEGY_REGION_STATUS_ERROR = 5;
+}
+
+// CandidateStatus describes universe candidacy without authorizing allocation.
+enum CandidateStatus {
+  CANDIDATE_STATUS_UNSPECIFIED = 0;
+  CANDIDATE_STATUS_INELIGIBLE = 1;
+  CANDIDATE_STATUS_ELIGIBLE = 2;
+  CANDIDATE_STATUS_EXCLUDED = 3;
+  CANDIDATE_STATUS_STALE = 4;
+  CANDIDATE_STATUS_PENDING = 5;
+  CANDIDATE_STATUS_ERROR = 6;
+}
+
+// HoldingStatus describes governed holding knowledge, not broker truth beyond
+// the latest reconciled ExecutionEvent.
+enum HoldingStatus {
+  HOLDING_STATUS_UNSPECIFIED = 0;
+  HOLDING_STATUS_NONE = 1;
+  HOLDING_STATUS_PENDING_OPEN = 2;
+  HOLDING_STATUS_OPEN = 3;
+  HOLDING_STATUS_PENDING_CLOSE = 4;
+  HOLDING_STATUS_CLOSED = 5;
+  HOLDING_STATUS_UNKNOWN = 6;
+}
+
+// CapacityStatus carries policy-neutral capacity availability. Exact capital
+// and holding policy remains outside this contract revision.
+enum CapacityStatus {
+  CAPACITY_STATUS_UNSPECIFIED = 0;
+  CAPACITY_STATUS_AVAILABLE = 1;
+  CAPACITY_STATUS_EXHAUSTED = 2;
+  CAPACITY_STATUS_RESERVED = 3;
+  CAPACITY_STATUS_UNKNOWN = 4;
+  CAPACITY_STATUS_ERROR = 5;
+}
+
+// FreshnessStatus records whether an entity view is usable under an identified
+// future policy; it does not define the unresolved staleness threshold.
+enum FreshnessStatus {
+  FRESHNESS_STATUS_UNSPECIFIED = 0;
+  FRESHNESS_STATUS_FRESH = 1;
+  FRESHNESS_STATUS_STALE = 2;
+  FRESHNESS_STATUS_UNKNOWN = 3;
+}
+
+// CandidateRankingStatus describes ranking production without defining its
+// unresolved formula, tie-breaking policy, or candidate timing.
+enum CandidateRankingStatus {
+  CANDIDATE_RANKING_STATUS_UNSPECIFIED = 0;
+  CANDIDATE_RANKING_STATUS_NOT_APPLICABLE = 1;
+  CANDIDATE_RANKING_STATUS_COMPLETED = 2;
+  CANDIDATE_RANKING_STATUS_INSUFFICIENT_CANDIDATES = 3;
+  CANDIDATE_RANKING_STATUS_INVALID = 4;
+  CANDIDATE_RANKING_STATUS_ERROR = 5;
+}
+
+// StrategyDecisionType is distinct from StrategyRegion even where names overlap.
+// A decision does not claim that an action was requested or executed.
+enum StrategyDecisionType {
+  STRATEGY_DECISION_TYPE_UNSPECIFIED = 0;
+  STRATEGY_DECISION_TYPE_NO_ACTION = 1;
+  STRATEGY_DECISION_TYPE_ALLOCATE = 2;
+  STRATEGY_DECISION_TYPE_HOLD_AND_TRAIL = 3;
+  STRATEGY_DECISION_TYPE_LIQUIDATE = 4;
+  STRATEGY_DECISION_TYPE_DISREGARD = 5;
+}
+
+// StrategyDecisionStatus describes whether a decision was produced, blocked,
+// not applicable, or failed.
+enum StrategyDecisionStatus {
+  STRATEGY_DECISION_STATUS_UNSPECIFIED = 0;
+  STRATEGY_DECISION_STATUS_PRODUCED = 1;
+  STRATEGY_DECISION_STATUS_BLOCKED = 2;
+  STRATEGY_DECISION_STATUS_NOT_APPLICABLE = 3;
+  STRATEGY_DECISION_STATUS_ERROR = 4;
+}
+
+// ExecutionMode identifies only the approved paper execution objectives. No
+// live or funded execution value is defined or authorized.
+enum ExecutionMode {
+  EXECUTION_MODE_UNSPECIFIED = 0;
+  EXECUTION_MODE_LOCAL_PAPER = 1;
+  EXECUTION_MODE_ALPACA_PAPER = 2;
+}
+
+// ExecutionIntentAction is a requested action, not an execution outcome.
+enum ExecutionIntentAction {
+  EXECUTION_INTENT_ACTION_UNSPECIFIED = 0;
+  EXECUTION_INTENT_ACTION_ALLOCATE = 1;
+  EXECUTION_INTENT_ACTION_HOLD_AND_TRAIL = 2;
+  EXECUTION_INTENT_ACTION_LIQUIDATE = 3;
+  EXECUTION_INTENT_ACTION_CANCEL = 4;
+}
+
+// ExecutionIntentStatus describes the lifecycle of a request before execution
+// outcome. SENT does not mean accepted or filled.
+enum ExecutionIntentStatus {
+  EXECUTION_INTENT_STATUS_UNSPECIFIED = 0;
+  EXECUTION_INTENT_STATUS_CREATED = 1;
+  EXECUTION_INTENT_STATUS_ELIGIBLE = 2;
+  EXECUTION_INTENT_STATUS_BLOCKED = 3;
+  EXECUTION_INTENT_STATUS_SENT = 4;
+  EXECUTION_INTENT_STATUS_EXPIRED = 5;
+  EXECUTION_INTENT_STATUS_CANCELED = 6;
+  EXECUTION_INTENT_STATUS_ERROR = 7;
+}
+
+// ExecutionEventStatus is the executor-reported result. Only ExecutionEvent can
+// assert these execution meanings; StrategyDecision and ExecutionIntent cannot.
+enum ExecutionEventStatus {
+  EXECUTION_EVENT_STATUS_UNSPECIFIED = 0;
+  EXECUTION_EVENT_STATUS_PENDING = 1;
+  EXECUTION_EVENT_STATUS_ACCEPTED = 2;
+  EXECUTION_EVENT_STATUS_REJECTED = 3;
+  EXECUTION_EVENT_STATUS_PARTIALLY_FILLED = 4;
+  EXECUTION_EVENT_STATUS_FILLED = 5;
+  EXECUTION_EVENT_STATUS_CANCELED = 6;
+  EXECUTION_EVENT_STATUS_FAILED = 7;
+}
+
+// ReconciliationStatus describes comparison of internal intent state with the
+// executor's latest reported state without defining retry/recovery policy.
+enum ReconciliationStatus {
+  RECONCILIATION_STATUS_UNSPECIFIED = 0;
+  RECONCILIATION_STATUS_PENDING = 1;
+  RECONCILIATION_STATUS_MATCHED = 2;
+  RECONCILIATION_STATUS_MISMATCH = 3;
+  RECONCILIATION_STATUS_UNRESOLVED = 4;
+  RECONCILIATION_STATUS_ERROR = 5;
+}
+
+// BarProcessingOutcomeType identifies the terminal application outcome for one
+// received bar. Causal evidence IDs provide the detailed structured result.
+enum BarProcessingOutcomeType {
+  BAR_PROCESSING_OUTCOME_TYPE_UNSPECIFIED = 0;
+  BAR_PROCESSING_OUTCOME_TYPE_ADMISSION_REJECTED = 1;
+  BAR_PROCESSING_OUTCOME_TYPE_INITIALIZING = 2;
+  BAR_PROCESSING_OUTCOME_TYPE_PRODUCTION_ELIGIBILITY_BLOCKED = 3;
+  BAR_PROCESSING_OUTCOME_TYPE_PHASE_MOTION_UNAVAILABLE = 4;
+  BAR_PROCESSING_OUTCOME_TYPE_NO_CROSSOVER = 5;
+  BAR_PROCESSING_OUTCOME_TYPE_SAME_REGION_PERSISTENCE = 6;
+  BAR_PROCESSING_OUTCOME_TYPE_NO_ACTION = 7;
+  BAR_PROCESSING_OUTCOME_TYPE_STRATEGY_DECISION = 8;
+  BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_INTENT = 9;
+  BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_EVENT = 10;
+  BAR_PROCESSING_OUTCOME_TYPE_PROCESSING_ERROR = 11;
+}
+
+// DiagnosticSeverity classifies governed diagnostics independently of logs.
+enum DiagnosticSeverity {
+  DIAGNOSTIC_SEVERITY_UNSPECIFIED = 0;
+  DIAGNOSTIC_SEVERITY_INFO = 1;
+  DIAGNOSTIC_SEVERITY_WARNING = 2;
+  DIAGNOSTIC_SEVERITY_ERROR = 3;
+  DIAGNOSTIC_SEVERITY_FATAL = 4;
+}
+
+// ErrorClassification provides stable operational categories without exposing
+// implementation-specific exception types.
+enum ErrorClassification {
+  ERROR_CLASSIFICATION_UNSPECIFIED = 0;
+  ERROR_CLASSIFICATION_CONFIGURATION = 1;
+  ERROR_CLASSIFICATION_SOURCE = 2;
+  ERROR_CLASSIFICATION_ADMISSION = 3;
+  ERROR_CLASSIFICATION_ANALYTICAL = 4;
+  ERROR_CLASSIFICATION_RULE_COMPILATION = 5;
+  ERROR_CLASSIFICATION_RULE_EVALUATION = 6;
+  ERROR_CLASSIFICATION_STATE = 7;
+  ERROR_CLASSIFICATION_PUBLICATION = 8;
+  ERROR_CLASSIFICATION_EXECUTION = 9;
+  ERROR_CLASSIFICATION_RECONCILIATION = 10;
+  ERROR_CLASSIFICATION_INTERNAL = 11;
+}
+
 // SourceProvenance identifies the observation supplied by an ONLINE or OFFLINE
 // adapter. It is source-independent evidence, not a Fin transport message or a
 // MongoDB document. Source identity is distinct from runtime evidence identity.
@@ -99,6 +444,8 @@ message BarAdmissionEvidence {
   BarAdmissionStatus status = 5;
   string reason = 6;
   int64 produced_unix_ms = 7;
+  repeated BarAdmissionFinding findings = 8;
+  string reception_evidence_id = 9;
 }
 
 // SolverIdentity identifies the exact analytical behavior that produced phase.
@@ -132,4 +479,937 @@ message PhaseEvidence {
   SolverIdentity solver_identity = 8;
   SourceProvenance source_provenance = 9;
   int64 produced_unix_ms = 10;
+  string analytical_state_evidence_id = 11;
+}
+
+// RuntimeIdentity identifies one started application instance and build. It is
+// carried by operational evidence and is not a process ID or mutable status.
+message RuntimeIdentity {
+  string runtime_id = 1;
+  string application_name = 2;
+  string application_version = 3;
+  string build_id = 4;
+  string instance_id = 5;
+  int64 started_unix_ms = 6;
+}
+
+// ConfigurationIdentity identifies immutable active configuration without
+// exposing secrets. Digest generation and canonicalization are governed build
+// concerns; configuration_digest is never a credential container.
+message ConfigurationIdentity {
+  string configuration_id = 1;
+  string configuration_version = 2;
+  string configuration_digest = 3;
+}
+
+// RuleIdentity identifies one governed rule and its owning responsibility.
+// expression_digest attributes compiled source without serializing expr.Program.
+message RuleIdentity {
+  string rule_id = 1;
+  string rule_version = 2;
+  string rule_name = 3;
+  string purpose = 4;
+  RuleOwningComponent owning_component = 5;
+  string expression_digest = 6;
+  RuleRawResultType expected_result_type = 7;
+}
+
+// RuleSetIdentity identifies the exact approved rule collection and
+// configuration loaded by a runtime.
+message RuleSetIdentity {
+  string rule_set_id = 1;
+  string rule_set_version = 2;
+  string configuration_id = 3;
+  string rule_set_digest = 4;
+}
+
+// AuthorizedDynamicVariable declares one variable exposed to one rule context.
+// It carries no value and grants no authority outside the owning component.
+message AuthorizedDynamicVariable {
+  string variable_name = 1;
+  RuleRawResultType value_type = 2;
+  string purpose = 3;
+  string unit = 4;
+  bool required = 5;
+}
+
+// SourceSubscriptionEvidence reports source state independently of bar activity.
+// OFFLINE collection_run_id selects exactly one run; ONLINE endpoint identifies
+// the upstream Fin_FeedSat_1 server without copying its transport messages.
+message SourceSubscriptionEvidence {
+  string evidence_id = 1;
+  string runtime_id = 2;
+  RuntimeMode runtime_mode = 3;
+  SourceConnectionStatus connection_status = 4;
+  string source_id = 5;
+  string endpoint = 6;
+  string collection_run_id = 7;
+  string subscription_identity = 8;
+  string reason = 9;
+  int64 produced_unix_ms = 10;
+}
+
+// BarReceptionEvidence accounts for every candidate at the common BarEvent
+// boundary before DEP-01. reception_id is the causal root for admission and the
+// eventual terminal BarProcessingOutcomeEvidence.
+message BarReceptionEvidence {
+  string reception_id = 1;
+  string runtime_id = 2;
+  string bar_event_id = 3;
+  string entity_id = 4;
+  SourceProvenance source_provenance = 5;
+  int64 received_unix_ms = 6;
+}
+
+// AnalyticalStateEvidence identifies the governed DEP-02 state transition
+// without serializing Hilbert recurrence buffers or other implementation state.
+message AnalyticalStateEvidence {
+  string evidence_id = 1;
+  string runtime_id = 2;
+  string entity_id = 3;
+  uint64 entity_sequence = 4;
+  uint64 contiguous_valid_bar_count = 5;
+  SequenceIntegrityStatus sequence_integrity = 6;
+  string prior_state_evidence_id = 7;
+  string admission_id = 8;
+  string solver_configuration_id = 9;
+  int64 produced_unix_ms = 10;
+}
+
+// ProductionEligibilityContext is the scoped input to Rule #1. It intentionally
+// contains no broker, cash, quantity, or execution state.
+message ProductionEligibilityContext {
+  string context_id = 1;
+  string phase_evidence_id = 2;
+  string analytical_state_evidence_id = 3;
+  PhaseStatus phase_status = 4;
+  bool phase_value_present = 5;
+  uint64 contiguous_valid_bar_count = 6;
+  SequenceIntegrityStatus sequence_integrity = 7;
+  bool current_bar_valid = 8;
+  bool prior_analytical_state_valid = 9;
+}
+
+// ProductionEligibilityEvidence is the controller's typed result. Bar 64 can
+// first be PRODUCTION_ELIGIBLE, but this message deliberately does not assert
+// when production-valid motion or crossover can first occur.
+message ProductionEligibilityEvidence {
+  string evidence_id = 1;
+  string runtime_id = 2;
+  string entity_id = 3;
+  uint64 entity_sequence = 4;
+  string phase_evidence_id = 5;
+  string context_id = 6;
+  ProductionEligibilityOutcome outcome = 7;
+  uint64 contiguous_valid_bar_count = 8;
+  SequenceIntegrityStatus sequence_integrity = 9;
+  string rule_evaluation_evidence_id = 10;
+  string reason = 11;
+  int64 produced_unix_ms = 12;
+  string analytical_state_evidence_id = 13;
+}
+
+// ProductionEligibilityRuleOutcome is the type-safe Rule #1 mapping result.
+message ProductionEligibilityRuleOutcome {
+  ProductionEligibilityOutcome outcome = 1;
+}
+
+// PhaseMotionRuleOutcome is a policy result around deterministic DEP-05 math.
+message PhaseMotionRuleOutcome {
+  PhaseMotionStatus status = 1;
+}
+
+// BoundaryCrossoverRuleOutcome is a type-safe DEP-06 evaluation result; it does
+// not define the unresolved detection mathematics.
+message BoundaryCrossoverRuleOutcome {
+  BoundaryCrossoverStatus status = 1;
+  BoundaryCrossoverType crossover_type = 2;
+}
+
+// StrategyRegionRuleOutcome maps a rule result to persistent DEP-07 membership.
+message StrategyRegionRuleOutcome {
+  StrategyRegionStatus status = 1;
+  StrategyRegion region = 2;
+}
+
+// UniverseEligibilityRuleOutcome maps a scoped DEP-08 rule to candidacy only.
+message UniverseEligibilityRuleOutcome {
+  CandidateStatus candidate_status = 1;
+}
+
+// CandidateRankingRuleOutcome maps ranking eligibility/completion status without
+// defining the deterministic ranking formula.
+message CandidateRankingRuleOutcome {
+  CandidateRankingStatus status = 1;
+}
+
+// StrategyDecisionRuleOutcome is a typed DEP-10 result, not an intent or fill.
+message StrategyDecisionRuleOutcome {
+  StrategyDecisionStatus status = 1;
+  StrategyDecisionType decision_type = 2;
+}
+
+// ExecutionIntentRuleOutcome governs DEP-11 eligibility, not execution outcome.
+message ExecutionIntentRuleOutcome {
+  ExecutionIntentStatus status = 1;
+}
+
+// RuleOutcomeMapping declares how one expected raw evaluator result maps to one
+// type-safe outcome. Routing and mutation descriptions are governance metadata;
+// they cannot add meanings absent from the selected typed outcome.
+message RuleOutcomeMapping {
+  string mapping_id = 1;
+  oneof expected_raw_result {
+    bool expected_boolean_result = 2;
+    int64 expected_integer_result = 3;
+    double expected_number_result = 4;
+    string expected_string_result = 5;
+  }
+  oneof typed_outcome {
+    ProductionEligibilityRuleOutcome production_eligibility_outcome = 6;
+    PhaseMotionRuleOutcome phase_motion_outcome = 7;
+    BoundaryCrossoverRuleOutcome boundary_crossover_outcome = 8;
+    StrategyRegionRuleOutcome strategy_region_outcome = 9;
+    UniverseEligibilityRuleOutcome universe_eligibility_outcome = 10;
+    CandidateRankingRuleOutcome candidate_ranking_outcome = 11;
+    StrategyDecisionRuleOutcome strategy_decision_outcome = 12;
+    ExecutionIntentRuleOutcome execution_intent_outcome = 13;
+  }
+  string routing_behavior = 14;
+  string permitted_state_mutation = 15;
+  bool evidence_required = 16;
+}
+
+// RuleDefinition is the governed logical Rule Registry entry. expr_expression is
+// compiled at startup or an approved load operation; no compiled program or
+// runtime object is serialized in this contract.
+message RuleDefinition {
+  RuleIdentity rule_identity = 1;
+  RuleSetIdentity rule_set_identity = 2;
+  string expr_expression = 3;
+  repeated AuthorizedDynamicVariable authorized_dynamic_variables = 4;
+  repeated RuleOutcomeMapping outcome_mappings = 5;
+}
+
+// RuleSetDefinition is the attributable configuration loaded into the common
+// Rule Registry. Its presence does not authorize runtime hot reload.
+message RuleSetDefinition {
+  RuleSetIdentity rule_set_identity = 1;
+  repeated RuleDefinition rules = 2;
+}
+
+// RuleEvaluationEvidence attributes one rule evaluation. raw_result is
+// diagnostic implementation evidence only; typed_outcome alone authorizes
+// governed routing or state mutation.
+message RuleEvaluationEvidence {
+  string evidence_id = 1;
+  string runtime_id = 2;
+  RuleIdentity rule_identity = 3;
+  RuleSetIdentity rule_set_identity = 4;
+  string causal_input_identity = 5;
+  uint64 evaluation_sequence = 6;
+  RuleEvaluationStatus evaluation_status = 7;
+  oneof raw_result {
+    bool raw_boolean_result = 8;
+    int64 raw_integer_result = 9;
+    double raw_number_result = 10;
+    string raw_string_result = 11;
+  }
+  oneof typed_outcome {
+    ProductionEligibilityRuleOutcome production_eligibility_outcome = 12;
+    PhaseMotionRuleOutcome phase_motion_outcome = 13;
+    BoundaryCrossoverRuleOutcome boundary_crossover_outcome = 14;
+    StrategyRegionRuleOutcome strategy_region_outcome = 15;
+    UniverseEligibilityRuleOutcome universe_eligibility_outcome = 16;
+    CandidateRankingRuleOutcome candidate_ranking_outcome = 17;
+    StrategyDecisionRuleOutcome strategy_decision_outcome = 18;
+    ExecutionIntentRuleOutcome execution_intent_outcome = 19;
+  }
+  string reason = 20;
+  int64 produced_unix_ms = 21;
+}
+
+// AlgorithmIdentity attributes deterministic mathematics without freezing its
+// unresolved formula in this schema.
+message AlgorithmIdentity {
+  string algorithm_id = 1;
+  string algorithm_version = 2;
+  string configuration_id = 3;
+  string implementation_id = 4;
+}
+
+// PhaseMotionEvidence records DEP-05 output. Optional values are absent when
+// motion is unavailable/invalid. Degrees-per-bar is the intended velocity unit;
+// the exact delta, window, smoothing, and acceleration policy remains open.
+message PhaseMotionEvidence {
+  string evidence_id = 1;
+  string runtime_id = 2;
+  string entity_id = 3;
+  uint64 entity_sequence = 4;
+  string prior_phase_evidence_id = 5;
+  string current_phase_evidence_id = 6;
+  // Identifies the current phase observation's eligibility evidence.
+  string production_eligibility_evidence_id = 7;
+  PhaseMotionStatus status = 8;
+  PhaseMotionDirection direction = 9;
+  optional double signed_delta_degrees = 10;
+  optional double phase_velocity_degrees_per_bar = 11;
+  AlgorithmIdentity algorithm_identity = 12;
+  string rule_evaluation_evidence_id = 13;
+  string reason = 14;
+  int64 produced_unix_ms = 15;
+  // Present when the approved motion policy uses prior-phase eligibility.
+  string prior_production_eligibility_evidence_id = 16;
+}
+
+// BoundaryCrossoverEvidence records DEP-06 output separately from persistent
+// region membership. Exact crossover mathematics remain identified by policy.
+message BoundaryCrossoverEvidence {
+  string evidence_id = 1;
+  string runtime_id = 2;
+  string entity_id = 3;
+  uint64 entity_sequence = 4;
+  string phase_motion_evidence_id = 5;
+  BoundaryCrossoverStatus status = 6;
+  BoundaryCrossoverType crossover_type = 7;
+  optional double boundary_degrees = 8;
+  AlgorithmIdentity algorithm_identity = 9;
+  string rule_evaluation_evidence_id = 10;
+  string reason = 11;
+  int64 produced_unix_ms = 12;
+  string prior_phase_evidence_id = 13;
+  string current_phase_evidence_id = 14;
+}
+
+// StrategyRegionEvidence records DEP-07 persistent membership and whether the
+// result initialized, persisted, or transitioned. It never claims execution.
+message StrategyRegionEvidence {
+  string evidence_id = 1;
+  string runtime_id = 2;
+  string entity_id = 3;
+  uint64 entity_sequence = 4;
+  StrategyRegionStatus status = 5;
+  StrategyRegion previous_region = 6;
+  StrategyRegion current_region = 7;
+  string phase_evidence_id = 8;
+  string crossover_evidence_id = 9;
+  string rule_evaluation_evidence_id = 10;
+  string policy_identity = 11;
+  int64 produced_unix_ms = 12;
+  string prior_strategy_region_evidence_id = 13;
+}
+
+// DecimalValue carries an exact decimal quantity or monetary value as text plus
+// unit/currency. Interpretation and sizing policy are not defined by the schema.
+message DecimalValue {
+  string value = 1;
+  string unit = 2;
+}
+
+// CapacityEvidence carries approved capacity values when available without
+// defining how capacity or capital is calculated.
+message CapacityEvidence {
+  CapacityStatus status = 1;
+  optional uint32 capacity_limit = 2;
+  optional uint32 capacity_used = 3;
+  optional DecimalValue available_capital = 4;
+  string policy_identity = 5;
+}
+
+// EntityUniverseState is the latest governed DEP-08 view for one entity. It is
+// asynchronous and does not imply a synchronized universe frame.
+message EntityUniverseState {
+  string entity_state_id = 1;
+  string entity_id = 2;
+  uint64 entity_sequence = 3;
+  string strategy_region_evidence_id = 4;
+  StrategyRegion strategy_region = 5;
+  CandidateStatus candidate_status = 6;
+  HoldingStatus holding_status = 7;
+  FreshnessStatus freshness_status = 8;
+  string pending_strategy_decision_id = 9;
+  string pending_execution_intent_id = 10;
+  int64 updated_unix_ms = 11;
+  string phase_motion_evidence_id = 12;
+}
+
+// UniverseStateEvidence identifies one serialized DEP-08 universe version and
+// its latest entity views. Snapshot, staleness, capital, and capacity policies
+// remain attributable rather than embedded in this schema.
+message UniverseStateEvidence {
+  string evidence_id = 1;
+  string runtime_id = 2;
+  string universe_version = 3;
+  repeated EntityUniverseState entities = 4;
+  CapacityEvidence capacity = 5;
+  string policy_identity = 6;
+  string causal_input_identity = 7;
+  int64 produced_unix_ms = 8;
+  string rule_evaluation_evidence_id = 9;
+  string prior_universe_state_evidence_id = 10;
+  string execution_event_id = 11;
+}
+
+// CandidateRankingEntry records one DEP-09 placement. score is present only if
+// the approved ranking algorithm produces a scalar with the named unit.
+message CandidateRankingEntry {
+  string entity_id = 1;
+  uint32 rank = 2;
+  optional double score = 3;
+  string score_unit = 4;
+  string phase_motion_evidence_id = 5;
+  bool tied = 6;
+}
+
+// CandidateRankingEvidence records the complete candidate set and ranking
+// result without defining the unresolved ranking formula or tie policy.
+message CandidateRankingEvidence {
+  string evidence_id = 1;
+  string runtime_id = 2;
+  string universe_state_evidence_id = 3;
+  string candidate_set_id = 4;
+  CandidateRankingStatus status = 5;
+  repeated CandidateRankingEntry entries = 6;
+  AlgorithmIdentity ranking_policy_identity = 7;
+  string rule_evaluation_evidence_id = 8;
+  string reason = 9;
+  int64 produced_unix_ms = 10;
+}
+
+// StrategyDecision is the distinct DEP-10 result. It is neither a region nor
+// an execution request/outcome, even when a decision label resembles a region.
+message StrategyDecision {
+  string decision_id = 1;
+  string runtime_id = 2;
+  string entity_id = 3;
+  uint64 entity_sequence = 4;
+  StrategyDecisionStatus status = 5;
+  StrategyDecisionType decision_type = 6;
+  string strategy_region_evidence_id = 7;
+  string crossover_evidence_id = 8;
+  string universe_state_evidence_id = 9;
+  string candidate_ranking_evidence_id = 10;
+  string rule_evaluation_evidence_id = 11;
+  string policy_identity = 12;
+  string reason = 13;
+  int64 produced_unix_ms = 14;
+}
+
+// ExecutionIntent is the DEP-11 request sent to either approved paper executor.
+// It never states that execution occurred. Quantity is optional until an
+// approved sizing policy supplies it.
+message ExecutionIntent {
+  string intent_id = 1;
+  string runtime_id = 2;
+  string entity_id = 3;
+  ExecutionIntentAction requested_action = 4;
+  ExecutionIntentStatus status = 5;
+  string strategy_decision_id = 6;
+  optional DecimalValue requested_quantity = 7;
+  string configuration_id = 8;
+  string policy_identity = 9;
+  string idempotency_key = 10;
+  string correlation_id = 11;
+  optional int64 valid_until_unix_ms = 12;
+  string rule_evaluation_evidence_id = 13;
+  int64 produced_unix_ms = 14;
+  string universe_state_evidence_id = 15;
+}
+
+// ExecutorIdentity identifies the selected paper adapter. No live execution
+// mode exists in the authoritative vocabulary.
+message ExecutorIdentity {
+  string executor_id = 1;
+  string executor_version = 2;
+  ExecutionMode execution_mode = 3;
+  string configuration_id = 4;
+}
+
+// ExecutionEvent is the only contract that reports execution outcome. Decimal
+// quantities/prices preserve exact adapter values without defining sizing policy.
+message ExecutionEvent {
+  string event_id = 1;
+  string runtime_id = 2;
+  string execution_intent_id = 3;
+  string entity_id = 4;
+  ExecutionEventStatus status = 5;
+  ExecutorIdentity executor_identity = 6;
+  string external_order_id = 7;
+  optional DecimalValue requested_quantity = 8;
+  optional DecimalValue filled_quantity = 9;
+  optional DecimalValue fill_price = 10;
+  string reason = 11;
+  string correlation_id = 12;
+  int64 execution_unix_ms = 13;
+  int64 produced_unix_ms = 14;
+}
+
+// ExecutionReconciliationEvidence compares the latest executor event with the
+// originating intent. It carries state without defining retry/recovery policy.
+message ExecutionReconciliationEvidence {
+  string evidence_id = 1;
+  string runtime_id = 2;
+  string execution_intent_id = 3;
+  string execution_event_id = 4;
+  ReconciliationStatus status = 5;
+  string reason = 6;
+  int64 produced_unix_ms = 7;
+}
+
+// RuntimeActivitySnapshot holds independent monotonic counters for one runtime
+// observation window. Counter values do not establish liveness or connectivity.
+message RuntimeActivitySnapshot {
+  string snapshot_id = 1;
+  string runtime_id = 2;
+  uint64 bars_received = 3;
+  uint64 bars_admitted = 4;
+  uint64 bars_rejected = 5;
+  uint64 bars_initializing = 6;
+  // Counts bars with PRODUCTION_ELIGIBILITY_OUTCOME_PRODUCTION_ELIGIBLE.
+  uint64 bars_phase_eligible = 7;
+  uint64 phase_motion_evaluations = 8;
+  uint64 boundary_crossovers = 9;
+  uint64 hop_on_events = 10;
+  uint64 hop_off_events = 11;
+  uint64 strategy_decisions = 12;
+  uint64 execution_intents = 13;
+  uint64 execution_events = 14;
+  int64 window_start_unix_ms = 15;
+  int64 produced_unix_ms = 16;
+}
+
+// DiagnosticEvidence is structured operational evidence, not a replacement for
+// logs and not a financially meaningful outcome.
+message DiagnosticEvidence {
+  string evidence_id = 1;
+  string runtime_id = 2;
+  string component_identity = 3;
+  DiagnosticSeverity severity = 4;
+  ErrorClassification error_classification = 5;
+  string causal_identity = 6;
+  string configuration_id = 7;
+  string rule_set_id = 8;
+  string message = 9;
+  int64 produced_unix_ms = 10;
+}
+
+// RuntimeStatusEvidence is an observable lifecycle/health snapshot. Activity is
+// separate so a RUNNING runtime can truthfully report zero bars.
+message RuntimeStatusEvidence {
+  string evidence_id = 1;
+  RuntimeIdentity runtime_identity = 2;
+  RuntimeMode runtime_mode = 3;
+  RuntimeLifecycleStatus lifecycle_status = 4;
+  RuntimeHealthStatus health_status = 5;
+  bool process_live = 6;
+  SourceSubscriptionEvidence source_status = 7;
+  ConfigurationIdentity configuration_identity = 8;
+  RuleSetIdentity rule_set_identity = 9;
+  SolverIdentity solver_identity = 10;
+  RuntimeActivitySnapshot activity = 11;
+  string reason = 12;
+  int64 produced_unix_ms = 13;
+}
+
+// BarProcessingOutcomeEvidence closes the causal path for every received bar.
+// Detailed evidence IDs retain structured stage semantics instead of flattening
+// every component result into one ambiguous status.
+message BarProcessingOutcomeEvidence {
+  string evidence_id = 1;
+  string runtime_id = 2;
+  string reception_id = 3;
+  string bar_event_id = 4;
+  string entity_id = 5;
+  uint64 entity_sequence = 6;
+  BarProcessingOutcomeType outcome_type = 7;
+  string admission_evidence_id = 8;
+  string phase_evidence_id = 9;
+  string production_eligibility_evidence_id = 10;
+  string phase_motion_evidence_id = 11;
+  string crossover_evidence_id = 12;
+  string strategy_region_evidence_id = 13;
+  string universe_state_evidence_id = 14;
+  string candidate_ranking_evidence_id = 15;
+  string strategy_decision_id = 16;
+  string execution_intent_id = 17;
+  string execution_event_id = 18;
+  string diagnostic_evidence_id = 19;
+  string reason = 20;
+  int64 produced_unix_ms = 21;
+  string analytical_state_evidence_id = 22;
+}
+
+// RuntimeEvidenceEnvelope is the neutral outbound publication contract. It does
+// not depend on a viewer, HACCAM subscriber spelling, or transport implementation.
+message RuntimeEvidenceEnvelope {
+  string publication_id = 1;
+  string runtime_id = 2;
+  uint64 publication_sequence = 3;
+  oneof evidence {
+    RuntimeStatusEvidence runtime_status = 4;
+    SourceSubscriptionEvidence source_subscription = 5;
+    BarReceptionEvidence bar_reception = 6;
+    BarAdmissionEvidence bar_admission = 7;
+    AnalyticalStateEvidence analytical_state = 8;
+    PhaseEvidence phase = 9;
+    ProductionEligibilityEvidence production_eligibility = 10;
+    RuleEvaluationEvidence rule_evaluation = 11;
+    PhaseMotionEvidence phase_motion = 12;
+    BoundaryCrossoverEvidence boundary_crossover = 13;
+    StrategyRegionEvidence strategy_region = 14;
+    UniverseStateEvidence universe_state = 15;
+    CandidateRankingEvidence candidate_ranking = 16;
+    StrategyDecision strategy_decision = 17;
+    ExecutionIntent execution_intent = 18;
+    ExecutionEvent execution_event = 19;
+    ExecutionReconciliationEvidence execution_reconciliation = 20;
+    RuntimeActivitySnapshot runtime_activity = 21;
+    BarProcessingOutcomeEvidence bar_processing_outcome = 22;
+    DiagnosticEvidence diagnostic = 23;
+    RuleSetDefinition rule_set_definition = 24;
+  }
+  int64 produced_unix_ms = 25;
+}
+
+// GetRuntimeStatusRequest addresses one runtime instance. An empty runtime_id
+// means the sole local instance only when the implementation explicitly permits it.
+message GetRuntimeStatusRequest {
+  string runtime_id = 1;
+}
+
+// GetRuntimeStatusResponse wraps the current governed status snapshot for the
+// externally callable runtime observation boundary.
+message GetRuntimeStatusResponse {
+  RuntimeStatusEvidence runtime_status = 1;
+}
+
+// SubscribeRuntimeEvidenceRequest selects a runtime and optional resume point.
+// Resume behavior remains subject to approved publication/recovery policy.
+message SubscribeRuntimeEvidenceRequest {
+  string runtime_id = 1;
+  optional uint64 after_publication_sequence = 2;
+}
+
+// SubscribeRuntimeEvidenceResponse carries one typed publication on the
+// server-streamed evidence boundary.
+message SubscribeRuntimeEvidenceResponse {
+  RuntimeEvidenceEnvelope evidence = 1;
+}
+
+// SubmitExecutionIntentRequest crosses the executor adapter boundary using the
+// same intent contract for Local Paper and Alpaca Paper.
+message SubmitExecutionIntentRequest {
+  ExecutionIntent execution_intent = 1;
+}
+
+// SubmitExecutionIntentResponse acknowledges adapter receipt only. It does not
+// claim acceptance, fill, or any other execution outcome.
+message SubmitExecutionIntentResponse {
+  string execution_intent_id = 1;
+  string executor_id = 2;
+  bool received = 3;
+  string reason = 4;
+  int64 received_unix_ms = 5;
+}
+
+// StreamExecutionEventsRequest selects executor outcomes for one runtime. Exact
+// replay/resume semantics remain governed by future reconciliation policy.
+message StreamExecutionEventsRequest {
+  string runtime_id = 1;
+  optional string after_execution_event_id = 2;
+}
+
+// StreamExecutionEventsResponse carries one executor-reported outcome.
+message StreamExecutionEventsResponse {
+  ExecutionEvent execution_event = 1;
+}
+
+// ReceiveBarRequest enters one source-independent candidate at the authoritative
+// BarEvent boundary. Reception accounts for arrival and does not perform DEP-01.
+message ReceiveBarRequest {
+  string runtime_id = 1;
+  BarEvent bar_event = 2;
+}
+
+message ReceiveBarResponse {
+  BarReceptionEvidence reception_evidence = 1;
+}
+
+// AdmitBarRequest supplies the received candidate and its causal reception fact
+// to DEP-01. Admission remains distinct from transport reception.
+message AdmitBarRequest {
+  string runtime_id = 1;
+  BarEvent bar_event = 2;
+  BarReceptionEvidence reception_evidence = 3;
+}
+
+message AdmitBarResponse {
+  BarAdmissionEvidence admission_evidence = 1;
+}
+
+// UpdateAnalyticalStateRequest supplies one admitted bar and the prior ordered
+// state evidence when present. Rejected candidates must not call this operation.
+message UpdateAnalyticalStateRequest {
+  string runtime_id = 1;
+  BarEvent bar_event = 2;
+  BarAdmissionEvidence admission_evidence = 3;
+  AnalyticalStateEvidence prior_analytical_state_evidence = 4;
+}
+
+message UpdateAnalyticalStateResponse {
+  AnalyticalStateEvidence analytical_state_evidence = 1;
+}
+
+// UpdateJehPhaseRequest supplies the admitted bar and ordered DEP-02 transition.
+// The service applies the approved JEH/Ehlers recurrence; it never calls the
+// reference generator at runtime.
+message UpdateJehPhaseRequest {
+  string runtime_id = 1;
+  BarEvent bar_event = 2;
+  BarAdmissionEvidence admission_evidence = 3;
+  AnalyticalStateEvidence analytical_state_evidence = 4;
+  PhaseEvidence prior_phase_evidence = 5;
+}
+
+message UpdateJehPhaseResponse {
+  PhaseEvidence phase_evidence = 1;
+}
+
+message EvaluateProductionEligibilityRequest {
+  string runtime_id = 1;
+  PhaseEvidence phase_evidence = 2;
+  AnalyticalStateEvidence analytical_state_evidence = 3;
+  ProductionEligibilityContext context = 4;
+  RuleIdentity rule_identity = 5;
+}
+
+message EvaluateProductionEligibilityResponse {
+  ProductionEligibilityEvidence production_eligibility_evidence = 1;
+  RuleEvaluationEvidence rule_evaluation_evidence = 2;
+}
+
+// EvaluatePhaseMotionRequest carries both phase observations explicitly. The
+// contract preserves the unresolved decision whether bar 64 or bar 65 can first
+// produce valid motion/crossover; no eligibility answer is inferred here.
+message EvaluatePhaseMotionRequest {
+  string runtime_id = 1;
+  PhaseEvidence prior_phase_evidence = 2;
+  PhaseEvidence current_phase_evidence = 3;
+  ProductionEligibilityEvidence production_eligibility_evidence = 4;
+  RuleIdentity rule_identity = 5;
+  // Optional by message presence. Carrying this evidence permits, but does not
+  // decide, a policy requiring both prior and current phases to be eligible.
+  ProductionEligibilityEvidence prior_production_eligibility_evidence = 6;
+}
+
+message EvaluatePhaseMotionResponse {
+  PhaseMotionEvidence phase_motion_evidence = 1;
+  RuleEvaluationEvidence rule_evaluation_evidence = 2;
+}
+
+message DetectBoundaryCrossoverRequest {
+  string runtime_id = 1;
+  PhaseEvidence prior_phase_evidence = 2;
+  PhaseEvidence current_phase_evidence = 3;
+  PhaseMotionEvidence phase_motion_evidence = 4;
+  RuleIdentity rule_identity = 5;
+}
+
+message DetectBoundaryCrossoverResponse {
+  BoundaryCrossoverEvidence boundary_crossover_evidence = 1;
+  RuleEvaluationEvidence rule_evaluation_evidence = 2;
+}
+
+message EvaluateStrategyRegionRequest {
+  string runtime_id = 1;
+  PhaseEvidence phase_evidence = 2;
+  BoundaryCrossoverEvidence boundary_crossover_evidence = 3;
+  StrategyRegionEvidence prior_strategy_region_evidence = 4;
+  RuleIdentity rule_identity = 5;
+}
+
+message EvaluateStrategyRegionResponse {
+  StrategyRegionEvidence strategy_region_evidence = 1;
+  RuleEvaluationEvidence rule_evaluation_evidence = 2;
+}
+
+message UpdateUniverseStateRequest {
+  string runtime_id = 1;
+  StrategyRegionEvidence strategy_region_evidence = 2;
+  UniverseStateEvidence prior_universe_state_evidence = 3;
+  ExecutionEvent latest_execution_event = 4;
+  RuleIdentity rule_identity = 5;
+}
+
+message UpdateUniverseStateResponse {
+  UniverseStateEvidence universe_state_evidence = 1;
+  RuleEvaluationEvidence rule_evaluation_evidence = 2;
+}
+
+message RankCandidatesRequest {
+  string runtime_id = 1;
+  UniverseStateEvidence universe_state_evidence = 2;
+  RuleIdentity rule_identity = 3;
+  // Supplies the latest attributable Phase Velocity evidence for candidates.
+  // Exact ranking mathematics, timing, and tie policy remain unresolved.
+  repeated PhaseMotionEvidence phase_motion_evidence = 4;
+}
+
+message RankCandidatesResponse {
+  CandidateRankingEvidence candidate_ranking_evidence = 1;
+  RuleEvaluationEvidence rule_evaluation_evidence = 2;
+}
+
+message GenerateStrategyDecisionRequest {
+  string runtime_id = 1;
+  StrategyRegionEvidence strategy_region_evidence = 2;
+  UniverseStateEvidence universe_state_evidence = 3;
+  CandidateRankingEvidence candidate_ranking_evidence = 4;
+  BoundaryCrossoverEvidence boundary_crossover_evidence = 5;
+  RuleIdentity rule_identity = 6;
+}
+
+message GenerateStrategyDecisionResponse {
+  StrategyDecision strategy_decision = 1;
+  RuleEvaluationEvidence rule_evaluation_evidence = 2;
+}
+
+message GenerateExecutionIntentRequest {
+  string runtime_id = 1;
+  StrategyDecision strategy_decision = 2;
+  UniverseStateEvidence universe_state_evidence = 3;
+  RuleIdentity rule_identity = 4;
+}
+
+message GenerateExecutionIntentResponse {
+  ExecutionIntent execution_intent = 1;
+  RuleEvaluationEvidence rule_evaluation_evidence = 2;
+}
+
+// ValidateRuleSetRequest validates a versioned definition without activating it.
+message ValidateRuleSetRequest {
+  string runtime_id = 1;
+  RuleSetDefinition rule_set_definition = 2;
+}
+
+message ValidateRuleSetResponse {
+  bool valid = 1;
+  repeated DiagnosticEvidence diagnostics = 2;
+  RuleSetIdentity rule_set_identity = 3;
+}
+
+// GetActiveRuleSetRequest observes startup-selected rule configuration. These
+// contracts do not authorize runtime hot reload or mutation.
+message GetActiveRuleSetRequest {
+  string runtime_id = 1;
+}
+
+message GetActiveRuleSetResponse {
+  RuleSetDefinition rule_set_definition = 1;
+}
+
+// RuntimeOperationsService is a legitimate externally callable observation
+// boundary. Lifecycle mutation and stop remain governed by the application host
+// and scripts; this service does not manufacture internal DEP network hops.
+service RuntimeOperationsService {
+  // GetRuntimeStatus returns current lifecycle, health, source, version, and
+  // activity evidence. Zero counters do not imply that the runtime is stopped.
+  rpc GetRuntimeStatus(GetRuntimeStatusRequest) returns (GetRuntimeStatusResponse);
+}
+
+// RuntimeEvidenceService is the governed outbound producer boundary for viewers,
+// evidence stores, and approved subscribers. Internal components publish to the
+// in-process evidence facility; they are not separate gRPC services.
+service RuntimeEvidenceService {
+  // SubscribeRuntimeEvidence streams typed evidence in publication order under
+  // an approved delivery/recovery policy.
+  rpc SubscribeRuntimeEvidence(SubscribeRuntimeEvidenceRequest) returns (stream SubscribeRuntimeEvidenceResponse);
+}
+
+// BarReceptionService is INTERNAL-ONLY unless separately approved for exposure.
+// It governs ingress accounting at the common ONLINE/OFFLINE BarEvent boundary.
+service BarReceptionService {
+  rpc ReceiveBar(ReceiveBarRequest) returns (ReceiveBarResponse);
+}
+
+// BarAdmissionService is the INTERNAL-ONLY DEP-01 contract.
+service BarAdmissionService {
+  rpc AdmitBar(AdmitBarRequest) returns (AdmitBarResponse);
+}
+
+// AnalyticalStateService is the INTERNAL-ONLY DEP-02 ordered-state contract.
+service AnalyticalStateService {
+  rpc UpdateAnalyticalState(UpdateAnalyticalStateRequest) returns (UpdateAnalyticalStateResponse);
+}
+
+// JehPhaseService is the INTERNAL-ONLY DEP-03/DEP-04 JEH recurrence and circular
+// phase-state contract. Service definition does not authorize network exposure.
+service JehPhaseService {
+  rpc UpdateJehPhase(UpdateJehPhaseRequest) returns (UpdateJehPhaseResponse);
+}
+
+// ProductionEligibilityService is the INTERNAL-ONLY controller between DEP-04
+// and DEP-05. Its typed outcome owns Rule #1 meaning, not raw expr output.
+service ProductionEligibilityService {
+  rpc EvaluateProductionEligibility(EvaluateProductionEligibilityRequest) returns (EvaluateProductionEligibilityResponse);
+}
+
+// PhaseMotionService is the INTERNAL-ONLY DEP-05 contract. Deterministic motion
+// mathematics remain in Go/domain code; expr may only gate or map typed outcomes.
+service PhaseMotionService {
+  rpc EvaluatePhaseMotion(EvaluatePhaseMotionRequest) returns (EvaluatePhaseMotionResponse);
+}
+
+// BoundaryCrossoverService is the INTERNAL-ONLY DEP-06 contract.
+service BoundaryCrossoverService {
+  rpc DetectBoundaryCrossover(DetectBoundaryCrossoverRequest) returns (DetectBoundaryCrossoverResponse);
+}
+
+// StrategyRegionService is the INTERNAL-ONLY DEP-07 contract. HOP_ON/HOP_OFF
+// remain crossover events and region outcomes never assert order submission.
+service StrategyRegionService {
+  rpc EvaluateStrategyRegion(EvaluateStrategyRegionRequest) returns (EvaluateStrategyRegionResponse);
+}
+
+// UniverseStateService is the INTERNAL-ONLY DEP-08 serialized state contract.
+service UniverseStateService {
+  rpc UpdateUniverseState(UpdateUniverseStateRequest) returns (UpdateUniverseStateResponse);
+}
+
+// CandidateRankingService is the INTERNAL-ONLY DEP-09 contract, separate from
+// universe ownership. Ranking mathematics remain deterministic domain logic.
+service CandidateRankingService {
+  rpc RankCandidates(RankCandidatesRequest) returns (RankCandidatesResponse);
+}
+
+// StrategyDecisionService is the INTERNAL-ONLY DEP-10 contract. A decision is
+// not an ExecutionIntent and cannot report an ExecutionEvent.
+service StrategyDecisionService {
+  rpc GenerateStrategyDecision(GenerateStrategyDecisionRequest) returns (GenerateStrategyDecisionResponse);
+}
+
+// ExecutionIntentService is the INTERNAL-ONLY DEP-11 contract. It converts an
+// approved typed decision into an intent when governed rules permit it.
+service ExecutionIntentService {
+  rpc GenerateExecutionIntent(GenerateExecutionIntentRequest) returns (GenerateExecutionIntentResponse);
+}
+
+// RuleRegistryService is INTERNAL-ONLY. It validates versioned rule definitions
+// and reports the startup-selected active set; it does not expose generic expr
+// evaluation or authorize runtime hot reload.
+service RuleRegistryService {
+  rpc ValidateRuleSet(ValidateRuleSetRequest) returns (ValidateRuleSetResponse);
+  rpc GetActiveRuleSet(GetActiveRuleSetRequest) returns (GetActiveRuleSetResponse);
+}
+
+// ExecutorService is the operational adapter boundary shared by Local Paper and
+// future separately approved Alpaca Paper. It is APPROVED INTERNAL gRPC when
+// registered, but may remain unregistered and in-process. No live mode exists.
+service ExecutorService {
+  // SubmitExecutionIntent acknowledges receipt only; outcomes arrive separately.
+  rpc SubmitExecutionIntent(SubmitExecutionIntentRequest) returns (SubmitExecutionIntentResponse);
+
+  // StreamExecutionEvents reports actual paper-executor outcomes and never
+  // changes the upstream StrategyDecision or ExecutionIntent meaning.
+  rpc StreamExecutionEvents(StreamExecutionEventsRequest) returns (stream StreamExecutionEventsResponse);
 }

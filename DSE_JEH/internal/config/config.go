@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	dsejehv1 "tramuthus/dse-jeh-transsat-1/gen/dse_jeh/v1"
 )
@@ -16,6 +17,9 @@ type Config struct {
 	MongoCollection  string
 	CollectionRunID  string
 	GRPCAddress      string
+	ServerAddress    string
+	StatusInterval   time.Duration
+	RemainRunning    bool
 	Symbols          []string
 	MaxBars          uint32
 	FinalizedOnly    bool
@@ -30,12 +34,19 @@ func Load() (Config, error) {
 		MongoDatabase:    env("BAR_SEQ_LAB_MONGO_DB", "bar_sequence_db"),
 		MongoCollection:  env("BAR_SEQ_LAB_MONGO_COLLECTION", "bar_sequence"),
 		GRPCAddress:      env("DSE_JEH_GRPC_ADDRESS", "127.0.0.1:50051"),
+		ServerAddress:    env("DSE_JEH_SERVER_ADDRESS", "127.0.0.1:50052"),
+		RemainRunning:    envBool("DSE_JEH_REMAIN_RUNNING", true),
 		Symbols:          split(os.Getenv("DSE_JEH_SYMBOLS")),
 		FinalizedOnly:    envBool("DSE_JEH_FINALIZED_ONLY", true),
 		OutputPath:       env("DSE_JEH_OUTPUT", "exports/phase_evidence.jsonl"),
 		ReferenceCSV:     strings.TrimSpace(os.Getenv("DSE_JEH_REFERENCE_CSV")),
 		ComparisonReport: env("DSE_JEH_COMPARISON_REPORT", "exports/phase_equivalence.json"),
 	}
+	statusInterval, err := time.ParseDuration(env("DSE_JEH_STATUS_INTERVAL", "10s"))
+	if err != nil || statusInterval <= 0 {
+		return Config{}, fmt.Errorf("DSE_JEH_STATUS_INTERVAL must be a positive duration")
+	}
+	cfg.StatusInterval = statusInterval
 	switch strings.ToUpper(strings.TrimSpace(os.Getenv("DSE_JEH_MODE"))) {
 	case "ONLINE":
 		cfg.Mode = dsejehv1.RuntimeMode_RUNTIME_MODE_ONLINE
@@ -61,6 +72,9 @@ func Load() (Config, error) {
 	}
 	if cfg.Mode == dsejehv1.RuntimeMode_RUNTIME_MODE_OFFLINE && cfg.CollectionRunID == "" {
 		return Config{}, fmt.Errorf("DSE_JEH_OFFLINE_COLLECTION_RUN_ID is required in OFFLINE mode")
+	}
+	if strings.TrimSpace(cfg.ServerAddress) == "" {
+		return Config{}, fmt.Errorf("DSE_JEH_SERVER_ADDRESS is required")
 	}
 	return cfg, nil
 }

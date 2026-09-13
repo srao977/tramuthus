@@ -3,15 +3,15 @@
 | Document control | Value |
 | --- | --- |
 | Filename | `DSE_JEH_TRANS_SAT_1_SYSTEM_DESIGN_V0_1_091226.md` |
-| Date | 2026-09-12 |
+| Date | 2026-09-13 |
 | Version | V0.1 |
 | Status | APPROVED |
-| Implementation status | PHASE 1 IMPLEMENTED - PENDING HUMAN REVIEW |
+| Implementation status | DEP-01 through DEP-04 implemented and validated; complete application architecture not implemented |
 | Architectural identity | `DSE_JEH_TransSat_1` |
 | Physical documentation location | `DSE_JEH/docs` |
 | Relationship to `DSE_JEH_provers` | Experimental proving and regression apparatus; not a TransSat and not operational runtime code |
 
-**Purpose.** Define the proposed architecture for the first concrete runtime instance of the portable John Ehlers-Hilbert Decision Strategy Engine family. This pre-approval revision establishes the **Dynamic Execution Pipeline** as the event-driven inner decision engine. It creates no implementation, package, protobuf, deployment, persistence, or execution authority.
+**Purpose.** Define the complete production application architecture for the first concrete runtime instance of the portable John Ehlers-Hilbert Decision Strategy Engine family. This in-place V0.1 reconciliation governs the persistent runtime, the **Dynamic Execution Pipeline**, its single authoritative protobuf vocabulary, lifecycle, rule evaluation, evidence, telemetry, and execution boundary. It records the existing DEP-01 through DEP-04 implementation without authorizing further implementation in this documentation task.
 
 Normative terms `MUST`, `MUST NOT`, `SHOULD`, and `MAY` express design requirements. Strategy interpretations are hypotheses until separately validated; deterministic behavior alone does not establish scientific validity or efficacy.
 
@@ -34,15 +34,15 @@ The JEH family concerns phase, angle, circular state, motion, boundary crossing,
 
 ## 2. Executive Summary
 
-`DSE_JEH_TransSat_1` V0.1 has exactly two bar-stream input modes: **ONLINE** and **OFFLINE**. The host selects one mode at startup through the proposed `DSE_JEH_MODE` environment variable. ONLINE consumes the `Fin_Feed_Sat_1` gRPC bar stream through an internal gRPC bar consumer. OFFLINE uses an internal stream producer to read the verified 4,519 observations in `bar_sequence_db.bar_sequence` and emit them one bar at a time in an approved deterministic replay order.
+`DSE_JEH_TransSat_1` V0.1 has exactly two bar-stream input modes: **ONLINE** and **OFFLINE**. The host selects one mode at startup through `DSE_JEH_MODE`. ONLINE acts as a gRPC client subscriber to the authoritative `Fin_FeedSat_1` stream. OFFLINE reads exactly one explicitly selected MongoDB `collection_run_id`, identified by `DSE_JEH_OFFLINE_COLLECTION_RUN_ID`, and emits its observations one at a time in the approved deterministic replay order. Absence of the OFFLINE selector is a startup configuration error; it never means all collection runs.
 
 Both modes map their source observations to the same logical `BarEvent` and converge at the same admission boundary. Whether operating ONLINE or OFFLINE, `DSE_JEH_TransSat_1` receives an ordered stream of bar events through a common internal bar-event boundary. Source selection changes the producer and transport/input component, not JEH analytical or Dynamic Execution Pipeline behavior.
 
-For every admitted `BarEvent`, `DSE_JEH_TransSat_1` advances that entity's ordered analytical state, runs the JEH/Ehlers phase solver, updates circular phase state from $\phi[n-1]$ to $\phi[n]$, derives phase-motion evidence, detects relevant boundary crossovers, advances the four-region rules engine, updates the latest universe state, evaluates `DISREGARD`, `ALLOCATE`, `HOLD & TRAIL`, and `LIQUIDATE` behavior, and produces a strategy decision and `ExecutionIntent` where applicable.
+For every admitted `BarEvent`, `DSE_JEH_TransSat_1` advances that entity's ordered analytical state, runs the JEH/Ehlers phase solver, updates circular phase state from $\phi[n-1]$ to $\phi[n]$, and passes the result through an explicit Production Eligibility Controller. A blocked result terminates that bar's decision flow with audit evidence. An eligible result enters the authoritative four-state Dynamic Execution Engine, whose state and associated action may produce a governed execution instruction for an external execution adapter. Every received bar has an attributable terminal processing outcome; no bar silently disappears.
 
 This event-driven loop is the **Dynamic Execution Pipeline**. Actual execution remains outside it in an external execution/action adapter, and only an `ExecutionEvent` can describe an execution outcome.
 
-`PhaseEvidence` remains important, but it is internal analytical evidence produced by the in-boundary phase solver in both modes. The solver and strategy rules are logically distinct and independently testable components inside the V0.1 runtime. No separate offline or backtest strategy implementation is permitted.
+`PhaseEvidence` remains important upstream analytical evidence, but mathematical calculability is not production eligibility. A numerical phase value cannot by itself authorize a boundary event, strategy-state action, governed execution instruction, or order submission. The solver, eligibility control, deterministic algorithms, governed policy rules, four-state engine, and execution adapter are distinct responsibilities. No separate offline or backtest strategy implementation is permitted.
 
 ---
 
@@ -55,9 +55,9 @@ This event-driven loop is the **Dynamic Execution Pipeline**. Actual execution r
 - Internal `Fin_Feed_Sat_1` gRPC bar consumption and internal offline stream production as transport/input boundaries
 - Bounded per-entity ordered bar and phase-solver state
 - In-runtime JEH/Ehlers phase calculation
-- Circular phase, phase motion, crossover, and four-region strategy processing
-- Universe candidate/holding state and dynamic candidate comparison
-- Strategy decisions, `ExecutionIntent`, and mock `ExecutionEvent` proving boundaries
+- Circular phase and the four-state Dynamic Execution Engine
+- Boundary-triggered policy events and state-associated ranking, trailing, reallocation, and disregard actions
+- Governed execution instructions and mock `ExecutionEvent` proving boundaries
 - Deterministic one-event-at-a-time replay and analytical phase equivalence
 - Evidence lineage, versioning, failure isolation, recovery questions, and observational viewing
 
@@ -73,6 +73,36 @@ This event-driven loop is the **Dynamic Execution Pipeline**. Actual execution r
 8. ONLINE and OFFLINE input MUST feed the same engine logic after common `BarEvent` admission.
 9. Persistence, transport, viewing, and execution remain adapters around the mathematical and strategy core.
 10. Solver, strategy, ranking, configuration, and evidence identities are versioned and attributable.
+11. **State transitions are history-free:** each current transition is defined by its input state and resulting output state. Historical transition values do not alter an already-established state.
+
+### 3.3 Complete Application and Proto Authority
+
+`DSE_JEH_TransSat_1` SHALL be a complete, independent, persistent, startable, stoppable, observable, proto-governed Transformation Satellite application. It is not an experiment, proving utility, batch analysis program, `go run` harness, temporary Phase 1 executable, or offline-only replay tool. Proving and validation exercise this application; they do not define an alternate runtime.
+
+The one authoritative DSE_JEH proto is `DSE_JEH/api/proto/dse_jeh/v1/DSE_JEH_TransSat_1.proto`. It SHALL remain one file and SHALL evolve to define the services, messages, enums, statuses, events, typed outcomes, evidence, and operational state required for all governed inbound, internal-processing, outbound, lifecycle, telemetry, and execution-boundary behavior. It is the satellite's authoritative operational vocabulary, not merely an external transport schema. Internal Go MUST NOT invent parallel financially meaningful enums, states, statuses, events, decisions, outcomes, or execution meanings that are absent from the proto. Ordinary locks, queues, recurrence buffers, and helper mechanics need not become proto concepts.
+
+Proto-governed operational responsibility does not imply a network-distributed RPC boundary. Internal services MAY execute in-process, but their governed inputs, outcomes, state, and evidence remain described by the proto. No additional phase, motion, rule, telemetry, execution, or other DSE_JEH proto may be created.
+
+The required development order is:
+
+```text
+System Design
+  -> governed rule and outcome model
+  -> authoritative proto
+  -> generated Go types and service contracts
+  -> Go implementation
+  -> build
+  -> governed start and stop of the built executable
+  -> end-to-end validation
+```
+
+Before implementation of any governed process, its required services, messages, enums, statuses, typed outcomes, and evidence contracts MUST exist in the authoritative proto. Experimental Go-first behavior followed by contract retrofit is prohibited.
+
+The target proto MUST comprehensively govern runtime lifecycle, mode, health, input source/subscription state, bar reception, admission and admission evidence, per-entity analytical identity/state, JEH evidence, production eligibility, the four-state Dynamic Execution Engine, `PhaseTransitionState`, boundary policy events, state-associated actions, the governed execution boundary, `ExecutionEvent`, rule identity/evaluation/outcomes/evidence, activity telemetry, diagnostics, degraded/error states, and governed outbound publication/producer behavior. Names MUST be fully descriptive where analytical, operational, or financial meaning is carried.
+
+The current proto service structure after Production Eligibility was derived from the superseded DEP-05-through-DEP-11 decomposition. It remains unchanged by this documentation task and MUST be reviewed only after this replacement design is approved. This design does not decide which existing services survive, combine, disappear, or are replaced.
+
+The existing proto was inspected during this reconciliation and truthfully covers only the Phase 1 analytical slice (`RuntimeMode`, phase/admission statuses, source/bar/admission/solver/phase messages). It is too thin for the complete application and MUST be expanded in a later authorized proto task; this document does not modify it.
 
 ## 4. Overall System Context
 
@@ -91,7 +121,7 @@ flowchart TD
     end
     BAR[Common BarEvent Admission]
     DEP[Dynamic Execution Pipeline]
-    INTENT[ExecutionIntent]
+    INTENT[Governed execution instruction]
     GRPC -->|map/admit| BAR
     PROD -->|one stored bar at a time| BAR
     BAR --> DEP --> INTENT
@@ -104,46 +134,36 @@ The mode distinction ends at `BarEvent`. The TransSat owns phase calculation and
 
 ---
 
-## 5. Dynamic Execution Pipeline
+## 5. Four-State Dynamic Execution Engine
 
-The **Dynamic Execution Pipeline** is the event-driven inner decision engine of `DSE_JEH_TransSat_1`. It continuously reacts to accepted bar events. It is not a batch phase classifier, CSV processor, viewer, precomputed-`PhaseEvidence` consumer, polling process, broker adapter, or downstream-only execution stage.
+The **Dynamic Execution Engine** is the event-driven inner strategy engine of `DSE_JEH_TransSat_1`. Its atomic unit is the current production-eligible `Bar[n]`. Retained analytical phase state $\phi[n-1]$ is context used with current $\phi[n]$ to describe the current transition; it is not a separately executing event and need not come from a production-eligible predecessor bar.
+
+The former DEP-05-through-DEP-11 conceptual decomposition is superseded. Dynamic Execution is authoritatively defined by exactly four strategy states, four boundary transitions, and the actions associated with those states. Supporting mathematics, rule evaluation, telemetry, and execution adapters do not create additional strategy states or numbered Dynamic Execution stages.
 
 ```mermaid
 flowchart TD
-  B[BAR EVENT n]
-  O[DEP-02 Per-Entity Ordered Bar State]
-  S[DEP-03 JEH / Ehlers Phase Solver]
-  C[DEP-04 Circular Phase State<br/>phi n-1 to phi n]
-  X[DEP-06 Boundary Crossover Detector]
-  M[DEP-05 Phase Motion / Phase Velocity omega]
-  R[DEP-07 STRATEGY REGION / RULES ENGINE]
-  D0[DISREGARD<br/>180° to 270°]
-  HO[HOP-ON crossover event<br/>valid 270° boundary crossing]
-  D1[ALLOCATE<br/>270° to 360°<br/>rank candidates by omega]
-  Z[0° boundary crossover]
-  D2[HOLD & TRAIL<br/>0° to 90°<br/>dynamic trailing behavior]
-  HF[HOP-OFF crossover event<br/>valid 90° boundary crossing]
-  D3[LIQUIDATE<br/>90° to 180°<br/>freed capital available for reallocation]
-  U[DEP-08 Universe Candidate / Holding State]
-  K[DEP-09 Candidate Comparison / Ranking Policy]
-  D[DEP-10 Dynamic Strategy Decision]
-  I[DEP-11 ExecutionIntent]
+  P[DEP-04 established phase state<br/>retained phi n-1 and current phi n]
+  G[Production Eligibility Controller]
+  D0[180°-270°<br/>DISREGARD<br/>no allocation action]
+  D1[270°-360°<br/>ALLOCATE<br/>rank by Phase Velocity omega]
+  D2[0°-90°<br/>HOLD & TRAIL<br/>trail stops dynamically]
+  D3[90°-180°<br/>LIQUIDATE<br/>reallocate freed capital]
+  I[Governed execution instruction<br/>when required]
   A[External Execution Adapter]
   E[ExecutionEvent]
-  B --> O --> S --> C
-  C --> X
-  C --> M
-  X --> R
-  M --> R
-  R --> D0
-  R --> HO --> D1
-  R --> Z --> D2
-  R --> HF --> D3
-  D0 --> U
-  D1 --> U
-  D2 --> U
-  D3 --> U
-  U --> K --> D --> I --> A --> E
+  P --> G
+  G -->|PRODUCTION ELIGIBLE<br/>initial classification by current phase| D0
+  G -->|PRODUCTION ELIGIBLE<br/>initial classification by current phase| D1
+  G -->|PRODUCTION ELIGIBLE<br/>initial classification by current phase| D2
+  G -->|PRODUCTION ELIGIBLE<br/>initial classification by current phase| D3
+  D0 -->|cross 270° / HOP-ON| D1
+  D1 -->|cross 0°| D2
+  D2 -->|cross 90° / HOP-OFF| D3
+  D3 -->|cross 180°| D0
+  D1 -. action may require .-> I
+  D2 -. action may require .-> I
+  D3 -. action may require .-> I
+  I --> A --> E
 ```
 
 ### 5.1 Design-local responsibilities
@@ -154,15 +174,14 @@ flowchart TD
 | DEP-02 | Per-Entity Ordered Analytical State: advance only the addressed entity and retain bounded sufficient solver state |
 | DEP-03 | JEH / Ehlers Phase Update: calculate phase from the accepted ordered bar trajectory |
 | DEP-04 | Circular Phase State: represent initialization, observability, validity, $\phi[n-1]$, and $\phi[n]$ without sentinels |
-| DEP-05 | Phase Motion Analysis: derive versioned directional motion evidence in degrees per bar |
-| DEP-06 | Boundary Crossover Detection: distinguish robust circular crossover events from strategy-region membership |
-| DEP-07 | Strategy Region / Rules Engine: apply the governed four-region strategy interpretation and distinguish persistent strategy-region membership from crossover events; `HOP-ON` and `HOP-OFF` are not persistent states |
-| DEP-08 | Universe Candidate / Holding State: maintain latest per-entity strategy region, allocation candidates, holdings, liquidation context, capacity, and pending work |
-| DEP-09 | Candidate Comparison / Ranking: select among current eligible `ALLOCATE` candidates using an approved Phase Velocity ($\omega$) policy |
-| DEP-10 | Strategy Decision Generation: decide whether to allocate, hold/trail, liquidate, disregard, or take no action with causal evidence |
-| DEP-11 | ExecutionIntent Generation: publish an idempotent governed request without claiming execution |
+| Production Eligibility Controller | Governed event-flow gate after DEP-04 and before the four-state engine; map Rule #1 and continuity/phase validity to a typed outcome, emit audit evidence, and prevent blocked analytical results from reaching Dynamic Execution |
+| Phase-transition mathematics | Deterministically derive the current `PhaseTransitionState`, including signed circular displacement and Phase Velocity where needed; this is supporting Go/domain mathematics, not a strategy state |
+| Boundary policy | Evaluate the four governed crossings and produce typed policy outcomes: 270° `HOP-ON`, 0° enter `HOLD & TRAIL`, 90° `HOP-OFF`, and 180° enter `DISREGARD` |
+| Four-state engine | Establish or maintain exactly one of `DISREGARD`, `ALLOCATE`, `HOLD & TRAIL`, or `LIQUIDATE` and invoke its associated action |
+| State-associated actions | `ALLOCATE`: rank by Phase Velocity; `HOLD & TRAIL`: trail stops dynamically; `LIQUIDATE`: reallocate freed capital; `DISREGARD`: no allocation action |
+| Execution boundary | Produce the governed execution instruction required by a state action without claiming execution; the external adapter owns attempts and outcomes |
 
-These identifiers are local to this design. They are not repository package, service, type, or protobuf names and MUST NOT become implementation names without separate approval.
+DEP-01 through DEP-04 remain upstream analytical responsibilities. The responsibilities after Production Eligibility deliberately do not retain DEP-05-through-DEP-11 numbering. Their minimum proto and implementation structure must be derived later from this four-state design rather than from the superseded service decomposition.
 
 ---
 
@@ -174,35 +193,44 @@ sequenceDiagram
   participant ADM as DEP-01 Admission
   participant ENT as Per-entity coordinator
   participant SOL as JEH phase solver
-  participant ANA as Motion and crossover analysis
-  participant SM as State-machine rules
-  participant UNI as Universe coordinator
-  participant DEC as Decision engine
-  participant PUB as Intent publisher
-  SRC->>ADM: new BarEvent(entity S, n)
-  ADM->>ENT: accepted ordered bar
-  ENT->>SOL: update bounded solver state
-  SOL-->>ENT: PhaseEvidence / initialization evidence
-  ENT->>ANA: phi n-1, phi n, validity
-  ANA-->>SM: motion evidence and crossover evidence
-  SM-->>UNI: entity state transition or persistence
-  UNI->>DEC: latest asynchronous universe view
-  DEC-->>PUB: decision and optional ExecutionIntent
+  participant ELG as Production Eligibility
+  participant MATH as Transition mathematics
+  participant RULE as Boundary policy rule
+  participant ENG as Four-state engine
+  participant ACT as State action
+  participant OUT as Execution boundary
+  participant EXE as External executor
+  SRC->>ADM: current Bar[n]
+  ADM->>ENT: accepted Bar[n]
+  ENT->>SOL: advance analytical state for Bar[n]
+  SOL-->>ELG: retained phi[n-1], current phi[n], evidence
+  ELG-->>MATH: production-eligible Bar[n]
+  MATH-->>RULE: PhaseTransitionState
+  RULE-->>ENG: typed boundary/state outcome
+  ENG-->>ACT: current four-state result
+  ACT-->>OUT: governed instruction when required
+  OUT-->>EXE: execution instruction
+  EXE-->>OUT: ExecutionEvent
 ```
 
-For one newly accepted bar:
+Every production-eligible `Bar[n]` represents a potential state transition from the entity's retained analytical state to the state established by the current bar. The retained state is causal context, not another Dynamic Execution event.
+
+For one newly accepted `Bar[n]`:
 
 1. Admit the event and establish deterministic identity and source lineage.
 2. Advance only that entity's ordered bar/solver trajectory.
 3. Run the JEH/Ehlers phase update.
-4. Record initialization or current observable phase $\phi[n]$.
-5. Retain/use prior observable phase $\phi[n-1]$ where valid.
-6. Derive phase-motion evidence and detect circular boundary crossover evidence.
-7. Update the entity's four-region JEH rules state, preserving any distinct crossover event.
-8. Update universe candidate, holding, unavailable, and pending state.
-9. Evaluate liquidation first, then current candidate reallocation, hold, or disregard behavior.
-10. Produce a strategy decision and optional `ExecutionIntent`.
-11. Leave action and outcome production to the external adapter.
+4. Establish initialization or current observable phase $\phi[n]$.
+5. Retain/use analytical phase state $\phi[n-1]$ as causal context where valid.
+6. Apply Production Eligibility to current `Bar[n]`.
+7. If eligible, derive the current `PhaseTransitionState` using deterministic Go/domain mathematics.
+8. Evaluate the component-scoped boundary policy and produce a typed rule outcome.
+9. Establish or maintain exactly one of the four authoritative strategy states.
+10. Apply the associated state action: disregard, rank by Phase Velocity, trail dynamically, or reallocate freed capital.
+11. Produce a governed execution instruction when the action requires external execution.
+12. Leave action attempts to the external executor.
+13. Record any executor outcome only as an `ExecutionEvent`.
+14. Give `Bar[n]` an attributable terminal processing outcome.
 
 Malformed input, missing prerequisites, or an unobservable phase MUST produce explicit non-action evidence and MUST NOT corrupt another entity.
 
@@ -258,6 +286,14 @@ Each symbol owns an independent causal bar sequence and JEH state. A symbol's fi
 
 Continuity is sequence integrity within the symbol's sequence scope, not elapsed wall-clock time. Irregular or long intervals between successive valid bars do not reset analytical history. Duplicate, conflicting, gapped, out-of-order, and invalid candidates retain their deterministic admission disposition and do not mutate JEH state. No missing bar is synthesized or interpolated. If causal sequence integrity is not restored, later candidates cannot advance the solver or regain production eligibility.
 
+### 8.2 Production Eligibility Controller
+
+Rule #1 is an explicit governed event-flow control rule, not merely warm-up prose or a `PhaseStatus` label. The Production Eligibility Controller consumes typed phase/admission evidence and an authorized context containing only phase status/presence, contiguous valid-bar count, sequence integrity, current-bar validity, and prior analytical-state validity. It maps its rule evaluation to a typed proto outcome such as initializing, production eligible, blocked continuity, blocked invalid phase, or error; exact declaration names require proto review.
+
+The first 63 valid contiguous bars perform JEH mathematics, retain analytical state, and produce evidence, but the controller terminates their processing before the four-state Dynamic Execution Engine. Production Eligibility applies to current `Bar[n]`. Once eligible, that bar owns its complete downstream Dynamic Execution processing. Retained $\phi[n-1]$ is predecessor analytical context and does not need to come from a production-eligible bar. Bar 64 is therefore the first possible bar that may enter the four-state engine, using retained $\phi[63]$ as context for the transition caused by bar 64. Bar 63 does not enter Dynamic Execution or become production eligible retroactively.
+
+**Strict mathematical calculability is not production runtime eligibility.** Solver output, phase-value presence, `OBSERVABLE`, production eligibility, motion eligibility, crossover eligibility, and financial-action eligibility are separate governed concepts. No numerical phase value bypasses this controller.
+
 ---
 
 ## 9. Per-Entity and Universe State
@@ -272,9 +308,8 @@ Each entity conceptually maintains:
 - previous accepted analytical state;
 - explicit $\phi[n-1]$ and $\phi[n]$ presence;
 - phase observability and validity;
-- previous and current JEH strategy region;
-- most recent boundary crossover;
-- phase-motion evidence and its validity/confidence;
+- current four-state strategy state;
+- current `PhaseTransitionState` and most recent boundary policy event;
 - candidate and holding status where applicable; and
 - solver, strategy, ranking, and configuration version identity.
 
@@ -307,99 +342,156 @@ Universe state is not a claim that all entities were updated simultaneously. Eac
 
 ---
 
-## 10. Four-Region Circular JEH Rules Engine
+## 10. Authoritative Four-State Hop-On/Hop-Off Engine
 
-The System Design adopts the canonical region/action vocabulary from the supplied Hop On Hop Off strategy artifact. The artifact itself is not stored in this repository, so no repository path is asserted. The four persistent strategy regions/actions are:
+The supplied Hop-On/Hop-Off diagram is the authoritative Dynamic Execution Engine. It defines exactly four persistent strategy states and their associated actions:
 
 | Half-open phase interval | Canonical strategy region/action | Current strategy interpretation |
 | --- | --- | --- |
-| $0 \le \phi < 90$ | `HOLD & TRAIL` | Maintain the holding and trail dynamically; exact trailing-stop policy remains unresolved |
-| $90 \le \phi < 180$ | `LIQUIDATE` | Liquidation context; freed capital becomes available for governed reallocation |
-| $180 \le \phi < 270$ | `DISREGARD` | Not an allocation candidate |
-| $270 \le \phi < 360$ | `ALLOCATE` | Allocation-candidate region; rank candidates by Phase Velocity ($\omega$) under an approved policy |
+| $0 \le \phi < 90$ | `HOLD & TRAIL` | Trail stops dynamically; the exact trailing algorithm remains to be specified |
+| $90 \le \phi < 180$ | `LIQUIDATE` | Reallocate freed capital; exact capital and reallocation mechanics remain to be specified |
+| $180 \le \phi < 270$ | `DISREGARD` | Disregard; perform no allocation action |
+| $270 \le \phi < 360$ | `ALLOCATE` | Rank by Phase Velocity ($\omega$); exact ranking policy remains to be specified |
 
 ```mermaid
 stateDiagram-v2
   state "HOLD & TRAIL" as HOLD_AND_TRAIL
-  [*] --> INITIALIZING
-  INITIALIZING --> DISREGARD: first observable phase in 180-270
-  INITIALIZING --> ALLOCATE: first observable phase in 270-360
-  INITIALIZING --> HOLD_AND_TRAIL: first observable phase in 0-90
-  INITIALIZING --> LIQUIDATE: first observable phase in 90-180
-  DISREGARD --> ALLOCATE: valid 270° crossover / HOP-ON event
-  ALLOCATE --> HOLD_AND_TRAIL: valid 0° boundary crossover
-  HOLD_AND_TRAIL --> LIQUIDATE: valid 90° crossover / HOP-OFF event
-  LIQUIDATE --> DISREGARD: validated cross 180°
+  [*] --> DISREGARD: first eligible phase in 180-270
+  [*] --> ALLOCATE: first eligible phase in 270-360
+  [*] --> HOLD_AND_TRAIL: first eligible phase in 0-90
+  [*] --> LIQUIDATE: first eligible phase in 90-180
+  DISREGARD --> ALLOCATE: cross 270° / HOP-ON
+  ALLOCATE --> HOLD_AND_TRAIL: cross 0°
+  HOLD_AND_TRAIL --> LIQUIDATE: cross 90° / HOP-OFF
+  LIQUIDATE --> DISREGARD: cross 180°
   DISREGARD: 180-270 DISREGARD
   ALLOCATE: 270-360 ALLOCATE / rank by Phase Velocity
   HOLD_AND_TRAIL: 0-90 HOLD & TRAIL / dynamic trailing behavior
   LIQUIDATE: 90-180 LIQUIDATE / freed capital for reallocation
 ```
 
-The wheel is one full circular phase space, interpreted clockwise from top as `HOLD & TRAIL`, `LIQUIDATE`, `DISREGARD`, then `ALLOCATE`. Terms such as trough, peak, accelerating upward, or rolling over are **JEH strategy interpretations**, not universal scientific facts unless independently validated.
+The wheel is one full circular phase space, interpreted clockwise from top as `HOLD & TRAIL`, `LIQUIDATE`, `DISREGARD`, then `ALLOCATE`. The four transitions have fixed strategy-policy meanings: cross 270° to fire `HOP-ON` and enter `ALLOCATE`; cross 0° to enter `HOLD & TRAIL`; cross 90° to fire `HOP-OFF` and enter `LIQUIDATE`; and cross 180° to enter `DISREGARD`. These meanings are not open policy questions. Terms such as trough, peak, accelerating upward, or rolling over are JEH strategy interpretations, not universal scientific facts unless independently validated.
 
-**Strategy-region membership is not a boundary crossover event.** `HOP-ON` is the named event for a valid 270° boundary crossover in the approved direction into `ALLOCATE`. `HOP-OFF` is the named event for a valid 90° boundary crossover in the approved direction into `LIQUIDATE`. Neither is a persistent strategy state. Five successive bars in `ALLOCATE` represent persistent membership, not five `HOP-ON` events. First observable classification, same-region persistence, region exit, boundary crossover, region entry, candidate status, decision, and intent require distinct evidence.
+**Strategy-state membership is not a boundary event.** `HOP-ON` and `HOP-OFF` are typed rule-policy firing events, never persistent states. Five successive bars in `ALLOCATE` represent persistent membership, not five `HOP-ON` events. Operational state/value/result objects describe current engine behavior; separate telemetry, audit, and trace records establish attribution.
 
-The transition from `ALLOCATE` into `HOLD & TRAIL` uses the 0° boundary crossover; no additional event name is defined. Source trigger concepts such as $\phi[n]\ge270$ and $\phi[n-1]<270$, or $\phi[n]\ge90$ and $\phi[n-1]<90$, express intended directional cases only. They MUST NOT be applied blindly to circular wraps, reverse movement, exact-boundary samples, jitter, or large jumps. The names `HOP-ON` and `HOP-OFF` establish event semantics, not detection mathematics. Robust 270°, 90°, 180°, and 360°/0° crossover algorithms remain blocking questions.
+No additional HOP terminology is defined. Deterministic Go/domain code establishes factual phase and crossing values. Component-scoped `expr` rules evaluate the four governed boundary policies and map them to typed outcomes and state/action changes. Exact algorithmic treatment of wrap, reverse movement, exact-boundary samples, large transitions, and jitter/recrossing remains to be specified without reopening the four policy meanings.
 
 ---
 
-## 11. Phase Motion and Phase Velocity ($\omega$)
+## 11. Phase Transition State and Phase Velocity ($\omega$)
 
 ```mermaid
 flowchart LR
-  P[phi n-1 and phi n] --> M[Phase Motion Analyzer]
-  M --> E[PhaseMotionEvidence<br/>Phase Velocity omega<br/>direction, magnitude, validity,<br/>degrees per bar]
-  E --> R[Candidate Ranking Policy]
+  P[retained phi n-1 and current phi n] --> M[Deterministic Go/domain mathematics]
+  M --> S[PhaseTransitionState<br/>signed delta, direction, magnitude,<br/>Phase Velocity omega]
+  S --> R[Component-scoped boundary policy rule]
+  S --> A[ALLOCATE ranking action]
 ```
 
-The pipeline requires phase-motion evidence because multiple entities may occupy `ALLOCATE`. The canonical intended ranking quantity is **Phase Velocity ($\omega$)**, measured in **degrees per bar**, because V0.1 is driven by accepted bar index rather than wall-clock frequency. Phase Velocity is an intended ranking input; its exact definition remains unresolved.
+`PhaseTransitionState` is the operational value describing the transition caused by current production-eligible `Bar[n]`. It contains the current signed circular displacement, direction, magnitude, Phase Velocity, validity, and causal references to retained $\phi[n-1]$ and current $\phi[n]$. It is not experimental proof. Separate telemetry/audit/trace records may record it for attribution and analysis.
 
-The exact mathematics are not approved. In particular, the naive positive-modulo expression
+The V1 fundamental quantity is
 
 $$
-\omega = (\phi[n]-\phi[n-1]) \bmod 360
+\omega[n] = \operatorname{circular\_delta}(\phi[n-1],\phi[n])
 $$
 
-MUST NOT be frozen as the definition. A transition from 10 degrees to 350 degrees may represent approximately -20 degrees of signed circular movement, not +340 degrees.
+measured in **degrees per bar**. Because the transition is from one accepted bar state to the next, $\Delta Bar=1$ for V1. V1 does not use wall-clock velocity, a multi-bar estimator, smoothing, acceleration, another motion model, or an additional eligibility bar.
 
-Explicit counterexample: $\phi[n-1] = 10°$ and $\phi[n] = 350°$ may represent approximately $-20°$ of signed circular movement; naive positive modulo produces $+340°$.
+Signed reverse motion MUST remain representable. The naive unsigned positive-modulo expression is insufficient: $\phi[n-1]=10°$ to $\phi[n]=350°$ may represent approximately $-20°/bar$, not $+340°/bar$. The deterministic convention for an exactly 180-degree directional tie remains a narrow exceptional policy decision.
 
-The approved design must resolve signed circular difference, direction, wrap handling, 180-degree ties, abnormal jumps, initialization, gaps, confidence/validity, smoothing, one-bar versus multi-bar estimation, and whether acceleration is separately required. Velocity MUST NOT be called acceleration. Historical candidate values or rankings from source analysis are examples, not evidence of acceleration, optimal allocation, or efficacy.
+Phase Velocity is supporting mathematics used by the `ALLOCATE` state's ranking action. It is not a strategy state and does not create a separate conceptual Dynamic Execution stage. Velocity MUST NOT be called acceleration.
+
+### 11.1 History-Free State Transitions
+
+A state transition is defined by its input state and resulting output state. Historical state-transition values MUST NOT influence, redefine, smooth, accelerate, or reconstruct the current transition or an already-established state. The engine advances forward one eligible event at a time.
+
+Derived values may describe the current transition and may be retained for telemetry, diagnostics, auditability, or analysis. They do not become historical inputs that alter current strategy state. The design prohibits historical trajectory inference, multi-transition lookback, transition smoothing, acceleration as a state determinant, and downstream reconstruction of an earlier state.
+
+### 11.2 Deterministic Mathematics and Governed Policy
+
+Go/domain code computes `PhaseTransitionState`, Phase Velocity, and factual boundary-crossing inputs. `expr` MUST NOT implement circular mathematics or crossover algorithms. Component-scoped `expr` rules evaluate the authoritative boundary policies and produce typed outcomes that govern the resulting state/action change.
 
 ---
 
-## 12. Dynamic Allocation and Strategy Behavior
+## 12. State-Associated Actions
 
-Candidate comparison and ranking are part of the Dynamic Execution Pipeline. The first intended ranking signal is Phase Velocity ($\omega$), but its definition and the ranking formula, timing, ties, staleness, and eligibility are unresolved.
+The actions shown by the authoritative diagram are part of the four-state engine. They are not additional strategy states or numbered pipeline stages.
 
 The current intended workflow is:
 
-1. **LIQUIDATE first.** A valid 90° `HOP-OFF` crossover places the entity in the `LIQUIDATE` region/action context. The Strategy Decision determines whether liquidation should be requested; if eligible, it generates an `ExecutionIntent`. Freed capital becomes available for governed reallocation under still-unresolved sequencing and capital rules.
-2. **ALLOCATE / reallocate.** When approved capacity/capital is available, inspect the current non-stale `ALLOCATE` candidate universe, rank candidates using the approved Phase Velocity ($\omega$) policy, and generate allocation intent only when the Strategy Decision permits it.
-3. **HOLD & TRAIL.** Held entities in `HOLD & TRAIL` remain held under the strategy-region model and are intended to trail stops dynamically. Exact trailing-stop mathematics are not approved and remain open.
-4. **DISREGARD.** Entities in `DISREGARD` are not allocation candidates under the current region model. Remaining in `DISREGARD` does not generate a `HOP-ON` event.
+1. **ALLOCATE:** rank eligible allocation candidates by Phase Velocity ($\omega$). Ranking formula, timing, tie-breaking, staleness, and candidate eligibility remain unresolved.
+2. **HOLD & TRAIL:** trail stops dynamically. The action is authoritative; its exact algorithm remains unresolved.
+3. **LIQUIDATE:** reallocate freed capital. The action is authoritative; capital representation, capacity, sizing, sequencing, and reconciliation remain unresolved.
+4. **DISREGARD:** take no allocation action.
 
 The design does not yet approve single versus multiple holdings, capital representation, capacity, replacement, candidate-set timing, or liquidation/allocation transaction semantics.
 
 ---
 
-## 13. Decision and External Execution Boundary
+## 13. Governed External Execution Boundary
 
 ```mermaid
 flowchart LR
-  J[JEH Strategy Region] --> T[Strategy Transition / Crossover Evidence]
-  T --> G[Execution Eligibility]
-  G --> D[Strategy Decision]
-  D --> I[ExecutionIntent]
+  S[Four-State Dynamic Execution Engine] --> A0[State-associated action]
+  A0 --> I[Governed execution instruction<br/>when required]
   I --> A[External Execution Adapter]
   A --> E[ExecutionEvent]
   E --> R[Reconciliation and evidence]
 ```
 
-The pipeline decides what should be requested. It does not place orders or claim outcomes. `ExecutionIntent` requires deterministic identity, target, requested action, causal decision, strategy/configuration lineage, idempotency/correlation identity, and validity semantics in the final contract. `ExecutionEvent` separately records acceptance, rejection, action/fill, cancellation, failure, or reconciliation.
+The four-state engine determines strategy state and action. It does not place orders or claim outcomes. When external action is required, it produces a governed execution instruction with deterministic identity, target, requested action, causal state/action, strategy/configuration lineage, idempotency/correlation identity, and validity semantics. The exact contract remains for later design-derived proto review. `ExecutionEvent` separately records acceptance, rejection, action/fill, cancellation, failure, or reconciliation.
 
-The first proving executor is **MOCK / SIMULATED EXECUTION ONLY**: no broker, capital, live order, or Alpaca submission. The proof chain is `bar event -> phase -> motion -> crossover -> state -> ranking -> decision -> ExecutionIntent -> mock ExecutionEvent`. No external call may hold a per-entity or universe strategy-state lock.
+The first proving executor is **MOCK / SIMULATED EXECUTION ONLY**: no broker, live order, or Alpaca submission. The proof chain is `bar event -> phase -> PhaseTransitionState -> boundary policy -> four-state result -> associated action -> governed execution instruction when required -> mock ExecutionEvent`. No external call may hold a strategy-state lock.
+
+The execution boundary remains a proto-governed Executor interface with a `MockExecutor` as the first implementation and a future separately approved `AlpacaPaperExecutor` as a substitutable adapter. Both consume the same governed execution-instruction meaning and report the same `ExecutionEvent` meaning. Execution adapters contain no strategy logic. Neither the rule engine nor the JEH analytical engine imports an executor or Alpaca SDK. Live-money endpoints and orders are prohibited.
+
+### 13.1 Governed Outcome-Based Rule Architecture
+
+All rule-governed components use one common application facility:
+
+```text
+typed input / prior evidence
+  -> component context builder
+  -> component-scoped authorized dynamic variables
+  -> Rule Registry rule_id + rule_version
+  -> precompiled github.com/antonmedv/expr program
+  -> raw implementation evaluation result
+  -> rule-specific typed proto outcome mapper
+  -> governed Go state transition or routing
+  -> RuleEvaluationEvidence
+  -> next component or attributable termination
+```
+
+`github.com/antonmedv/expr` is mandatory as the condition evaluator for governed dynamic rules. Expressions MUST normally compile once at application startup or governed rule-set load/reload, never once per bar. Compilation failure is a visible governed configuration/runtime failure and cannot silently disable a rule. Runtime hot reload and arbitrary in-market rule modification are not authorized by this design.
+
+`expr` is not the rule architecture and is not authority: proto is the authoritative operational vocabulary; Go owns orchestration, state, and approved deterministic algorithms; and a typed proto outcome owns governed routing meaning. Raw `true` or `false` has no application-wide financial meaning. Each identified/versioned rule maps its raw result to its own typed success, block, no-action, not-applicable, or error outcome.
+
+An expression MUST NOT perform circular mathematics, detect crossings algorithmically, submit an order, call Alpaca, mutate broker/cash/holding authority, claim execution, or create an `ExecutionEvent`. The rule engine and JEH engine have no Alpaca dependency. The execution chain remains `deterministic values -> scoped rule -> typed outcome -> four-state state/action change -> governed execution instruction when required -> Executor -> ExecutionEvent`.
+
+### 13.2 Rule Object, Registry, and Evidence
+
+The common Governed Rule Engine contains a Rule Registry, expr compiler, compiled-program cache, evaluator, typed-outcome mapper, and rule-evidence producer. It MUST NOT be reimplemented independently in each DEP component. Each logical rule identifies at least its rule ID, version, name, purpose, owning component, expression, authorized variables, expected raw result type, typed success and failure/block outcomes, routing behavior, permitted state mutation, evidence requirement, and rule-set/configuration identity. Anonymous expression strings scattered through Go are prohibited.
+
+Every evaluation emits `RuleEvaluationEvidence` sufficient to establish rule ID/version, owning component, causal input identity, evaluation sequence, evaluation status, typed outcome, reason/diagnostic information, and rule-set/configuration identity. A blocked, not-applicable, no-action, or error result is still an attributable outcome. Financially meaningful outcomes MUST NOT be generic strings.
+
+Approved rules and approved variables/thresholds may evolve without rewriting pipeline orchestration, but every activated rule set has identity/version, approval, validation, and historical attribution. Unsafe or unknown changes fail closed.
+
+### 13.3 Component-Scoped Dynamic Variables
+
+There is no unrestricted global pipeline rule context. Each rule-governed component exposes only its approved variables:
+
+| Component | Authorized context boundary | Prohibited collapse / unresolved authority |
+| --- | --- | --- |
+| Production Eligibility Controller | phase status/value presence, contiguous valid-bar count, sequence integrity, current-bar validity, prior analytical-state validity | No cash, broker, fill, or quantity data |
+| Phase-transition calculation | current production eligibility, retained $\phi[n-1]$, current $\phi[n]$, sequence integrity | Deterministic Go/domain mathematics produces `PhaseTransitionState`; `expr` does not calculate it |
+| Boundary policy | current strategy state, current `PhaseTransitionState`, deterministic boundary facts | Typed outcomes implement the four authoritative boundary meanings; `HOP_ON`/`HOP_OFF` are events, never states |
+| `ALLOCATE` action | eligible candidates and current Phase Velocity values | Ranking mathematics and policy remain unresolved; no additional strategy state is created |
+| `HOLD & TRAIL` action | current `HOLD & TRAIL` state and approved execution context | Exact dynamic trailing algorithm remains unresolved |
+| `LIQUIDATE` action | current `LIQUIDATE` state and approved execution/capital context | Exact freed-capital reallocation mechanics remain unresolved |
+| Execution instruction eligibility | typed four-state result/action and pending execution/reconciliation facts | Instruction is a request, not execution evidence; exact contract requires later proto review |
+
+DEP-03 JEH/Hilbert recurrence, approved circular delta and velocity, ranking calculation, quantity sizing, and deterministic identity generation remain deterministic Go algorithms where appropriate. Rules govern conditions, eligibility, policy, routing, and outcome selection; they do not replace mathematics.
 
 ---
 
@@ -428,15 +520,19 @@ DSE_JEH_MODE=ONLINE
 DSE_JEH_MODE=OFFLINE
 ```
 
+The independently built executable is started through governed PowerShell, currently `scripts/Start-DSEJEHTransSat1.ps1`, and MUST NOT use `go run`. The complete lifecycle requires an approved `scripts/Stop-DSEJEHTransSat1.ps1` or equivalent explicit governed process-stop mechanism. Startup validates configuration before dependencies start; shutdown stops intake, drains or explicitly cancels accepted work, flushes evidence, and publishes final lifecycle state.
+
+Existing configuration inspected on 2026-09-13 includes `DSE_JEH_MODE`, canonical `DSE_JEH_OFFLINE_COLLECTION_RUN_ID` (with a temporary legacy alias), `DSE_JEH_GRPC_ADDRESS`, `DSE_JEH_SYMBOLS`, `DSE_JEH_FINALIZED_ONLY`, `DSE_JEH_MAX_BARS`, `DSE_JEH_OUTPUT`, `DSE_JEH_REFERENCE_CSV`, and `DSE_JEH_COMPARISON_REPORT`, plus Mongo adapter settings. The target design requires contract review and normalization of endpoint, execution-mode, log-level, evidence-output, shutdown, and runtime-identity configuration; no variable listed as a target example is approved merely by appearing here.
+
 The host/startup layer reads `DSE_JEH_MODE` and selects one producer/input component. The Dynamic Execution Pipeline MUST NOT read this variable or branch on source mode.
 
 **ONLINE** maps bars from the `Fin_Feed_Sat_1` gRPC bar stream through an internal gRPC consumer into the common `BarEvent` boundary. The transport is not JEH mathematics, and the pipeline MUST NOT depend on Fin protobuf types or gRPC semantics. This design neither invents nor freezes a Fin service or protobuf contract.
 
 The inspected candidate binding is `finfeedsat.v1.IngestionService.StreamBars`; the request is `finfeedsat.v1.StreamBarsRequest` and the server-streamed response is `finfeedsat.v1.Bar`. The DSE_JEH adapter would require adapter-local identity mapping, sequencing/continuity validation, and duplicate handling. The candidate is not approved for binding because its current contract cannot expose queue loss, guarantee finalized bars, or resume from an acknowledged position.
 
-**OFFLINE** uses an internal stream producer to read `bar_sequence_db.bar_sequence` in an approved deterministic order and emit one stored observation at a time into the common `BarEvent` boundary. OFFLINE remains a stream, not a batch strategy processor. The producer MUST NOT calculate phase, phase motion, crossover, JEH strategy region, ranking, decisions, or `ExecutionIntent`, and MUST NOT invoke `phase_angle_series_generator`.
+**OFFLINE** uses an internal stream producer to read exactly one explicitly selected `collection_run_id` from `bar_sequence_db.bar_sequence` in an approved deterministic order and emit one stored observation at a time into the common `BarEvent` boundary. The current validation selector is `20260911T161623Z-1`. OFFLINE remains a stream, not a batch strategy processor. The producer MUST NOT calculate phase, `PhaseTransitionState`, boundary policy outcomes, four-state strategy state/actions, or governed execution instructions, and MUST NOT invoke `phase_angle_series_generator`.
 
-For equivalent admitted bars and ordering, both modes execute identical solver, motion, crossover, state, universe, ranking, decision, and intent logic. Source provenance may differ; strategy behavior must not. A separate offline or backtest strategy implementation is prohibited. Optional future OFFLINE pacing is a producer/runtime concern and MUST NOT change bar interpretation or pipeline behavior.
+For equivalent admitted bars and entity-causal ordering under the same initial state, versions, rule set, and configuration, both modes MUST produce equivalent admission-through-execution records except for approved source provenance and transport timing. This is the ONLINE/OFFLINE convergence invariant. Both modes enter the same `BarEvent` boundary and execute identical eligibility, transition mathematics, boundary policy, four-state state/action, governed execution-boundary, and adapter-routing logic. A separate offline or backtest strategy implementation is prohibited. Optional future OFFLINE pacing is a producer/runtime concern and MUST NOT change bar interpretation or engine behavior.
 
 ---
 
@@ -473,7 +569,7 @@ flowchart TD
   REP[PATH B - OFFLINE RUNTIME PROVING<br/>Internal Offline Stream Producer]
   BAR[One BarEvent at a time]
   DEP[Dynamic Execution Pipeline]
-  RUN[Runtime phase series<br/>state evidence, decisions, intents]
+  RUN[Runtime phase series<br/>four-state results and audit records]
   CMP[PHASE COMPARISON]
   DB --> GEN --> REF --> CMP
   DB --> REP --> BAR --> DEP --> RUN --> CMP
@@ -489,13 +585,12 @@ The existing phase CSV and `DSE_JEH_provers` remain regression/reference evidenc
 
 For the same admitted bar observations and order, ONLINE and OFFLINE MUST produce equivalent results given the same solver version, strategy version, configuration, ranking policy, and initial state:
 
-- phase and phase-motion evidence;
-- crossover and state-transition evidence;
-- universe-state evolution and rankings;
-- decisions and `ExecutionIntent` records; and
+- phase evidence and `PhaseTransitionState` values;
+- typed boundary-policy outcomes and four-state transitions;
+- state-associated action results and governed execution instructions; and
 - mock `ExecutionEvent` records.
 
-Evidence identity must include enough typed and versioned information to distinguish entity, source observation, source mode/provenance, entity order, replay/order policy where applicable, solver, strategy, zone model, phase-motion policy, ranking policy, configuration, causal predecessor, and output kind. IDs must support idempotency, mode-equivalence comparison, reconciliation, and conflict detection without making transport types, file layout, or database keys part of strategy mathematics.
+Operational and audit identities must include enough typed and versioned information to distinguish entity, source observation, source mode/provenance, entity order, replay/order policy where applicable, solver, four-state strategy policy, transition-mathematics policy, action policy, configuration, causal predecessor, and output kind. IDs must support idempotency, mode-equivalence comparison, reconciliation, and conflict detection without making transport types, file layout, or database keys part of strategy mathematics.
 
 ---
 
@@ -506,6 +601,7 @@ DSE_JEH_TransSat_1
 |
 +-- Runtime / Startup Configuration
 |     +-- DSE_JEH_MODE = ONLINE | OFFLINE
++-- Lifecycle / Health / Governed Start and Stop
 +-- ONLINE Bar Input
 |     +-- Fin_Feed_Sat_1 gRPC Bar Consumer
 +-- OFFLINE Bar Input
@@ -514,19 +610,24 @@ DSE_JEH_TransSat_1
 +-- Per-Entity Analytical State Coordinator
 +-- JEH Phase Solver
 +-- Circular Phase State Manager
-+-- Phase Motion Analyzer
-+-- Boundary Crossover Detector
-+-- Strategy Region / Rules Engine
-+-- Universe State Coordinator
-+-- Candidate Ranking Engine
-+-- Strategy Decision Engine
-+-- ExecutionIntent Publisher
++-- Production Eligibility Controller
++-- Governed Rule Engine
+|     +-- Rule Registry
+|     +-- expr Compiler and Compiled Program Cache
+|     +-- Rule Evaluator and Typed Outcome Mapper
+|     +-- RuleEvaluationEvidence
++-- Phase Transition Mathematics
++-- Four-State Dynamic Execution Engine
+|     +-- Boundary Policy Rules
+|     +-- DISREGARD / ALLOCATE / HOLD & TRAIL / LIQUIDATE State
+|     +-- State-Associated Actions
++-- Governed Execution Instruction Boundary
 +-- Execution Adapter Interface
-+-- Evidence / Diagnostics
-+-- optional Persistence Adapter
++-- Runtime Activity / Evidence / Diagnostics
++-- Persistence and Publication Adapters
 ```
 
-These are logical design components only. They do not authorize packages, services, files, or contracts.
+These are logical proto-governed operational responsibilities. They do not imply one process or RPC service per component, and this documentation change does not authorize implementation.
 
 ---
 
@@ -542,18 +643,24 @@ Failures must be isolated:
 | --- | --- |
 | Malformed, duplicate, conflicting, missing, or out-of-order bar | Apply explicit deterministic admission policy; do not silently mutate history |
 | One entity's solver/state failure | Degrade/quarantine that entity without corrupting others |
-| Ranking or decision failure | Preserve accepted analytical evidence and surface failure |
+| State-action or policy failure | Preserve accepted analytical state and audit records and surface failure |
 | Persistence/publication/viewer failure | Surface health degradation; do not alter strategy truth |
 | Execution adapter latency/failure | Preserve strategy state; do not claim execution; do not block unrelated entities |
 | Restart/version mismatch | Refuse unsafe restoration or reconstruct under an approved policy |
 
-Runtime health should distinguish liveness, input health, per-entity initialization/readiness, universe readiness, persistence/publication health, execution-adapter health, recovery/replay state, and active version identities.
+Runtime health MUST distinguish liveness, selected mode, startup/running/draining/stopped/degraded/failure state as approved, input subscription/connectivity, per-entity initialization/readiness, universe readiness, persistence/publication health, execution-adapter health, recovery/replay state, and active version identities. A running process receiving zero bars remains alive; zero activity is not stopped, failed, completed, or disconnected unless separate health evidence establishes that condition. ONLINE is persistent despite a quiet stream. OFFLINE end-of-selection behavior requires an explicit policy distinguishing replay completion from application stop.
+
+### 19.1 Runtime Activity, Telemetry, and Full Bar Accountability
+
+The runtime exposes independently meaningful cumulative and/or interval activity for bar reception/admission, initialization, production eligibility, phase-transition calculations, boundary-policy firings, four-state transitions/persistence, state-associated actions, governed execution instructions, and execution events. Exact proto-safe declaration names and counter/reset semantics require review after the replacement design. These values are not interchangeable.
+
+Every received bar produces a causal outcome chain. Rejection ends with admission evidence. An admitted initializing bar ends with a Production Eligibility blocked outcome and evidence. A production-eligible `Bar[n]` uses retained $\phi[n-1]$ as analytical context and owns its complete Dynamic Execution evaluation; no predecessor production eligibility is required. An eligible bar ends with a typed four-state result and associated action result, including persistence or no action where applicable. Any external-action path remains attributable through its governed instruction, executor, and `ExecutionEvent`. No branch may silently return or discard an event without governed audit records and activity accounting.
 
 ---
 
 ## 20. Viewer Boundary
 
-The viewer is observational only and MUST NOT calculate authoritative phase, motion, crossover, state, ranking, decision, intent, or execution truth. A future viewer may display polar universe state, entity phase/motion/state, crossovers, candidates, ranking, holdings, decisions, `ExecutionIntent`, and `ExecutionEvent`. Viewer failure or latency cannot affect processing.
+The viewer is observational only and MUST NOT calculate authoritative phase, transition values, boundary outcomes, four-state state/actions, execution instructions, or execution truth. A future viewer may display phase, `PhaseTransitionState`, boundary-policy events, four-state membership, state-action results, governed execution instructions, and `ExecutionEvent`. Viewer failure or latency cannot affect processing.
 
 Polar visualization represents one circular phase space. A rectangular chart's 360/0 wrap is not automatically a scientific discontinuity.
 
@@ -567,12 +674,12 @@ The first separately authorized validation plan should cover:
 2. Entity isolation and asynchronous sequences without synchronized frames.
 3. Current 63-observation initialization behavior, first possible phase at 64, and legitimate zero degrees.
 4. Phase equivalence against `phase_angle_series_generator` with approved tolerance.
-5. Signed motion, wrap, reverse motion, large jump, and abnormal/invalid vectors.
-6. Canonical strategy-region membership versus initial entry, persistence, exit, named `HOP-ON`/`HOP-OFF` events, other crossover evidence, and entry.
-7. Every boundary, including 90, 180, 270, and 360/0 in both movement directions.
-8. Stale universe members, candidate-set timing, ranking ties, and capacity behavior once approved.
-9. Liquidation-before-allocation ordering and intent idempotency.
-10. Decision, intent, mock execution, and reconciliation non-equivalence.
+5. `PhaseTransitionState` vectors, including signed motion, wrap, reverse motion, large transitions, and abnormal/invalid inputs.
+6. Initial four-state classification, same-state persistence, and the four boundary-policy outcomes, including `HOP-ON` and `HOP-OFF`.
+7. Deterministic boundary-fact handling for 90, 180, 270, and 360/0, including exact samples, reverse movement, multiple crossings, and jitter.
+8. ALLOCATE ranking, HOLD & TRAIL behavior, LIQUIDATE freed-capital reallocation, and DISREGARD no-action behavior once their algorithms are approved.
+9. Governed execution-instruction identity/idempotency and execution reconciliation.
+10. Four-state action, execution instruction, and execution outcome non-equivalence.
 11. Deterministic 4,519-event replay and repeated evidence identity/digest comparison.
 12. ONLINE/OFFLINE semantic equivalence, source-specific recovery, and component failure isolation.
 13. ONLINE ordering, duplicate/gap/loss detection, reconnect/resumption, backpressure, and lag behavior once contracted.
@@ -614,35 +721,21 @@ No answer is invented where evidence does not yet exist. `RESOLVED` below closes
 | OQ 33 | REQUIRES HUMAN DECISION | Generator preserves source-time regressions, Fin inserts/replaces chronologically, and the prover rejects non-increasing new positions. | **BLOCKER:** out-of-order finding and disposition are not approved. |
 | OQ 45 | DEFERRED - NOT REQUIRED FOR INITIAL PHASE 1 PROTO | Checkpoint storage, compatibility, restart, and reconciliation mechanisms are not approved. | Omit checkpoint/recovery declarations; fresh initialization remains valid. |
 | OQ 46 | DEFERRED - NOT REQUIRED FOR INITIAL PHASE 1 PROTO | DSE_JEH durability, retention, and publication boundaries are not approved. | Define no persistence API or service. |
-| OQ 49 | DEFERRED - NOT REQUIRED FOR INITIAL PHASE 1 PROTO | The design identifies health dimensions but no lifecycle state machine or external operations consumer. | Omit `RuntimeStatus`, `RuntimeHealthEvidence`, and operations service/RPC. |
+| OQ 49 | REQUIRED FOR COMPLETE APPLICATION PROTO | Exact lifecycle and health enum/service shapes remain to be approved, but persistent liveness, governed start/stop, zero-input validity, source health, degradation, activity, and final-state evidence are mandatory target contract responsibilities. | Expand the single proto before lifecycle/health implementation; in-process operation does not remove proto governance. |
 | OQ 50 | DEFERRED - NOT REQUIRED FOR INITIAL PHASE 1 PROTO | Promotion criteria require later validated OFFLINE evidence and safe ONLINE delivery semantics. | No promotion declaration belongs in the proto. |
 
-### 22.2 Phase 2 open questions preserved unchanged
+### 22.2 Four-state engine decisions and remaining open questions
 
-20. What is the exact signed circular $\Delta\phi$ definition, including tie behavior?
-21. What is the exact Phase Velocity ($\omega$) definition in degrees per bar?
-22. Does $\omega$ use one-bar or multi-bar estimation?
-23. Is phase motion smoothed; if so, under what separately identified policy?
-24. Is angular acceleration needed as a distinct quantity?
-25. What are robust 90-degree `HOP-OFF` crossover semantics?
-26. What are robust 180-degree crossover semantics?
-27. What are robust 270-degree `HOP-ON` crossover semantics?
-28. What are robust 360/0 crossover semantics?
-29. How is reverse phase movement interpreted and processed?
-30. How are large or abnormal phase jumps classified?
-34. How is entity-state staleness measured and exposed?
-35. What are universe snapshot semantics under asynchronous arrivals?
-36. What candidate ranking mathematics, tie-breaking, and validity rules are approved?
-37. When is the candidate set sampled relative to an incoming event and decisions?
-38. When and how do stale candidates expire?
-39. How is allocation/execution capacity defined?
-40. Are single or multiple simultaneous holdings supported?
-41. How is capital state represented without coupling strategy mathematics to an executor?
-42. What atomicity and reconciliation govern liquidation-before-allocation sequencing?
-43. What are mock execution acceptance, rejection, fill, latency, and failure semantics?
-44. Is a trailing-stop policy part of V0.1, and what mathematics would govern it?
-47. What is the exact versioned `ExecutionIntent` contract?
-48. What is the exact versioned `ExecutionEvent` contract?
+20. **RESOLVED:** `PhaseTransitionState` uses signed `circular_delta` from retained $\phi[n-1]$ to current $\phi[n]$ in degrees per bar with $\Delta Bar=1$; deterministic handling of an exact 180-degree directional tie remains open.
+21. **RESOLVED:** State transitions are history-free; no multi-transition lookback, smoothing, acceleration, or historical reconstruction determines current state.
+22. **RESOLVED:** The strategy-policy meanings are fixed: 270° -> `HOP-ON`/`ALLOCATE`; 0° -> `HOLD & TRAIL`; 90° -> `HOP-OFF`/`LIQUIDATE`; 180° -> `DISREGARD`.
+23. What deterministic algorithm handles wrap, reverse movement, exact-boundary samples, large or multiple-boundary transitions, and jitter/recrossing while preserving those fixed policy meanings?
+24. What ALLOCATE ranking formula, timing, tie-breaking, staleness, and candidate-eligibility policy are approved?
+25. What exact dynamic trailing algorithm implements the authoritative `HOLD & TRAIL` action?
+26. What capital representation, capacity, sizing, sequencing, and reconciliation implement the authoritative `LIQUIDATE` freed-capital reallocation action?
+27. What minimum governed execution-instruction and `ExecutionEvent` contracts are required by the four-state engine?
+28. What minimum proto/service changes are required after review of the superseded post-phase service structure?
+29. **RESOLVED:** Current production-eligible `Bar[n]` owns the complete Dynamic Execution path. Retained $\phi[n-1]$ is analytical context and need not come from an eligible predecessor; bar 64 is the first possible four-state-engine entry.
 
 ### 22.3 Stage A proto gate
 
@@ -654,11 +747,12 @@ No answer is invented where evidence does not yet exist. `RESOLVED` below closes
 
 | Source | Design use | Authority limit |
 | --- | --- | --- |
-| Supplied Hop On Hop Off strategy artifact (not stored in this repository) | Canonical `DISREGARD`, `ALLOCATE`, `HOLD & TRAIL`, and `LIQUIDATE` region/action names; `HOP-ON` and `HOP-OFF` crossover-event names; Phase Velocity ranking intent; trailing and reallocation intent | Terminology is authoritative for this design; crossover, velocity, ranking, trailing-stop, and capital mathematics remain unresolved |
+| Supplied Hop On Hop Off strategy diagram | Authoritative four-state Dynamic Execution Engine, four boundary-policy meanings, and ALLOCATE, HOLD & TRAIL, LIQUIDATE, and DISREGARD actions | State and policy meanings are authoritative; exact transition-detection, ranking, trailing, capital/reallocation, execution-instruction, and reconciliation algorithms remain unresolved |
 | `phase_angle_series_generator` docs and implementation | Median-price solver behavior, 63-bar initialization, normalized phase, independent reference path | Standalone batch generator; not runtime or strategy authority |
 | `DSE_JEH_provers` | PhaseEvidence admission, zone/transition regression evidence, deterministic proving patterns | Precomputed-phase apparatus; not runtime input architecture or efficacy evidence |
 | `bar_sequence_db.bar_sequence` | Initial realtime-equivalent replay source; 4,519 observations verified 2026-09-12 | Dataset and MongoDB are not architectural dependencies |
-| This document | Proposed V0.1 runtime boundary and requirements | Human review required; implementation not authorized |
+| Rule-engine examples named for this reconciliation (not present in the inspected workspace) | Architectural examples of typed contexts and `expr` use only | Not DSE_JEH business-rule authority; sample combined allocation/buy and region-only liquidation logic are expressly rejected |
+| This document | Complete V0.1 target runtime boundary and requirements | This reconciliation does not authorize implementation |
 
 The source strategy's polar interpretation motivates the four states and dynamic behavior. It does not establish that a particular phase means a universal trough/peak, that one-bar motion proves acceleration, or that historical $\omega$ examples prove optimal allocation.
 
@@ -666,19 +760,50 @@ The source strategy's polar interpretation motivates the four states and dynamic
 
 ## 24. Non-Goals
 
-This revision does not authorize or perform:
+This reconciliation does not authorize or perform:
 
-- Go implementation, gRPC client implementation, or protobuf creation/modification;
+- Go implementation, gRPC client implementation, protobuf modification, or generated-code changes;
 - modification of `Fin_Feed_Sat_1`;
-- implementation of the Internal Offline Stream Producer or Dynamic Execution Pipeline;
-- replay execution;
+- implementation of the Production Eligibility Controller, four-state Dynamic Execution Engine, state-associated actions, or execution adapters;
+- replay or experimental Go execution;
 - modification of `phase_angle_series_generator`, Bar Sequence Lab, or `DSE_JEH_provers`;
 - MongoDB data modification or repository restructuring;
 - live broker, Alpaca, real-capital, or live-order execution;
 - trailing-stop implementation;
-- final phase-velocity, crossover, or candidate-ranking mathematics;
+- final transition-detection, ranking, trailing, capital/reallocation, or execution-instruction algorithms;
 - a separate backtest strategy;
-- viewer changes, deployment, commit, or push.
+- startup/stop-script changes, viewer changes, deployment, commit, or push.
+
+### 24.1 Truthful Implementation Status at Reconciliation
+
+| Responsibility | Status on 2026-09-13 |
+| --- | --- |
+| DEP-01 Bar Event Admission | IMPLEMENTED and validated in Phase 1 |
+| DEP-02 Per-Entity Ordered Analytical State | IMPLEMENTED and validated in Phase 1 |
+| DEP-03 JEH / Ehlers Phase Update | IMPLEMENTED and validated in Phase 1 |
+| DEP-04 Circular Phase State | IMPLEMENTED and validated in Phase 1 |
+| Rule #1 behavior | IMPLEMENTED inside analytical status/state handling: contiguous bars 1-63 initialize and bar 64 can become `OBSERVABLE` |
+| Explicit proto-governed Production Eligibility Controller | NOT IMPLEMENTED |
+| Four-state Dynamic Execution Engine and state-associated actions | NOT IMPLEMENTED; former DEP-05-through-DEP-11 contracts remain generated but are superseded as design authority and await review |
+| Governed Rule Engine / Rule Registry / mandatory expr integration | NOT IMPLEMENTED |
+| Complete proto operational vocabulary | NOT IMPLEMENTED; current proto covers only the Phase 1 analytical slice |
+| Complete persistent lifecycle, stop mechanism, health, telemetry, and full bar outcome evidence | NOT IMPLEMENTED; current runtime/build/start path is partial |
+| Mock/future approved paper execution adapter and complete `ExecutionEvent` path | NOT IMPLEMENTED |
+
+The current runtime is useful Phase 1 implementation evidence, but completion of DEP-01 through DEP-04 does not make the complete Transformation Satellite or Phase 2 complete.
+
+### 24.2 Reconciled Consistency Invariants
+
+- The complete target is one independently startable and stoppable persistent built application; startup and stop are governed, `go run` is prohibited, and zero input is a valid running state.
+- **Mode convergence:** ONLINE and one-selector OFFLINE input converge at the same `BarEvent` boundary and use one E2E path.
+- The single proto is authoritative for governed internal and external vocabulary while in-process implementation does not require artificial RPC hops.
+- Rule #1 processes bars 1 through 63 as `INITIALIZING`; current eligible `Bar[n]` owns its complete downstream path; retained $\phi[n-1]$ is analytical context rather than another Dynamic Execution event; and bar 64 is the first possible four-state-engine entry.
+- `expr` programs are identified/versioned and compiled once per startup or governed load; a raw boolean has no global business meaning and maps to a rule-specific typed proto outcome before Go routing.
+- **Every-bar accountability and named metrics:** every received bar ends with attributable typed evidence. Activity separately tracks `bars_received`, `bars_admitted`, `bars_rejected`, `bars_initializing`, `bars_phase_eligible`, `phase_motion_evaluations`, `boundary_crossovers`, `hop_on_events`, `hop_off_events`, `strategy_decisions`, `execution_intents`, and `execution_events`.
+- **Four-state authority:** `DISREGARD`, `ALLOCATE`, `HOLD & TRAIL`, and `LIQUIDATE` are the only strategy states. `HOP_ON` and `HOP_OFF` are rule-policy firing events, not states.
+- **History-free transitions:** only input state and resulting output state define the current transition; retained transition values are telemetry/audit data, not state-determining history.
+- `PhaseTransitionState` uses signed single-bar circular delta in degrees per bar without smoothing or acceleration. Exact 180-degree tie handling and deterministic crossing algorithms remain unresolved, as do ranking, trailing, capital/reallocation, execution-instruction, and reconciliation details.
+- This documentation task authorizes no changes to proto, generated code, Go implementation, startup/stop scripts, tests, or broker integration.
 
 ---
 
@@ -691,13 +816,16 @@ This revision does not authorize or perform:
 | V0.1 terminology refinement | 2026-09-12 | Aligned the Dynamic Execution Pipeline with the supplied Hop On Hop Off strategy artifact: established `DISREGARD`, `ALLOCATE`, `HOLD & TRAIL`, and `LIQUIDATE` as the four canonical persistent strategy region/action terms; defined `HOP-ON` and `HOP-OFF` as 270° and 90° crossover events rather than states; retained Phase Velocity ($\omega$) as the intended ranking quantity; and preserved unresolved crossover, velocity, ranking, trailing-stop, and capital-allocation mathematics. |
 | V0.1 Phase 1 contract review | 2026-09-12 | Recorded repository evidence for source contracts, ordering, JEH inputs, and ONLINE delivery; classified Phase 1 OQs; and held the initial proto at the Stage A gate pending approved identity, provenance, admission, replay-order, and ONLINE continuity decisions. |
 | V0.1 Phase 1 implementation authorization | 2026-09-12 | Human direction authorized deterministic Phase 1 implementation choices, the single authoritative proto, generated bindings, ONLINE and OFFLINE adapters, common admission, JEH analytical processing, executable validation, and reports while preserving all Phase 2 boundaries. |
+| V0.1 complete-application reconciliation | 2026-09-13 | Revised in place to define an independently startable/stoppable persistent application; make the single proto authoritative for all governed operational vocabulary; add the explicit Production Eligibility Controller, outcome-based `expr` rule architecture, component-scoped contexts, Rule Registry, typed outcomes/evidence, complete bar accountability and telemetry; preserve execution separation and financial terminology; record truthful implementation status; and retain unresolved Phase 2 mathematics and policy. |
+| V0.1 final Dynamic Execution Pipeline reconciliation | 2026-09-13 | Established current eligible `Bar[n]` as owner of the complete Dynamic Execution Pipeline, made $\phi[n-1]$ retained analytical context rather than a separately eligible bar, removed the bar-65 prerequisite, defined DEP-05 as the current bar's single-bar phase-state-transition mathematics, separated DEP-06 crossover interpretation from DEP-05 motion and DEP-07 persistent strategy state, and aligned diagrams, lifecycle, open questions, and consistency invariants. |
+| V0.1 four-state Dynamic Execution replacement | 2026-09-13 | Superseded the former DEP-05-through-DEP-11 conceptual decomposition with the authoritative four-state Hop-On/Hop-Off Dynamic Execution Engine; established history-free transitions, `PhaseTransitionState`, fixed boundary-policy meanings, state-associated actions, deterministic-mathematics versus `expr` separation, and a design-derived future proto review. |
 
 ---
 
 ## 26. Authorization Statement
 
-This document is **APPROVED** as the Phase 1 architectural authority.
+This document is **APPROVED** as the V0.1 complete-application architectural authority.
 
-**Phase 1 is implemented and pending human review of validation evidence.**
+**DEP-01 through DEP-04 are implemented and validated by existing Phase 1 evidence. The four-state Dynamic Execution Engine, its state-associated actions, its design-derived proto contracts, and the complete execution path are not implemented. Existing post-phase proto services remain unchanged pending later review and do not control this replacement design.**
 
-This approval and the explicit 2026-09-12 implementation direction authorize Phase 1 contract, runtime, test, replay-validation, and reporting work only. They do not authorize Phase 2 implementation, deployment, execution integration, or trading.
+This in-place reconciliation freezes the corrected application architecture. It does not authorize proto, generated-code, Go, script, broker-integration, deployment, or trading changes.

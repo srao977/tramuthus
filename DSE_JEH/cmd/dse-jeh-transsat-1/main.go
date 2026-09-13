@@ -2,14 +2,16 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
+	"time"
 
+	"tramuthus/dse-jeh-transsat-1/internal/app"
 	"tramuthus/dse-jeh-transsat-1/internal/config"
-	runtimeapp "tramuthus/dse-jeh-transsat-1/internal/runtime"
 )
 
 func main() {
@@ -26,14 +28,33 @@ func run() error {
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
-	stats, err := runtimeapp.Run(ctx, cfg)
+	stopFile := strings.TrimSpace(os.Getenv("DSE_JEH_STOP_FILE"))
+	if stopFile != "" {
+		_ = os.Remove(stopFile)
+		go watchStopFile(ctx, cancel, stopFile, os.Getpid())
+		defer os.Remove(stopFile)
+	}
+	application, err := app.New(cfg, app.Options{Output: os.Stdout})
 	if err != nil {
 		return err
 	}
-	encoded, err := json.Marshal(stats)
-	if err != nil {
-		return fmt.Errorf("marshal runtime summary: %w", err)
+	return application.Run(ctx)
+}
+
+func watchStopFile(ctx context.Context, cancel context.CancelFunc, path string, processID int) {
+	ticker := time.NewTicker(250 * time.Millisecond)
+	defer ticker.Stop()
+	want := strconv.Itoa(processID)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			content, err := os.ReadFile(path)
+			if err == nil && strings.TrimSpace(string(content)) == want {
+				cancel()
+				return
+			}
+		}
 	}
-	fmt.Println(string(encoded))
-	return nil
 }
