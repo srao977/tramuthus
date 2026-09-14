@@ -3,7 +3,20 @@ param(
     [ValidateSet("ONLINE", "OFFLINE")]
     [string]$Mode,
 
-    [string]$OfflineCollectionRunID
+    [string]$OfflineCollectionRunID,
+
+    [string]$PipelineRunID,
+
+    [ValidatePattern('^[A-Z0-9][A-Z0-9_-]*$')]
+    [string]$RunType,
+
+    [double]$StartingCapital = 100000.00,
+
+    [ValidateRange(0.0, 1.0)]
+    [double]$AllocationPct = 1.0,
+
+    [ValidateRange(0.0, 1.0)]
+    [double]$RiskR = 0.0
 )
 
 $ErrorActionPreference = "Stop"
@@ -34,6 +47,20 @@ if ($Mode -eq "OFFLINE") {
         [string]::IsNullOrWhiteSpace($env:DSE_JEH_COLLECTION_RUN_ID)) {
         throw "OFFLINE mode requires -OfflineCollectionRunID or DSE_JEH_OFFLINE_COLLECTION_RUN_ID."
     }
+    if ([string]::IsNullOrWhiteSpace($PipelineRunID)) {
+        throw "OFFLINE mode requires -PipelineRunID."
+    }
+    if ([string]::IsNullOrWhiteSpace($RunType)) {
+        throw "OFFLINE mode requires -RunType matching ^[A-Z0-9][A-Z0-9_-]*$."
+    }
+    if ($StartingCapital -le 0) {
+        throw "StartingCapital must be positive."
+    }
+    $env:DSE_JEH_PIPELINE_RUN_ID = $PipelineRunID.Trim()
+    $env:DSE_JEH_RUN_TYPE = $RunType
+    $env:DSE_JEH_STARTING_CAPITAL = $StartingCapital.ToString([System.Globalization.CultureInfo]::InvariantCulture)
+    $env:DSE_JEH_ALLOCATION_PCT = $AllocationPct.ToString([System.Globalization.CultureInfo]::InvariantCulture)
+    $env:DSE_JEH_RISK_R = $RiskR.ToString([System.Globalization.CultureInfo]::InvariantCulture)
 }
 $env:DSE_JEH_STOP_FILE = $stopFile
 Write-Host "Starting DSE_JEH_TransSat_1 ($Mode)"

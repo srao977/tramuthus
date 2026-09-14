@@ -1,0 +1,110 @@
+// DSE_JEH_TransSat_1 generic run_type validator migration.
+// Target: bar_sequence_db.h_h_stage_emit_values and capital_reservoir_events
+//
+// Run manually in MongoDB Compass Shell or mongosh after reviewing this file.
+// This script changes only each installed validator's run_type property.
+// It never creates, drops, renames, clears, updates, or populates a collection.
+
+(function updateRunTypeValidation() {
+  "use strict";
+
+  const DB_NAME = "bar_sequence_db";
+  const COLLECTIONS = ["h_h_stage_emit_values", "capital_reservoir_events"];
+  const RUN_TYPE_RULE = {
+    bsonType: "string",
+    minLength: 1,
+    pattern: "^[A-Z0-9][A-Z0-9_-]*$"
+  };
+  const targetDb = db.getSiblingDB(DB_NAME);
+  const issues = [];
+
+  function fail(message) {
+    issues.push(message);
+    print("FAIL: " + message);
+  }
+
+  function clone(value) {
+    return EJSON.parse(EJSON.stringify(value));
+  }
+
+  function canonicalize(value) {
+    if (Array.isArray(value)) {
+      return value.map(canonicalize);
+    }
+    if (value !== null && typeof value === "object") {
+      const normalized = {};
+      Object.keys(value).sort().forEach(function (key) {
+        normalized[key] = canonicalize(value[key]);
+      });
+      return normalized;
+    }
+    return value;
+  }
+
+  function equivalent(left, right) {
+    return EJSON.stringify(canonicalize(left)) === EJSON.stringify(canonicalize(right));
+  }
+
+  print("[DSE_JEH_TransSat_1] Generic run_type validator migration");
+  print("Database: " + DB_NAME);
+  print("Rule: " + EJSON.stringify(RUN_TYPE_RULE));
+  print("");
+
+  COLLECTIONS.forEach(function (collectionName) {
+    print("Collection: " + collectionName);
+    const info = targetDb.getCollectionInfos({ name: collectionName })[0];
+    if (!info) {
+      fail("Required collection '" + collectionName + "' does not exist.");
+      return;
+    }
+
+    const options = info.options || {};
+    const currentValidator = options.validator;
+    if (!currentValidator || !currentValidator.$jsonSchema ||
+        !currentValidator.$jsonSchema.properties ||
+        !currentValidator.$jsonSchema.properties.run_type) {
+      fail("Collection '" + collectionName + "' lacks the expected run_type JSON Schema validator; no change attempted.");
+      return;
+    }
+
+    const collection = targetDb.getCollection(collectionName);
+    const countBefore = collection.countDocuments({});
+    const indexesBefore = collection.getIndexes();
+    const expectedValidator = clone(currentValidator);
+    expectedValidator.$jsonSchema.properties.run_type = clone(RUN_TYPE_RULE);
+
+    const result = targetDb.runCommand({
+      collMod: collectionName,
+      validator: expectedValidator,
+      validationLevel: options.validationLevel || "strict",
+      validationAction: options.validationAction || "error"
+    });
+    if (result.ok !== 1) {
+      fail("collMod failed for '" + collectionName + "': " + EJSON.stringify(result));
+      return;
+    }
+
+    const installedInfo = targetDb.getCollectionInfos({ name: collectionName })[0];
+    const installedValidator = installedInfo && installedInfo.options && installedInfo.options.validator;
+    if (!equivalent(installedValidator, expectedValidator)) {
+      fail("Installed validator does not match the expected validator for '" + collectionName + "'.");
+    }
+    if (collection.countDocuments({}) !== countBefore) {
+      fail("Document count changed for '" + collectionName + "'.");
+    }
+    if (!equivalent(collection.getIndexes(), indexesBefore)) {
+      fail("Indexes changed for '" + collectionName + "'.");
+    }
+    if (issues.length === 0) {
+      print("PASS: validator updated; documents and indexes preserved.");
+    }
+    print("");
+  });
+
+  print("Safety summary:");
+  print("  Existing collections were required.");
+  print("  Existing validators were preserved except for properties.run_type.");
+  print("  No document or index operation was issued.");
+  print("Failures: " + issues.length);
+  print("FINAL RESULT: " + (issues.length === 0 ? "PASS" : "FAIL"));
+}());

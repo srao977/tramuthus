@@ -424,6 +424,24 @@ enum ExecutionEventStatus {
   EXECUTION_EVENT_STATUS_FAILED = 7;
 }
 
+// CapitalReservoirEventType classifies authoritative common-reservoir ledger
+// boundaries and confirmed execution cash movements. These are not strategy states.
+enum CapitalReservoirEventType {
+  CAPITAL_RESERVOIR_EVENT_TYPE_UNSPECIFIED = 0;
+  CAPITAL_RESERVOIR_EVENT_TYPE_RUN_START = 1;
+  CAPITAL_RESERVOIR_EVENT_TYPE_OUTFLOW = 2;
+  CAPITAL_RESERVOIR_EVENT_TYPE_INFLOW = 3;
+  CAPITAL_RESERVOIR_EVENT_TYPE_RUN_END = 4;
+}
+
+// CapitalReservoirCause preserves strategy causality independently of flow direction.
+enum CapitalReservoirCause {
+  CAPITAL_RESERVOIR_CAUSE_UNSPECIFIED = 0;
+  CAPITAL_RESERVOIR_CAUSE_HOP_ON = 1;
+  CAPITAL_RESERVOIR_CAUSE_HOP_OFF = 2;
+  CAPITAL_RESERVOIR_CAUSE_SAFETY_LIQUIDATION = 3;
+}
+
 // ReconciliationStatus describes comparison of internal intent state with the
 // executor's latest reported state without defining retry/recovery policy.
 enum ReconciliationStatus {
@@ -1188,6 +1206,40 @@ message ExecutionEvent {
   string governed_execution_instruction_id = 15;
 }
 
+// CapitalReservoirEvent is the live form of the authoritative persisted
+// reservoir event. stage_emit_value_id is the hexadecimal representation of
+// the BSON ObjectId stored by persistence for execution-derived events.
+message CapitalReservoirEvent {
+  string event_id = 1;
+  string pipeline_run_id = 2;
+  string collection_run_id = 3;
+  string run_type = 4;
+  uint64 event_sequence = 5;
+  string symbol = 6;
+  CapitalReservoirEventType event_type = 7;
+  CapitalReservoirCause cause = 8;
+  string stage_emit_value_id = 9;
+  int64 trigger_event_unix_ms = 10;
+  int64 execution_event_unix_ms = 11;
+  int64 processed_unix_ms = 12;
+  uint64 quantity = 13;
+  double execution_price = 14;
+  double signed_flow_amount = 15;
+  double initial_reservoir = 16;
+  uint32 symbol_count = 17;
+  double initial_symbol_capital = 18;
+  double reservoir_before = 19;
+  double reservoir_after = 20;
+  uint64 active_quantity_after = 21;
+  double reservoir_cash = 22;
+  double total_deployed_after = 23;
+  double total_marked_capital_after = 24;
+  double realized_pnl = 25;
+  double unrealized_pnl = 26;
+  double total_pnl = 27;
+  uint32 active_positions = 28;
+}
+
 // ExecutionReconciliationEvidence compares the latest executor event with the
 // originating intent. It carries state without defining retry/recovery policy.
 message ExecutionReconciliationEvidence {
@@ -1332,6 +1384,7 @@ message RuntimeEvidenceEnvelope {
     DynamicExecutionResult dynamic_execution_result = 27;
     StateActionOutcome state_action_outcome = 28;
     GovernedExecutionInstruction governed_execution_instruction = 29;
+    CapitalReservoirEvent capital_reservoir_event = 30;
   }
   int64 produced_unix_ms = 25;
 }

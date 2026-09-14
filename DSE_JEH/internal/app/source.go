@@ -21,7 +21,7 @@ func (function sourceFunc) Run(ctx context.Context, emit func(*dsejehv1.BarEvent
 	return function(ctx, emit)
 }
 
-func productionSource(cfg config.Config) Source {
+func productionSource(cfg config.Config, terminal interface{ Event(string, string, ...any) }) Source {
 	switch cfg.Mode {
 	case dsejehv1.RuntimeMode_RUNTIME_MODE_ONLINE:
 		consumer := online.New(cfg.GRPCAddress, cfg.Symbols, cfg.MaxBars, cfg.FinalizedOnly)
@@ -37,6 +37,23 @@ func productionSource(cfg config.Config) Source {
 			if err != nil {
 				return err
 			}
+			if len(events) == 0 {
+				return fmt.Errorf("supplied collection_run_id %s contains no usable records", cfg.CollectionRunID)
+			}
+			symbols := make(map[string]struct{})
+			minimumSequence := events[0].GetProvenance().GetEntitySequence()
+			maximumSequence := minimumSequence
+			for _, event := range events {
+				symbols[event.GetEntityId()] = struct{}{}
+				sequence := event.GetProvenance().GetEntitySequence()
+				if sequence < minimumSequence {
+					minimumSequence = sequence
+				}
+				if sequence > maximumSequence {
+					maximumSequence = sequence
+				}
+			}
+			terminal.Event("SOURCE VERIFY", "collection_run_id=%s | records=%d | distinct_symbols=%d | sequence_range=%d..%d | FROZEN", cfg.CollectionRunID, len(events), len(symbols), minimumSequence, maximumSequence)
 			for _, event := range events {
 				if err := emit(event); err != nil {
 					return err

@@ -10,7 +10,7 @@
 | Status | APPROVED |
 | Architectural authority | `DSE_JEH_TRANS_SAT_1_SYSTEM_DESIGN_V0_1_091226.md` |
 | Historical implementation-plan baseline | `DSE_JEH_TRANS_SAT_1_IMPLEMENTATION_PLAN_V0_1_091226.md` |
-| Current implementation status | DEP-01 through DEP-04 and Rule #1 analytical-path behavior are implemented and validated; bounded `CalculatePhaseTransition`, deterministic ordered boundary derivation, and `EvaluateDynamicExecution` are complete and focused-tested; the explicit Production Eligibility Controller, state-action algorithms, execution path, and both runtime objectives remain incomplete |
+| Current implementation status | DEP-01 through DEP-04, Rule #1 analytical-path behavior, bounded four-state evaluation, V1 per-symbol state actions, governed local mock execution, confirmed-event capital updates, MongoDB stage/Emit persistence, and fixed-source Runtime Objective 1 are implemented and validated; Alpaca Paper and deferred portfolio/adaptive policy remain incomplete |
 | Scope | Complete implementation planning for `DSE_JEH_TransSat_1` and its two ordered paper-runtime objectives |
 
 This V0.2 document is the current approved implementation-plan authority subordinate to the approved System Design V0.1. It does not overwrite, rename, or delete V0.1, which remains preserved as historical implementation-planning documentation.
@@ -28,8 +28,8 @@ Normative terms `MUST`, `MUST NOT`, `SHOULD`, and `MAY` express implementation r
 Implementation now defines three ordered phases:
 
 1. **PHASE 1 - BAR INPUT AND JEH ANALYTICAL PATH**: COMPLETE. DEP-01 through DEP-04 are integrated with the authoritative proto, persistent lifecycle, health, activity, and every-bar evidence model without rewriting validated JEH mathematics.
-2. **PHASE 2 - FOUR-STATE DYNAMIC EXECUTION ENGINE**: PARTIALLY COMPLETE. The four-state contracts, bounded V1 `DynamicExecutionService.CalculatePhaseTransition`, deterministic ordered boundary facts, and forward governed `DynamicExecutionService.EvaluateDynamicExecution` policy are complete and focused-tested. State-action algorithms, `GovernedExecutionInstruction` generation behavior, execution adapters, `ExecutionEvent`, reconciliation, and complete E2E wiring remain unimplemented or gated.
-3. **PHASE 3 - POST-E2E OBSERVABILITY AND DATA**: NOT STARTED. Rich stage-by-stage persistence, causal analytical datasets, and P&L/strategy-performance analysis follow complete governed mock-execution E2E validation.
+2. **PHASE 2 - FOUR-STATE DYNAMIC EXECUTION ENGINE**: COMPLETE FOR BOUNDED V1. The four-state contracts, phase transition, ordered boundary facts, forward governed policy, per-symbol state actions, governed instruction generation, deterministic `MockExecutor`, authoritative confirmed `ExecutionEvent`, and capital updates are implemented and tested.
+3. **PHASE 3 - DYNAMIC PIPELINE EXECUTION RUN TRACEABILITY**: COMPLETE FOR RUNTIME OBJECTIVE 1. The bounded `h_h_stage_emit_values` stage/Emit persistence and fixed-source pre-paper-trading endpoint comparison are implemented and validated.
 
 The completed application has two ordered runtime objectives, not two implementation phases:
 
@@ -59,7 +59,7 @@ The two required runtime objectives share one four-state engine and one governed
 
 The current System Design replaces the former post-phase pipeline decomposition with **PHASE 2 - FOUR-STATE DYNAMIC EXECUTION ENGINE**. Runtime Objectives 1 and 2 remain operating/proving objectives of one application and MUST NOT be renamed as implementation phases.
 
-Unresolved mathematics and financial policy do not prevent this plan. They are retained as `BLOCKED PENDING DESIGN DECISION` at the component that requires them.
+The System Design resolves the minimum V1 per-symbol state-action and capital mathematics required for the Dynamic Pipeline Execution Run, and that bounded path is now implemented and validated. Portfolio aggregation, candidate ranking, strength-weighted allocation, and adaptive capital/risk policy remain deferred rather than silently defaulted.
 
 ---
 
@@ -88,11 +88,12 @@ Existing Phase 1 reports record passing `buf lint`, `buf generate`, `go test ./.
 
 ### 4.2 Not Yet Implemented as the Complete Target
 
-- state-associated ALLOCATE ranking, HOLD & TRAIL, and LIQUIDATE/reallocation algorithms;
+- state-associated V1 ALLOCATE sizing, HOLD/high-water/trailing safety, safety liquidation, HOLD Emit, and LIQUIDATE/capital algorithms;
 - `GovernedExecutionInstruction` generation behavior and runtime integration of the bounded Dynamic Execution services;
 - complete `LocalPaperExecutor` / `MockExecutor` E2E path;
 - `AlpacaPaperExecutor`;
-- complete `ExecutionEvent` and reconciliation path; and
+- complete authoritative `ExecutionEvent` outcome and confirmed position/capital update path;
+- `h_h_stage_emit_values` stage/Emit persistence and fixed-source run initialization; and
 - Runtime Objective 1 and Runtime Objective 2 completion evidence.
 
 The runtime-integrated vertical slice ends deliberately after existing Rule #1 eligibility behavior. The bounded, currently unwired `CalculatePhaseTransition` and `EvaluateDynamicExecution` service implementations are complete and focused-tested, including deterministic ordered boundary facts and forward governed four-state outcomes. They do not implement state-action algorithms, instruction generation, executor behavior, or the complete E2E path. The existing phase-motion-unavailable runtime outcome is a deprecated compatibility result from the superseded decomposition.
@@ -158,13 +159,13 @@ Phase 2 starts after Production Eligibility and implements the authoritative fou
 
 Phase 2 contract review derived the minimum proto/service changes required by the approved replacement design. `DynamicExecutionService` now owns separate `CalculatePhaseTransition` and `EvaluateDynamicExecution` RPCs; `ExecutorService.SubmitGovernedExecutionInstruction` owns the active execution boundary. The seven former post-phase services remain generated only as deprecated compatibility surfaces. No unresolved action algorithm or execution policy was filled in for contract convenience.
 
-Current status: `PARTIALLY COMPLETE`. The four-state proto contracts, bounded V1 `CalculatePhaseTransition`, deterministic ordered boundary derivation, and forward governed `EvaluateDynamicExecution` behavior are implemented and focused-tested. Existing Rule #1 behavior remains implemented in the analytical path, while the complete explicit proto-governed Production Eligibility Controller is not implemented. Runtime wiring, state-action algorithms, instruction generation, and both executor adapters do not exist.
+Current status: `COMPLETE FOR BOUNDED V1`. The four-state proto contracts, transition/boundary behavior, forward policy, classification-only first entry, state-action algorithms, governed instruction generation, deterministic local mock execution, confirmed-event account updates, and runtime wiring are implemented and tested. Existing Rule #1 behavior remains implemented in the analytical path; a broader Production Eligibility redesign and external executor remain outside this completed boundary.
 
-### 6.3 PHASE 3 - POST-E2E OBSERVABILITY AND DATA
+### 6.3 PHASE 3 - DYNAMIC PIPELINE EXECUTION RUN TRACEABILITY
 
-The immediate implementation objective is the complete governed path through `GovernedExecutionInstruction`, `MockExecutor`, `ExecutionEvent`, and E2E validation. Rich persistence is not a prerequisite for completing that path; existing runtime evidence and logging may support implementation debugging and validation.
+The bounded `h_h_stage_emit_values` persistence defined by the System Design is implemented for the pre-paper-trading Dynamic Pipeline Execution Run. It uses one MongoDB collection with a `stage` discriminator and a common causal envelope; it does not create a collection per stage or treat persistence classifications as architectural stages. The completed endpoint comparison used top-level `run_type` values `RUN_A` and `RUN_B` as historical metadata labels. The current runtime accepts any required `run_type` matching `^[A-Z0-9][A-Z0-9_-]*$`; it does not replace or determine `pipeline_run_id`, `collection_run_id`, Risk R, or any four-state architectural term. `pipeline_run_id` uniquely identifies each execution, Risk R is independently validated in $[0,1]$, and `collection_run_id` independently selects source data. Repeated runs require no software or schema change solely for a new label or repeated/different Risk R.
 
-Only after complete E2E validation should Phase 3 design and implement persistent stage-by-stage data for JEH phase, `PhaseTransitionState`, boundary facts, rule outcomes, strategy state, state-associated actions, governed execution instructions, execution events, and subsequent P&L/strategy-performance analysis. That later dataset must support distinguishing implementation correctness from economic strategy quality. This plan does not design or authorize that persistence subsystem now.
+Persistence records the actual governed runtime operations/results from admission through capital result, including meaningful HOLD Emits even though HOLD creates no broker transaction. It supports causal traceability, run comparison, and validation; it is not an input required by the mathematics.
 
 ### 6.4 Phases Versus Runtime Objectives
 
@@ -349,7 +350,7 @@ A genuine causal continuity break requires production eligibility to be re-estab
 
 Production Eligibility applies to the current `Bar[n]`. Once `Bar[n]` is production eligible, that bar owns its complete downstream Dynamic Execution processing. Prior analytical state is input context for `Bar[n]`; the predecessor bar does not need to have entered Dynamic Execution and does not retroactively become production eligible when its retained state is consumed.
 
-Bar 64 is therefore the first possible bar that may enter the four-state engine. Transition mathematics may consume retained predecessor analytical phase $\phi[n-1]$ from bar 63 and current phase $\phi[n]$ from eligible bar 64. Bar 65 and later follow the same current-bar ownership model.
+Bar 64 is therefore the first possible bar that may enter the four-state engine, but that first entry establishes only the initial persistent state from the current phase. It does not treat $\phi[63]\rightarrow\phi[64]$ as an actionable crossing. Bar 65 is the first possible transition/action evaluation when bar 64 is the first eligible observation; later bars follow the same current-bar ownership model.
 
 ---
 
@@ -411,24 +412,84 @@ The deterministic boundary algorithm is resolved and implemented for the bounded
 
 ### 11.4 Four Persistent States and Actions
 
-| Interval | Persistent strategy state | Authoritative action | Remaining implementation detail |
+| Interval | Persistent strategy state | Authoritative action | Bounded V1 implementation |
 | --- | --- | --- | --- |
 | $180 \le \phi < 270$ | `DISREGARD` | No allocation action | None beyond typed no-action behavior |
-| $270 \le \phi < 360$ | `ALLOCATE` | Rank by Phase Velocity | Formula, timing, ties, staleness, candidate eligibility |
-| $0 \le \phi < 90$ | `HOLD_AND_TRAIL` | Trail stops dynamically | Exact trailing algorithm |
-| $90 \le \phi < 180$ | `LIQUIDATE` | Reallocate freed capital | Capital, capacity, sizing, sequencing, reconciliation |
+| $270 \le \phi < 360$ | `ALLOCATE` | Size whole shares from per-symbol available capital and governed `AllocationPct` | Implemented; candidate ranking and strength weighting remain deferred |
+| $0 \le \phi < 90$ | `HOLD_AND_TRAIL` | Maintain high-water mark and one governed trailing safety boundary; emit HOLD while active | Implemented for active confirmed positions |
+| $90 \le \phi < 180$ | `LIQUIDATE` | Request 100% liquidation of active quantity | Implemented with confirmed-outcome capital and P&L updates |
 
 `HOP_ON` and `HOP_OFF` are rule-policy firing events, not states. No additional state or HOP terminology is authorized.
 
-The bounded evaluation implementation produces the resulting four-state value and typed state-action outcome. It marks unresolved ALLOCATE, HOLD & TRAIL, and LIQUIDATE action algorithms as blocked rather than implementing them; `DISREGARD` remains typed no-action behavior. Runtime state persistence and action execution remain future integration work.
+The bounded runtime produces the resulting four-state value and typed state-action outcome, then applies the approved V1 state-action mathematics only when an actual governed forward crossing or active-position HOLD/safety condition requires it. `DISREGARD` remains typed no-action behavior. Initial quadrant classification establishes state only and cannot synthesize an action.
+
+V1 uses configurable `StartingCapital` and `AllocationPct` for each independently evaluated symbol. The initial baseline is $100,000 and `AllocationPct=1.0`; this is not one shared portfolio or a permanent portfolio policy. On governed forward 270-degree `HOP_ON_ALLOCATE`, do not re-evaluate Production Eligibility. Implement:
+
+$$
+CapitalToAllocate=C_{available}A,\qquad Qty=\left\lfloor\frac{CapitalToAllocate}{P_{entry}}\right\rfloor
+$$
+
+$$
+CashRemaining=C_{available}-(Qty\cdot P_{entry})
+$$
+
+For `HOLD_AND_TRAIL`, V1 has one and only one trailing-risk parameter: governed `Risk R` in $[0,1]$. Maintain the high-water mark and trailing safety price:
+
+$$
+P_{peak}[n]=\max(P_{peak}[n-1],Price[n]),\qquad P_{stop}[n]=P_{peak}[n](1-R)
+$$
+
+When $Price[n]>P_{stop}[n]$, emit observable/persistable `HOLD` and generate no broker instruction. When $Price[n]\le P_{stop}[n]$, initiate safety liquidation without labeling it `HOP_OFF`. `HOP_OFF` remains exclusively the governed forward 90-degree phase crossing. At $R=0.0$, no retreat is permitted and $P_{stop}=P_{peak}$; at $R=1.0$, $P_{stop}=0$ for a positive-priced instrument and trailing safety is effectively non-binding. Do not add `BaseStopPct`, `TighteningFactor`, `MinStopPct`, or another V1 trailing coefficient.
+
+For either normal HOP_OFF or safety liquidation, request $Qty_{sell}=Qty_{active}$. Treat that instruction as intent only. On confirmed `ExecutionEvent`:
+
+$$
+EndingCapital=CashRemaining+(Qty_{active}\cdot P_{exit})
+$$
+
+$$
+RealizedPnL=(P_{exit}-P_{entry})\cdot Qty_{active}
+$$
+
+During an active position, persist the observational value $CurrentCapital[n]=CashRemaining+(Qty_{active}\cdot Price[n])$ without creating a transition or instruction.
 
 ### 11.5 Contract and Execution Integration
 
 The bounded contract review replaced the active seven-service post-phase chain with cohesive `DynamicExecutionService.CalculatePhaseTransition` and `EvaluateDynamicExecution` contracts. Universe/candidate inputs and Phase Velocity ranking results are represented inside the engine context/action boundary. The former seven services remain deprecated only for compatibility.
 
-`DynamicExecutionService.EvaluateDynamicExecution` is implemented and focused-tested for the bounded evaluation slice. It consumes current four-state strategy state and `PhaseTransitionState`, derives ordered deterministic boundary facts, evaluates each fact in encounter order through the forward governed policy, and produces typed boundary-policy, resulting-state, and state-action outcomes. It does not generate `GovernedExecutionInstruction`; ranking, trailing, reallocation, instruction, and execution behavior remain gated and unimplemented.
+`DynamicExecutionService.EvaluateDynamicExecution` is implemented and focused-tested for the bounded evaluation slice. It consumes current four-state strategy state and `PhaseTransitionState`, derives ordered deterministic boundary facts, evaluates each fact in encounter order through the forward governed policy, and produces typed boundary-policy, resulting-state, and state-action outcomes. The application layer converts actual governed ALLOCATE and LIQUIDATE actions into `GovernedExecutionInstruction`, invokes the deterministic local mock, and mutates account state only from the matching confirmed `ExecutionEvent`.
 
 The engine produces `GovernedExecutionInstruction` when external execution is required. `ExecutorService.SubmitGovernedExecutionInstruction` accepts it without a forced `StrategyDecision`/`ExecutionIntent` chain, and `ExecutionEvent` remains separate. Mock/local paper remains the first target; future Alpaca PAPER remains later. No live/funded execution is authorized.
+
+### 11.6 Dynamic Pipeline Execution Run Initialization and Persistence
+
+For this bounded objective, require and verify the explicitly supplied `collection_run_id = 20260911T161623Z-1` from the existing `bar_sequence` collection once and freeze it for the complete Dynamic Pipeline Execution Run. Require an explicit unique `pipeline_run_id` and `run_type`, and load governed `StartingCapital`, `AllocationPct`, and Risk R independently. Do not query for or substitute a newer source run.
+
+Use the implemented MongoDB collection, `h_h_stage_emit_values`, with a stage discriminator and the following minimum common causal envelope:
+
+```text
+pipeline_run_id
+run_type
+collection_run_id
+symbol
+sequence_no
+stage
+stage_order
+event_time
+emit_type
+```
+
+Use structured stage input/output sections and retain `capital_allocation` for applicable capital-derived values, including independent `risk_r`. Every stage/Emit record carries both run identifiers and `run_type`. The persistence path must reconstruct forward causality from `Bar[n]` through admission, analytical state, JEH phase, Production Eligibility, `PhaseTransitionState`, ordered boundary facts, Dynamic Execution outcome, action/Emit, applicable instruction, `ExecutionEvent`, and capital result. Do not implement backward raw-state traversal.
+
+### 11.7 Capital Reservoir Accounting and Replay
+
+The bounded runtime implements one common Capital Reservoir initialized to $3,000,000 for the governed 30-symbol universe, with $100,000 retained as the V1 per-symbol allocation ceiling. Each symbol has one bidirectional conceptual pipe. Allocation sizing is capped by both that per-symbol ceiling and currently available common-reservoir cash; this accounting does not introduce ranking, bidding, optimization, or redistribution policy.
+
+The reservoir consumes only confirmed `ExecutionEvent` fills. BUY creates negative `OUTFLOW` with cause `HOP_ON`; normal liquidation creates positive `INFLOW` with cause `HOP_OFF`; safety liquidation creates positive `INFLOW` with the distinct cause `SAFETY_LIQUIDATION`. HOLD and pre-execution state/instruction events do not create zero-flow ledger records.
+
+The pre-existing `capital_reservoir_events` MongoDB collection persists the authoritative event used for live publication through `RuntimeEvidenceEnvelope`. Each execution-derived event stores `stage_emit_value_id` as a BSON ObjectId returned by insertion of the corresponding `EXECUTION_EVENT` record in `h_h_stage_emit_values`. `event_sequence` is monotonic within `pipeline_run_id` and protected by a unique compound index. Trigger, execution, and processing timestamps remain distinct.
+
+`RUN_START` records the opening basis. `RUN_END` records reservoir cash, deployed marked capital, total marked capital, realized/unrealized/total P&L, and active positions without force-liquidating positions at source completion. Symbol, execution timestamp, quantity, price, signed flow, active quantity after execution, and cause provide the persisted basis for later residence-time derivation and viewer replay.
 
 ---
 
@@ -546,11 +607,12 @@ Approved stored Bar Sequence
   -> DynamicExecutionService.CalculatePhaseTransition
   -> DynamicExecutionService.EvaluateDynamicExecution
   -> four-state result
-  -> state-associated action
+  -> state-associated action / Emit
+  -> capital calculation
   -> GovernedExecutionInstruction, when required
   -> LocalPaperExecutor / MockExecutor
   -> ExecutionEvent
-  -> local reconciliation, runtime evidence, telemetry, and resulting state
+  -> confirmed position/capital update, runtime evidence, telemetry, and resulting state
 ```
 
 This is the actual application, not a replay trading application, alternate strategy, alternate rule engine, experiment, or `DSE_JEH_provers` harness. The stored source is only an input adapter. The local executor is only an execution adapter.
@@ -561,11 +623,11 @@ This is the actual application, not a replay trading application, alternate stra
 
 ### 14.3 Reproducibility and Acceptance
 
-For identical stored input, initial state, and governed configuration, Objective 1 must reproduce the chain from `BarEvent` through admission, JEH state, `PhaseEvidence`, eligibility, `PhaseTransitionState`, boundary-policy outcomes, four-state membership, state-associated actions, governed execution instructions when required, and simulated `ExecutionEvent`.
+For identical frozen `collection_run_id`, initial state, and governed configuration, Objective 1 must reproduce the chain from `BarEvent` through admission, JEH state, `PhaseEvidence`, eligibility, `PhaseTransitionState`, boundary-policy outcomes, four-state membership, state-associated actions/Emits, capital values, governed execution instructions when required, and simulated `ExecutionEvent`. Each execution uses a distinct `pipeline_run_id`.
 
 Objective 1 acceptance requires deterministic E2E evidence, no silent bar loss, stable causal identities, expected counter relationships, executor reconciliation, clean governed start/stop, and repeated-run comparison. Objective 2 cannot begin until human review accepts Objective 1.
 
-Current status: `PARTIALLY COMPLETE`. The stored-bar runtime path is validated through existing Rule #1 eligibility behavior, including collection run `20260911T161623Z-1` with 3,120 received/admitted bars. The bounded `CalculatePhaseTransition` and `EvaluateDynamicExecution` services are complete and focused-tested but not integrated into this E2E runtime path. State-action algorithms, instruction generation, `LocalPaperExecutor`, `ExecutionEvent`, reconciliation, and full repeated E2E comparison remain absent. Runtime Objective 1 is not accepted.
+Current status: `COMPLETE FOR THE BOUNDED FIXED-SOURCE PATH`. The governed built application verified and froze collection run `20260911T161623Z-1`, processed all 3,120 bars in each endpoint run, persisted the complete post-classification path, and produced the recorded capital/Emit comparison. Local instruction/event reconciliation is exact for deterministic full fills; external retries, partial fills, recovery, and broker reconciliation remain deferred.
 
 ---
 
@@ -620,17 +682,19 @@ For equivalent input, initial state, configuration, rule identities/versions, an
 - completed focused `PhaseTransitionState` vectors for normalization, wrap/reverse displacement, zero, exact +180-degree tie handling, magnitude, direction, velocity, causal references, and non-finite input;
 - completed focused boundary-policy vectors for no crossing, forward/reverse crossings, forward/reverse wrap, start exclusion, end inclusion, `STATIONARY`, later-bar recross, ordered multiple-boundary traversal, exact +180-degree behavior, and ordered typed policy evaluations;
 - completed focused history-free state-transition and boundary-event tests for the bounded service slice;
-- ALLOCATE ranking, HOLD & TRAIL, LIQUIDATE reallocation, and execution-instruction idempotency tests after action-policy approval;
+- V1 ALLOCATE quantity/residual-cash, HOLD/high-water/trailing safety, causal liquidation, LIQUIDATE/P&L, confirmed-outcome update, initial-classification no-action, deterministic mock-fill, and execution-instruction idempotency tests;
 - lifecycle, zero-input, stop/drain, failure, and activity-accounting tests; and
 - race tests for entity and universe ownership.
 
-Current result: authoritative proto lint/generation/breaking checks and focused service tests pass for the bounded `CalculatePhaseTransition`, deterministic boundary, and `EvaluateDynamicExecution` slices; earlier Go tests, vet, and build pass for their recorded implemented scopes. The race test is environment-blocked by unavailable CGO/GCC. Tests for blocked state-action and execution behavior cannot exist until the controlling semantics are approved.
+Current result: the governed build passes Buf lint/generation, `go test ./...`, and executable creation. Focused tests cover transition/boundary evaluation, V1 financial formulas, confirmed-only account mutation, deterministic mock fills, and classification-only first entry. The race test remains environment-blocked by unavailable CGO/GCC.
 
 ### 16.2 Runtime Objective 1 Validation
 
-Run the built application against the explicitly selected approved stored collection run and `LocalPaperExecutor`. Compare repeated runs by causal evidence identity and semantic digest. Validate all terminal paths: admission rejection, initialization block, eligibility block, transition unavailable, unchanged state, each boundary-policy event, each state action, no action, governed execution instruction, simulated execution, and reconciliation.
+Initialize against explicitly supplied `bar_sequence.collection_run_id = 20260911T161623Z-1`, verify it once, and freeze it, then run the built application with `MockExecutor`. Use that same frozen source with distinct `pipeline_run_id` values for Run A (`StartingCapital=$100,000` per symbol, `AllocationPct=1.0`, `Risk R=0.0`) and Run B (same settings except `Risk R=1.0`). Compare ending capital and Emit behavior. After review, Run C may use an intermediate setting such as `Risk R=0.20`; this is not an optimized or recommended value.
 
-Current result: runtime-slice validation through motion-unavailable is complete; complete Objective 1 validation is `BLOCKED`.
+For each independently evaluated symbol, calculate $ReturnPct=((EndingCapital-StartingCapital)/StartingCapital)\cdot100$ and compare at minimum starting/ending capital, realized P&L, return percentage, HOP_ON/ALLOCATE count, HOLD count, normal HOP_OFF liquidation count, and safety-liquidation count. Preserve phase, Phase Velocity $\omega$, boundary facts, state outcomes, prices, and causal identifiers. Validate all terminal paths through authoritative `ExecutionEvent`; do not infer position/capital changes from instruction intent.
+
+Current result: `COMPLETE` for the bounded fixed-source path. Governed `RUN_A` `DPE-GOVERNED-RUN-A-20260914-001` and `RUN_B` `DPE-GOVERNED-RUN-B-20260914-001` each completed all 3,120 source bars. The clean trace collection contains exactly those two pipeline IDs. Persisted verification found only the expected top-level run type and independent endpoint Risk R for each run, zero required-envelope defects, and zero sequence-64 traces; the detailed comparison is in `DSE_JEH_DYNAMIC_PIPELINE_EXECUTION_RUN_REPORT_2026-09-14.md`.
 
 ### 16.3 Runtime Objective 2 Validation
 
@@ -642,7 +706,7 @@ Current result: `NOT STARTED`.
 
 Join equivalent runs at the governed execution-instruction boundary using causal input, initial state, configuration, solver/rule/action-policy versions, and instruction identity. Upstream mismatches are application defects or configuration differences. Downstream differences are valid only when attributable to executor environment and represented in `ExecutionEvent`/reconciliation evidence.
 
-Current result: `NOT STARTED`; neither objective has reached the comparison boundary.
+Current result: Runtime Objective 1 reached and validated the local governed instruction/event boundary. Cross-executor comparison remains `NOT STARTED` because Runtime Objective 2 is not authorized or implemented.
 
 ---
 
@@ -660,9 +724,9 @@ The required chain is `System Design -> governed rule/outcome -> proto -> genera
 | §10 / 7 | DEP-03/04 JEH and phase | `JehPhaseService.UpdateJehPhase` | `internal/jeh`, `internal/analytical/coordinator.go`, `internal/services/services.go` | Internal direct call; durable phase JSONL | Solver vectors, phase comparison, 3,120-record digest | IMPLEMENTED | None for current Phase 1 semantics |
 | §8 / 9 | Governed Rule Registry | `RuleRegistryService.ValidateRuleSet`, `GetActiveRuleSet` | `internal/services/services.go` | Internal-only concrete service; Rule #1 supplied at startup | Rule compilation exercised by service construction/tests | IMPLEMENTED FOR RULE #1 | Additional rules await owning semantics |
 | §9 / 10 | Rule #1 analytical-path behavior | `ProductionEligibilityService.EvaluateProductionEligibility` is the target explicit contract | Existing analytical status/state handling | Existing runtime path after phase | Bar 63/64 test; 1,848 initializing and 1,272 eligible replay outcomes | RULE #1 BEHAVIOR IMPLEMENTED | Complete explicit proto-governed controller remains not implemented |
-| §11.1-11.2 / 6 | `PhaseTransitionState` and history-free transition ownership | `DynamicExecutionService.CalculatePhaseTransition` | `internal/services/phase_transition.go` | Not yet wired into the runtime path | Focused service vectors pass; proto lint/breaking/generation previously passed | COMPLETE FOR BOUNDED V1 SLICE | Runtime integration follows the engine path; V1 transition mathematics is closed |
-| §11.3-11.4 / 4-7 | Ordered boundary facts, forward boundary policy, and bounded four-state evaluation | `DynamicExecutionService.EvaluateDynamicExecution` | `internal/services/dynamic_execution.go` | Not yet wired into the runtime path | Focused boundary and ordered typed-policy tests pass | COMPLETE FOR BOUNDED EVALUATION SLICE | State-action algorithms and runtime integration remain |
-| §11.5, §13-14 / 10-11 | Governed instruction, local execution, reconciliation, and Objective 1 | `ExecutorService.SubmitGovernedExecutionInstruction`, `StreamExecutionEvents` | No replacement implementation | Not wired | Generated instruction/event separation verified | CONTRACT COMPLETE / IMPLEMENTATION NOT STARTED | Executor/reconciliation semantics |
+| §11.1-11.2 / 6 | `PhaseTransitionState` and history-free transition ownership | `DynamicExecutionService.CalculatePhaseTransition` | `internal/services/phase_transition.go` | Wired into the runtime path after classification-only entry | Focused service vectors and full suite pass | COMPLETE FOR BOUNDED V1 SLICE | V1 transition mathematics is closed |
+| §11.3-11.4 / 4-7 | Ordered boundary facts, forward boundary policy, and bounded four-state evaluation | `DynamicExecutionService.EvaluateDynamicExecution` | `internal/services/dynamic_execution.go`, `internal/app/pipeline.go` | Wired into the runtime path | Focused boundary, initial-classification, and ordered typed-policy tests pass | COMPLETE FOR BOUNDED V1 SLICE | Portfolio/adaptive policy remains deferred |
+| §11.5-11.6, §13-14 / F-K | Governed instruction, stage/Emit persistence, mock execution, authoritative execution outcome, and Dynamic Pipeline Execution Run | Existing governed instruction and `ExecutionEvent` contracts | `internal/execution`, `internal/app/pipeline.go`, `internal/adapter/mongo/trace_writer.go` | Wired through local mock execution and confirmed account mutation | Governed build plus two 3,120-bar endpoint runs; Mongo envelope and instruction/event counts verified | COMPLETE FOR RUNTIME OBJECTIVE 1 | External reconciliation and Alpaca Paper remain deferred |
 | §15 / 12 | Alpaca Paper and Objective 2 | Same governed execution boundary | No adapter | Not wired | No paper integration test | NOT STARTED | Objective 1 approval and paper-only adapter policy |
 
 Generated stubs prove contract availability, not implemented business behavior. Service definition remains distinct from network exposure.
@@ -671,39 +735,46 @@ Generated stubs prove contract availability, not implemented business behavior. 
 
 ## 18. Dependency-Ordered Implementation Sequence
 
-1. Preserve the validated DEP-01-through-DEP-04 implementation and Rule #1 analytical-path behavior, including current eligible `Bar[n]` ownership and retained $\phi[n-1]$ context; keep the complete explicit Production Eligibility Controller status distinct.
-2. Retain the completed four-state proto contract review: 10 active services / 13 active RPCs and 17 services / 21 RPCs including deprecated compatibility surfaces. Make future proto changes only for a concrete implementation blocker or approved new contract requirement.
-3. Retain the completed bounded V1 `DynamicExecutionService.CalculatePhaseTransition` implementation and focused validation without reopening its mathematics.
-4. Retain the completed bounded `DynamicExecutionService.EvaluateDynamicExecution` implementation and focused validation.
-5. Retain the completed deterministic start-excluded/end-included boundary-fact handling, including ordered multiple boundaries, reverse facts without forward firing, and later-bar recrosses without suppression.
-6. Retain the completed forward governed boundary-policy evaluation and typed outcomes for the fixed 270, 0, 90, and 180-degree meanings.
-7. Retain the completed bounded four-state result evaluation; integrate runtime state persistence only with the later approved engine wiring.
-8. Integrate state-associated actions only after their gates: DISREGARD no action; ALLOCATE after ranking formula/timing/tie/candidate/freshness approval; HOLD & TRAIL after trailing-algorithm approval; LIQUIDATE after capital/sizing/sequencing/reallocation approval.
-9. Generate `GovernedExecutionInstruction` where required after instruction behavior is approved.
-10. Implement the approved `MockExecutor` behavior and emit `ExecutionEvent`, preserving the executor as an external action boundary.
-11. Execute and accept the complete governed E2E path through mock execution and `ExecutionEvent` before beginning rich persistence work.
-12. After E2E acceptance, design and implement stage-by-stage persistence, causal execution lineage, and P&L/strategy-performance datasets for implementation-correctness and strategy-efficacy analysis.
-13. Only after explicit approval, implement and validate the paper-only Alpaca adapter and Runtime Objective 2.
+The completed and focused-tested `CalculatePhaseTransition`, deterministic ordered boundary derivation, and `EvaluateDynamicExecution` slices remain frozen. Remaining work is bounded as follows:
 
-The sequence MUST NOT jump from isolated DEP tests directly to Alpaca Paper. Objective 1 is the required complete-application proving gate.
+A. Define and implement Dynamic Pipeline Execution Run initialization: verify explicitly supplied `collection_run_id = 20260911T161623Z-1` from `bar_sequence` once, freeze it, generate `pipeline_run_id`, and load/configure `StartingCapital`, `AllocationPct`, and `Risk R`.
+
+B. Implement one `h_h_stage_emit_values` collection with the common causal envelope, stage discriminator, structured stage inputs/outputs, Emit values, and `capital_allocation` values where applicable. Persistence labels MUST NOT create architectural stages.
+
+C. Implement the approved V1 ALLOCATE whole-share sizing and residual-cash mathematics without re-evaluating Production Eligibility.
+
+D. Implement V1 HOLD_AND_TRAIL: maintain $P_{peak}$, derive $P_{stop}$ from the single governed `Risk R`, emit meaningful non-transactional HOLD, and initiate distinctly causal safety liquidation when required.
+
+E. Implement V1 LIQUIDATE: request the complete active quantity and calculate ending capital, realized P&L, return percentage, and active-position mark-to-market values at their approved boundaries.
+
+F. Complete `GovernedExecutionInstruction` generation for BUY/SELL actions; HOLD generates no broker instruction.
+
+G. Complete deterministic `MockExecutor` behavior.
+
+H. Use `ExecutionEvent` as the authoritative execution outcome.
+
+I. Update position and capital only from confirmed execution outcomes, never from instruction intent alone.
+
+J. Run the same frozen `collection_run_id` with separate `pipeline_run_id` values for `Risk R=0.0` and `Risk R=1.0`, using $100,000 `StartingCapital` per independently evaluated symbol and `AllocationPct=1.0`.
+
+K. Compare ending-capital, realized-P&L, return, and Emit behavior, including normal HOP_OFF versus safety-liquidation counts.
+
+L. If warranted by observed results, run the same frozen source with an intermediate governed value such as `Risk R=0.20`; do not characterize it as optimized or recommended.
+
+M. After the Dynamic Pipeline Execution Run functions and is validated, proceed to Alpaca Paper execution through the substitutable adapter without redesigning the upstream strategy pipeline.
+
+The sequence MUST NOT jump from isolated component tests directly to Alpaca Paper. The Dynamic Pipeline Execution Run through `MockExecutor` and authoritative `ExecutionEvent` is the required complete-application gate.
 
 ### 18.1 Current Sequence Status
 
-| Item | Current status | Evidence or blocker |
+| Item | Current status | Evidence or remaining work |
 | --- | --- | --- |
-| 1 | COMPLETE | DEP-01 through DEP-04 and Rule #1 analytical behavior are implemented and validated; the complete explicit controller remains separate and unimplemented |
-| 2 | COMPLETE | Active post-phase model is 10 services / 13 RPCs; generated compatibility surface is 17 services / 21 RPCs; old post-phase services are deprecated only |
-| 3 | COMPLETE | Approved V1 transition mathematics is implemented and focused-tested; Buf validation and generation previously passed |
-| 4 | COMPLETE | `EvaluateDynamicExecution` is implemented and focused-tested for the bounded evaluation slice |
-| 5 | COMPLETE | Directed start-excluded/end-included facts, exact landings/departures, ordered multiple boundaries, reverse facts, wrap, `STATIONARY`, and later-bar recross behavior are implemented |
-| 6 | COMPLETE | Fixed forward policy meanings are evaluated through compile-once `expr` and mapped to typed outcomes in encounter order |
-| 7 | COMPLETE FOR BOUNDED EVALUATION | Exactly four resulting states and history-free persistence outcomes are produced; runtime state-store wiring remains future work |
-| 8 | GATED BY ACTION DESIGNS | Ranking, trailing, capital, sizing, sequencing, candidate eligibility, freshness, and reallocation require approval |
-| 9 | CONTRACT COMPLETE / BEHAVIOR GATED | `GovernedExecutionInstruction` exists; generation behavior awaits approved state actions and execution policy |
-| 10 | NOT STARTED / GATED | Mock executor and event behavior require approved execution semantics |
-| 11 | PARTIAL | Existing runtime validates through Rule #1 eligibility; both bounded Dynamic Execution services are focused-tested but not E2E-wired; complete Objective 1 is not accepted |
-| 12 | POST-E2E | Rich persistence and P&L datasets deliberately follow complete mock-execution E2E validation |
-| 13 | NOT STARTED | Requires accepted Objective 1 and explicit Alpaca Paper authorization |
+| A-B | COMPLETE | Exact source verification/freeze, unique run IDs, and `h_h_stage_emit_values` persistence validated |
+| C-E | COMPLETE FOR BOUNDED V1 | Per-symbol allocation, hold/trail, causal safety liquidation, full liquidation, and capital mathematics implemented and tested |
+| F-I | COMPLETE FOR LOCAL MOCK | Governed instruction, deterministic mock fill, authoritative event, and confirmed-only account mutation implemented and tested |
+| J-K | COMPLETE | Governed endpoint runs and capital/Emit comparison recorded in the 2026-09-14 run report |
+| L | CONDITIONAL / NOT RUN | Intermediate `Risk R` follows review of endpoint runs only if warranted |
+| M | NOT STARTED | Requires validated Dynamic Pipeline Execution Run and explicit Alpaca Paper authorization |
 
 ---
 
@@ -713,19 +784,19 @@ The following remain open and do not prevent approval of this plan. Work stops o
 
 | Boundary | Status | Decision or remaining requirement |
 | --- | --- | --- |
-| Four-state entry ownership | RESOLVED | Current eligible `Bar[n]` owns processing; retained $\phi[n-1]$ is predecessor context; bar 64 is the first possible engine entry |
+| Four-state entry ownership | RESOLVED AND IMPLEMENTED | Current eligible `Bar[n]` owns processing; first entry establishes classification only; retained $\phi[n-1]$ becomes predecessor context for later transition evaluation; membership alone never synthesizes an action |
 | `PhaseTransitionState` | RESOLVED AND IMPLEMENTED FOR V1 | Normalize to $[0°,360°)$; shortest signed displacement in $(-180°,180°]$; exact tie $+180°$; magnitude $|\Delta\phi|$; sign-derived direction; zero `STATIONARY`; $\omega=\Delta\phi$ degrees/bar; non-finite input invalid; history-free $\phi[n-1]\rightarrow\phi[n]$ |
 | Boundary facts and policies | RESOLVED AND IMPLEMENTED FOR BOUNDED SLICE | Directed shortest arc; start excluded/end included; ordered 0/90/180/270 facts; wrap and direction retained; reverse facts do not fire forward policy; later-bar recrosses are not suppressed; forward meanings produce typed outcomes |
-| Four-state evaluation and persistence | BOUNDED EVALUATION IMPLEMENTED / RUNTIME WIRING OPEN | Exactly four resulting states and history-free persistence outcomes are focused-tested; integration with runtime state ownership remains incomplete |
-| ALLOCATE action | BLOCKED PENDING DETAIL | Candidate snapshot, freshness, Phase Velocity ranking formula/timing/ties, capacity, and sizing |
-| HOLD & TRAIL action | BLOCKED PENDING DETAIL | Exact dynamic trailing-stop algorithm and execution-update semantics |
-| LIQUIDATE action | BLOCKED PENDING DETAIL | Capital representation, reallocation, capacity, sizing, sequencing, and reconciliation |
-| Governed execution instruction | MINIMUM CONTRACT RESOLVED; IMPLEMENTATION POLICY BLOCKED | `GovernedExecutionInstruction` defines identity, causality, action, idempotency, correlation, optional validity/quantity, and status; sizing, expiry/cancellation behavior, and adapter policy remain unresolved |
-| Executors/reconciliation | BLOCKED PENDING DESIGN DECISION | Execution outcome state machine, retries, duplicate events, recovery and reconciliation |
+| Four-state evaluation and persistence | IMPLEMENTED FOR BOUNDED V1 | Initial membership classifies only; later actual forward crossings govern state/action behavior and persisted evidence |
+| ALLOCATE action | IMPLEMENTED FOR BOUNDED V1 | Per-symbol capital, whole-share quantity, residual cash, and confirmed allocation are tested; candidate ranking and cross-symbol allocation remain deferred |
+| HOLD & TRAIL action | IMPLEMENTED FOR BOUNDED V1 | Active-position-only high-water, governed endpoint risk, HOLD Emit, and causal safety liquidation are implemented and observed |
+| LIQUIDATE action | IMPLEMENTED FOR BOUNDED V1 | Full active-quantity request, confirmed-event capital/P&L, and mark-to-market values are implemented |
+| Governed execution instruction | IMPLEMENTED FOR LOCAL MOCK | Instruction remains intent with deterministic identity/causality; execution authority remains the matching confirmed event |
+| Executors/reconciliation | LOCAL MOCK IMPLEMENTED / EXTERNAL RECOVERY DEFERRED | Deterministic fill-at-reference-price mock is complete; retries, partial fills, recovery, and external reconciliation remain open |
 | Lifecycle/recovery | PARTIALLY RESOLVED | OFFLINE completion is distinct from application stop and accepted work drains before stop; checkpoint, restart, pending-work recovery, and future execution reconciliation remain open |
 | ONLINE continuity | BLOCKED FOR STRONG CONTINUITY CLAIMS | Upstream loss detection, finalized-bar guarantee, resume cursor, backpressure |
 | Alpaca Paper | BLOCKED UNTIL OBJECTIVE 1 APPROVAL | Paper-only endpoint/configuration, order mapping, idempotency, fill/cancel/reconciliation policy |
-| Future adaptive policy geometry | FUTURE / NOT IMPLEMENTED | Any controlled, versioned response coefficients must preserve deterministic phase-transition and boundary facts; no coefficient names, formulas, learning logic, or persistence are approved |
+| Future adaptive policy geometry | FUTURE / NOT IMPLEMENTED | Strength weighting, omega-dependent sizing, relative/cross-symbol allocation, adaptive/entity/regime-specific risk, and optimized risk percentages remain deferred; deterministic phase-transition and boundary facts remain fixed |
 
 No unresolved item may be silently converted into a default implementation assumption.
 
@@ -736,9 +807,9 @@ No unresolved item may be silently converted into a default implementation assum
 Neither this plan nor the completed runtime slice authorizes:
 
 - creation of another DSE_JEH proto;
-- implementation of state-action, instruction-generation, or remaining runtime behavior before their required policy details are approved;
+- implementation work beyond the bounded sequence or invention of deferred portfolio/adaptive policy;
 - restoration of DEP-05 through DEP-11 as the active architectural decomposition;
-- MongoDB mutation;
+- MongoDB mutation during this documentation-only update;
 - Alpaca credential configuration or API calls;
 - paper or live order submission;
 - live/funded-capital design or execution;
@@ -764,6 +835,10 @@ Neither this plan nor the completed runtime slice authorizes:
 | V0.2 editorial consistency correction | 2026-09-13 | Corrected the Executive Summary to identify three implementation phases, corrected duplicate §6.3 numbering by renumbering "Phases Versus Runtime Objectives" to §6.4, and removed stale pre-approval wording from the authority hierarchy now that V0.2 is approved. No architecture, implementation status, mathematics, algorithms, contracts, code, tests, runtime behavior, or implementation sequence changed. |
 | V0.2 editorial phase-count correction | 2026-09-13 | Corrected the remaining stale reference in §6.4 from "two implementation phases" to "three implementation phases" so the section is consistent with the approved three-phase implementation structure. No architecture, implementation status, mathematics, algorithms, contracts, code, tests, runtime behavior, authorization, or implementation sequence changed. |
 | V0.2 Dynamic Execution implementation status alignment | 2026-09-13 | Updated the Implementation Plan to reflect the completed bounded `DynamicExecutionService.EvaluateDynamicExecution` implementation, deterministic ordered boundary-fact derivation, forward governed boundary-policy evaluation, reverse-crossing no-fire behavior, multiple-boundary directed encounter ordering, later-bar recross handling, and focused validation. Preserved unresolved state-action, execution, executor, E2E, persistence, P&L, and Alpaca gates. No code, proto, generated artifacts, tests, scripts, configuration, or runtime behavior changed in this documentation-only alignment. |
+| V0.2 V1 state-action and Dynamic Pipeline Execution Run sequence | 2026-09-14 | Updated the bounded implementation sequence from approved V1 state-associated ALLOCATE, HOLD/high-water/trailing safety, safety-liquidation, LIQUIDATE/capital mathematics through `GovernedExecutionInstruction`, `MockExecutor`, authoritative `ExecutionEvent`, one-collection `h_h_stage_emit_values` stage/Emit persistence, fixed-source endpoint runs, capital/Emit comparison, and subsequent Alpaca Paper execution. No implementation was performed. |
+| V0.2 bounded Runtime Objective 1 completion | 2026-09-14 | Recorded completed classification-only first entry, V1 per-symbol state actions, governed local mock execution, confirmed-event account mutation, stage/Emit persistence, and governed fixed-source endpoint runs. The authoritative empty collection shape was verified once before exactly two runs: `RUN_A` `DPE-GOVERNED-RUN-A-20260914-001` and `RUN_B` `DPE-GOVERNED-RUN-B-20260914-001`. Both used exact source `20260911T161623Z-1`, completed 3,120 bars, and passed run metadata, independent Risk R, and causal-envelope verification. Runtime Objective 2 and deferred portfolio/adaptive policy remain not started. |
+| V0.2 Capital Reservoir implementation | 2026-09-14 | Implemented one common $3,000,000 reservoir for 30 governed symbol pipes, confirmed-execution-only signed flow, compact `capital_reservoir_events` replay persistence, BSON ObjectId linkage to `h_h_stage_emit_values`, canonical per-run event sequencing, typed live evidence, and marked non-liquidating RUN_END accounting. Added the dated non-destructive setup script for the pre-existing empty collection. No reservoir execution run was performed pending human setup. |
+| V0.2 generic run metadata correction | 2026-09-14 | Replaced the bounded A/B runtime restriction with generic `run_type` validation matching `^[A-Z0-9][A-Z0-9_-]*$` and independent Risk R validation in $[0,1]$. Clarified that `pipeline_run_id` uniquely identifies an execution and `collection_run_id` identifies source data. Historical RUN_A/RUN_B endpoint records remain unchanged. No Dynamic Execution or Capital Reservoir mathematics changed, and no pipeline run was started. |
 
 ---
 
@@ -771,10 +846,10 @@ Neither this plan nor the completed runtime slice authorizes:
 
 This Implementation Plan V0.2 is **APPROVED** as the current implementation-plan authority subordinate to the approved `DSE_JEH_TransSat_1` System Design V0.1.
 
-V0.1 remains preserved as historical documentation. The approved System Design now governs the four-state replacement. This plan does not resolve any mathematical, action-policy, contract, lifecycle, or execution detail explicitly retained as open.
+V0.1 remains preserved as historical documentation. The approved System Design governs the four-state replacement and the resolved V1 per-symbol state-action/capital mathematics. This plan does not resolve any portfolio, adaptive-policy, lifecycle, or detailed executor-recovery question explicitly retained as open.
 
 Approval of this document authorizes implementation planning to proceed through the dependency gates stated here; it does not by itself approve unresolved mathematics, live trading, production deployment, Alpaca Paper execution, or any broker credentials. The four-state contract gate is complete; each remaining algorithmic/implementation boundary and Runtime Objective 2 requires its stated review and authorization.
 
-Implementation progress recorded here does not expand authorization. Current eligible `Bar[n]` ownership, bar 64 as the first possible four-state-engine entry, the V1 `PhaseTransitionState` mathematics, deterministic ordered boundary facts, bounded `EvaluateDynamicExecution`, exactly four states, history-free transitions, the four fixed forward boundary-policy meanings, and the minimum service model are resolved and implemented for their bounded service slices. State-action algorithms, `GovernedExecutionInstruction` generation, runtime integration, executor/reconciliation behavior, persistence, P&L analysis, adaptive coefficients, and broker interaction remain subject to their stated approvals. No paper/live order submission, staging, commit, push, or deployment is approved by this replacement.
+Implementation progress recorded here does not expand authorization. Current eligible `Bar[n]` ownership, classification-only first entry, V1 transition/boundary semantics, exactly four states, per-symbol state actions, governed local instructions, deterministic mock fills, authoritative confirmed events, capital results, persistence, and Runtime Objective 1 are implemented for the bounded path. Adaptive policy, portfolio behavior, external reconciliation, and broker interaction remain incomplete. No Alpaca/live order submission, staging, commit, push, or deployment is approved by this documentation update.
 
 Overall implementation verdict: **V0.2 PLAN REMAINS IN PROGRESS**.

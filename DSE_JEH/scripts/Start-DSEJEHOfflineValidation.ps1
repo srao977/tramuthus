@@ -1,5 +1,15 @@
 param(
     [string]$CollectionRunID = "20260911T161623Z-1",
+    [Parameter(Mandatory = $true)]
+    [string]$PipelineRunID,
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern('^[A-Z0-9][A-Z0-9_-]*$')]
+    [string]$RunType,
+    [double]$StartingCapital = 100000.00,
+    [ValidateRange(0.0, 1.0)]
+    [double]$AllocationPct = 1.0,
+    [ValidateRange(0.0, 1.0)]
+    [double]$RiskR = 0.0,
     [string]$MongoURI = "mongodb://127.0.0.1:27017",
     [string]$MongoDatabase = "bar_sequence_db",
     [string]$MongoCollection = "bar_sequence",
@@ -56,6 +66,9 @@ Write-Host "DSE_JEH_TransSat_1 OFFLINE validation"
 Write-Host "Mongo database: $($env:BAR_SEQ_LAB_MONGO_DB)"
 Write-Host "Mongo collection: $($env:BAR_SEQ_LAB_MONGO_COLLECTION)"
 Write-Host "Collection run: $($env:DSE_JEH_OFFLINE_COLLECTION_RUN_ID)"
+Write-Host "Pipeline run: $PipelineRunID"
+Write-Host "Run type: $RunType"
+Write-Host "Risk R: $RiskR"
 Write-Host "Runtime endpoint: $($env:DSE_JEH_SERVER_ADDRESS)"
 Write-Host "Remain running after replay: $($env:DSE_JEH_REMAIN_RUNNING)"
 if (-not [string]::IsNullOrWhiteSpace($env:DSE_JEH_OUTPUT)) {
@@ -63,5 +76,12 @@ if (-not [string]::IsNullOrWhiteSpace($env:DSE_JEH_OUTPUT)) {
 }
 Write-Host "Use scripts/Stop-DSEJEHTransSat1.ps1 from another terminal to request graceful shutdown."
 
-& $startScript -Mode OFFLINE -OfflineCollectionRunID $env:DSE_JEH_OFFLINE_COLLECTION_RUN_ID
+& $startScript `
+    -Mode OFFLINE `
+    -OfflineCollectionRunID $env:DSE_JEH_OFFLINE_COLLECTION_RUN_ID `
+    -PipelineRunID $PipelineRunID `
+    -RunType $RunType `
+    -StartingCapital $StartingCapital `
+    -AllocationPct $AllocationPct `
+    -RiskR $RiskR
 exit $LASTEXITCODE
