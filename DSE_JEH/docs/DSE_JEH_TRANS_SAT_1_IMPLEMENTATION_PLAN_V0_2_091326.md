@@ -10,7 +10,7 @@
 | Status | APPROVED |
 | Architectural authority | `DSE_JEH_TRANS_SAT_1_SYSTEM_DESIGN_V0_1_091226.md` |
 | Historical implementation-plan baseline | `DSE_JEH_TRANS_SAT_1_IMPLEMENTATION_PLAN_V0_1_091226.md` |
-| Current implementation status | PHASE 1 and the persistent runtime slice through Production Eligibility are implemented and validated; PHASE 2 and both complete runtime objectives remain incomplete |
+| Current implementation status | DEP-01 through DEP-04 and Rule #1 analytical-path behavior are implemented and validated; bounded `CalculatePhaseTransition`, deterministic ordered boundary derivation, and `EvaluateDynamicExecution` are complete and focused-tested; the explicit Production Eligibility Controller, state-action algorithms, execution path, and both runtime objectives remain incomplete |
 | Scope | Complete implementation planning for `DSE_JEH_TransSat_1` and its two ordered paper-runtime objectives |
 
 This V0.2 document is the current approved implementation-plan authority subordinate to the approved System Design V0.1. It does not overwrite, rename, or delete V0.1, which remains preserved as historical implementation-planning documentation.
@@ -25,10 +25,11 @@ Normative terms `MUST`, `MUST NOT`, `SHOULD`, and `MAY` express implementation r
 
 `DSE_JEH_TransSat_1` will be implemented as one independently executable, persistent, startable, stoppable, observable, proto-governed Transformation Satellite. It is not a replay experiment, a collection of proving utilities, or two executor-specific applications. ONLINE and OFFLINE sources converge at the same `BarEvent` boundary and use the same application logic through the governed execution-instruction boundary.
 
-Implementation preserves two established phases:
+Implementation now defines three ordered phases:
 
 1. **PHASE 1 - BAR INPUT AND JEH ANALYTICAL PATH**: COMPLETE. DEP-01 through DEP-04 are integrated with the authoritative proto, persistent lifecycle, health, activity, and every-bar evidence model without rewriting validated JEH mathematics.
-2. **PHASE 2 - FOUR-STATE DYNAMIC EXECUTION ENGINE**: PARTIALLY COMPLETE only at the shared Rule Registry and Production Eligibility infrastructure boundary. The four-state engine, its governed boundary policies and state actions, the design-derived contract update, execution adapters, `ExecutionEvent`, and reconciliation remain not implemented.
+2. **PHASE 2 - FOUR-STATE DYNAMIC EXECUTION ENGINE**: PARTIALLY COMPLETE. The four-state contracts, bounded V1 `DynamicExecutionService.CalculatePhaseTransition`, deterministic ordered boundary facts, and forward governed `DynamicExecutionService.EvaluateDynamicExecution` policy are complete and focused-tested. State-action algorithms, `GovernedExecutionInstruction` generation behavior, execution adapters, `ExecutionEvent`, reconciliation, and complete E2E wiring remain unimplemented or gated.
+3. **PHASE 3 - POST-E2E OBSERVABILITY AND DATA**: NOT STARTED. Rich stage-by-stage persistence, causal analytical datasets, and P&L/strategy-performance analysis follow complete governed mock-execution E2E validation.
 
 The completed application has two ordered runtime objectives, not two implementation phases:
 
@@ -45,8 +46,8 @@ No live or funded-capital execution is authorized.
 
 Authority order for implementation work is:
 
-1. Current modified `DSE_JEH_TRANS_SAT_1_SYSTEM_DESIGN_V0_1_091226.md`.
-2. This V0.2 plan after human approval; until approval, current modified V0.1 remains the implementation-plan baseline.
+1. The current approved `DSE_JEH_TRANS_SAT_1_SYSTEM_DESIGN_V0_1_091226.md` is the architectural authority.
+2. This V0.2 plan is the current approved implementation-plan authority subordinate to that System Design.
 3. Existing code, tests, and validation reports for implementation truth.
 4. Supplied Rule Engine Pipeline Patterns material only for the approved Chain of Responsibility, Specification/rule, typed context, compile-once `expr`, local paper, and Alpaca Paper adapter patterns.
 
@@ -68,14 +69,18 @@ Unresolved mathematics and financial policy do not prevent this plan. They are r
 
 | Responsibility | Current implementation truth | V0.2 treatment |
 | --- | --- | --- |
-| DEP-01 Bar Event Admission | IMPLEMENTED AND VALIDATED | Preserve behavior; reconcile contracts and complete every-bar evidence |
+| DEP-01 Bar Event Admission | IMPLEMENTED AND VALIDATED | Preserve behavior; align contracts and complete every-bar evidence |
 | DEP-02 Per-Entity Ordered Analytical State | IMPLEMENTED AND VALIDATED | Preserve entity isolation and causal ownership |
 | DEP-03 JEH / Ehlers Phase Update | IMPLEMENTED AND VALIDATED | Do not rewrite validated mathematics without approved cause |
 | DEP-04 Circular Phase State | IMPLEMENTED AND VALIDATED | Preserve explicit initialization/value presence and normalized phase |
-| Rule #1 behavior | IMPLEMENTED AND VALIDATED as an explicit `ProductionEligibilityService` | Compile once with `expr`, emit typed eligibility and rule evidence, and preserve established 63-bar semantics |
+| Rule #1 behavior | IMPLEMENTED AND VALIDATED in the analytical path | Preserve contiguous bars 1-63 initialization, first possible observable/eligible bar 64, current eligible `Bar[n]` ownership, and retained $\phi[n-1]$ as analytical context |
+| Explicit proto-governed Production Eligibility Controller | NOT IMPLEMENTED as the complete target | Implement and wire `ProductionEligibilityService.EvaluateProductionEligibility` without conflating it with the existing Rule #1 analytical behavior |
 | Rule Registry | IMPLEMENTED for the active Rule #1 set | Validate and retrieve the active typed rule set; no hot reload is authorized |
 | ONLINE and OFFLINE adapters | IMPLEMENTED for the Phase 1 path | Both route through the same host-owned `BarEvent` pipeline; strong ONLINE continuity claims remain blocked |
-| Authoritative proto and generated bindings | IMPLEMENTED | One proto defines 16 services and 18 RPCs; Go message and gRPC bindings are generated |
+| Authoritative proto and generated bindings | IMPLEMENTED | One proto defines 10 active services and 13 active RPCs; seven superseded services and one superseded executor RPC remain generated as deprecated compatibility surfaces |
+| `DynamicExecutionService.CalculatePhaseTransition` | COMPLETE for the bounded V1 slice | Approved mathematics implemented; authoritative proto updated as required; generated Go regenerated by Buf; focused service tests pass |
+| Deterministic ordered boundary facts | COMPLETE for the bounded service slice | Signed shortest directed arc; start excluded; end included; fixed 0/90/180/270 boundaries; direction and encounter order preserved; reverse and later-bar recross facts retained without suppression |
+| `DynamicExecutionService.EvaluateDynamicExecution` | COMPLETE for the bounded evaluation slice | Forward governed policy and typed four-state/action outcomes implemented and focused-tested; reverse facts produce no forward firing; no `GovernedExecutionInstruction` is generated |
 | Persistent runtime and observation services | IMPLEMENTED AND VALIDATED | Compiled host, lifecycle, shared status, heartbeat, evidence stream, zero-input persistence, and graceful stop |
 | Built executable and start/stop scripts | IMPLEMENTED AND VALIDATED | Compiled-executable workflow with PID-scoped governed stop; no `go run` acceptance path |
 
@@ -83,13 +88,14 @@ Existing Phase 1 reports record passing `buf lint`, `buf generate`, `go test ./.
 
 ### 4.2 Not Yet Implemented as the Complete Target
 
-- the four-state Dynamic Execution Engine and its state-associated actions;
+- state-associated ALLOCATE ranking, HOLD & TRAIL, and LIQUIDATE/reallocation algorithms;
+- `GovernedExecutionInstruction` generation behavior and runtime integration of the bounded Dynamic Execution services;
 - complete `LocalPaperExecutor` / `MockExecutor` E2E path;
 - `AlpacaPaperExecutor`;
 - complete `ExecutionEvent` and reconciliation path; and
 - Runtime Objective 1 and Runtime Objective 2 completion evidence.
 
-The implemented vertical slice ends deliberately after Production Eligibility. Its existing phase-motion-unavailable outcome is a legacy contract result from the superseded decomposition, not implementation of the replacement engine. No four-state transition, state action, governed execution instruction, or execution semantics are inferred.
+The runtime-integrated vertical slice ends deliberately after existing Rule #1 eligibility behavior. The bounded, currently unwired `CalculatePhaseTransition` and `EvaluateDynamicExecution` service implementations are complete and focused-tested, including deterministic ordered boundary facts and forward governed four-state outcomes. They do not implement state-action algorithms, instruction generation, executor behavior, or the complete E2E path. The existing phase-motion-unavailable runtime outcome is a deprecated compatibility result from the superseded decomposition.
 
 ---
 
@@ -105,18 +111,19 @@ Application Startup / Lifecycle / Health
   -> DEP-02 Per-Entity Ordered Analytical State
   -> DEP-03 JEH / Ehlers Phase Update
   -> DEP-04 Circular Phase State
-  -> Production Eligibility Controller
+  -> ProductionEligibilityService.EvaluateProductionEligibility
        -> BLOCKED: typed evidence and terminal bar outcome
        -> ELIGIBLE: continue
-    -> deterministic PhaseTransitionState calculation
-    -> component-scoped boundary policy rule
-    -> four-state Dynamic Execution Engine
+    -> DynamicExecutionService.CalculatePhaseTransition
+    -> DynamicExecutionService.EvaluateDynamicExecution
+    -> typed boundary-policy outcome and four-state result
       -> DISREGARD: no allocation action
       -> ALLOCATE: rank by Phase Velocity
       -> HOLD & TRAIL: trail stops dynamically
       -> LIQUIDATE: reallocate freed capital
-    -> governed execution instruction when required
-  -> selected Executor
+    -> GovernedExecutionInstruction when required
+  -> ExecutorService.SubmitGovernedExecutionInstruction
+  -> ExecutorService.StreamExecutionEvents
   -> ExecutionEvent
   -> reconciliation, evidence, telemetry, runtime state
 ```
@@ -127,7 +134,7 @@ The application remains running until governed stop, cancellation, or fatal appl
 
 ---
 
-## 6. Two Implementation Phases
+## 6. Implementation Phases and E2E Sequence
 
 ### 6.1 PHASE 1 - BAR INPUT AND JEH ANALYTICAL PATH
 
@@ -149,13 +156,19 @@ Status: `COMPLETE` for the approved Phase 1 scope. Strong ONLINE continuity/reco
 
 Phase 2 starts after Production Eligibility and implements the authoritative four-state engine, its supporting transition mathematics, governed boundary policies, state-associated actions, execution boundary, and reconciliation path. The former DEP-05-through-DEP-11 conceptual decomposition is superseded and is not an implementation sequence.
 
-Phase 2 begins by deriving the minimum proto/service changes required by the approved replacement design. Existing post-phase services remain generated but have no continuing design authority merely because they exist. This plan does not decide which survive, combine, disappear, or are replaced. No unresolved action algorithm or execution policy may be filled in for implementation convenience.
+Phase 2 contract review derived the minimum proto/service changes required by the approved replacement design. `DynamicExecutionService` now owns separate `CalculatePhaseTransition` and `EvaluateDynamicExecution` RPCs; `ExecutorService.SubmitGovernedExecutionInstruction` owns the active execution boundary. The seven former post-phase services remain generated only as deprecated compatibility surfaces. No unresolved action algorithm or execution policy was filled in for contract convenience.
 
-Current status: `PARTIALLY COMPLETE`. The Rule Registry, compile-once Rule #1 program, and Production Eligibility Controller exist. The post-phase contract requires review; the four-state engine, its actions, and both executor adapters do not exist.
+Current status: `PARTIALLY COMPLETE`. The four-state proto contracts, bounded V1 `CalculatePhaseTransition`, deterministic ordered boundary derivation, and forward governed `EvaluateDynamicExecution` behavior are implemented and focused-tested. Existing Rule #1 behavior remains implemented in the analytical path, while the complete explicit proto-governed Production Eligibility Controller is not implemented. Runtime wiring, state-action algorithms, instruction generation, and both executor adapters do not exist.
 
-### 6.3 Phases Versus Runtime Objectives
+### 6.3 PHASE 3 - POST-E2E OBSERVABILITY AND DATA
 
-The two implementation phases describe construction responsibility. Runtime Objectives 1 and 2 exercise the completed application with different executors. Objective 1 is a mandatory complete-application gate before Objective 2; neither objective is a renamed implementation phase.
+The immediate implementation objective is the complete governed path through `GovernedExecutionInstruction`, `MockExecutor`, `ExecutionEvent`, and E2E validation. Rich persistence is not a prerequisite for completing that path; existing runtime evidence and logging may support implementation debugging and validation.
+
+Only after complete E2E validation should Phase 3 design and implement persistent stage-by-stage data for JEH phase, `PhaseTransitionState`, boundary facts, rule outcomes, strategy state, state-associated actions, governed execution instructions, execution events, and subsequent P&L/strategy-performance analysis. That later dataset must support distinguishing implementation correctness from economic strategy quality. This plan does not design or authorize that persistence subsystem now.
+
+### 6.4 Phases Versus Runtime Objectives
+
+The three implementation phases describe construction responsibility. Runtime Objectives 1 and 2 exercise the completed application with different executors. Objective 1 is a mandatory complete-application gate before Objective 2; neither objective is a renamed implementation phase.
 
 ---
 
@@ -167,17 +180,17 @@ The sole DSE_JEH proto remains:
 
 `DSE_JEH/api/proto/dse_jeh/v1/DSE_JEH_TransSat_1.proto`
 
-The previous contract workstream expanded this file in place to 16 services and 18 RPCs under the superseded post-phase design. The authoritative proto and generated bindings remain unchanged in this documentation task. After approval of the replacement documents, a bounded contract-design task MUST derive the minimum service/message changes required by the four-state engine while preserving compatibility where required.
+The previous contract workstream expanded this file in place to 16 services and 18 RPCs under the superseded post-phase design. The bounded four-state contract review replaced that active model additively: the current proto has 10 active services and 13 active RPCs, while seven former services and `ExecutorService.SubmitExecutionIntent` remain deprecated compatibility declarations. Including compatibility surfaces, generated code contains 17 services and 21 RPCs.
 
 The implementation order is:
 
 ```text
 replacement System Design approved
   -> replacement Implementation Plan approved
-  -> derive minimum four-state proto/service changes
-  -> update human-reviewed authoritative proto
-  -> buf lint / compatibility checks
-  -> generated Go contracts
+  -> minimum four-state proto/service changes reviewed
+  -> authoritative proto updated additively
+  -> buf lint / compatibility checks passed
+  -> generated Go contracts regenerated
   -> Go implementation
   -> tests and build
   -> built executable
@@ -203,7 +216,7 @@ The expanded proto must describe all governed meanings required for:
 - runtime activity and every-bar terminal outcome; and
 - governed outbound evidence/publication behavior.
 
-Exact declaration names and the minimum service decomposition require later proto review. Financially or operationally meaningful Go enums, states, statuses, events, outcomes, and execution meanings MUST NOT exist as parallel ungoverned vocabulary.
+The minimum declaration and service decomposition is now reviewed: `PhaseTransitionState`, `BoundaryPolicyOutcome`, `DynamicExecutionState`, `StateActionOutcome`, `DynamicExecutionResult`, and `GovernedExecutionInstruction` are current authoritative types under `DynamicExecutionService` and `ExecutorService`. Financially or operationally meaningful Go enums, states, statuses, events, outcomes, and execution meanings MUST NOT exist as parallel ungoverned vocabulary.
 
 ### 7.3 Proto Services Versus Network Services
 
@@ -222,8 +235,8 @@ A protobuf service definition is not a deployment declaration and does not requi
 | DEP-03 through DEP-04 | deterministic JEH update and circular phase state | `PhaseEvidence`, phase status, solver identity | `JehPhaseService`; internal-only | approved JEH algorithms and phase normalization |
 | Production Eligibility | Rule #1 event-flow gate | scoped input, eligibility status/outcome/evidence, rule evidence | `ProductionEligibilityService`; internal-only | context, evaluation, typed routing |
 | Governed Rule Registry | attributable rule configuration and validation | rule identity/version, definitions, typed mappings, evaluation evidence | `RuleRegistryService`; internal-only | registry, compile/cache, validate, retrieve active set |
-| Four-state Dynamic Execution Engine | exactly four states, four boundary policies, and state-associated actions | `PhaseTransitionState`, typed state/policy/action outcomes, and separate audit records | Existing post-phase services require later design-derived review; no service split is selected here | deterministic transition facts plus governed state/action changes |
-| Governed execution boundary | convey required external action without claiming execution | execution-instruction identity/status and execution outcome | Existing execution-related services require later review; executor remains a separate adapter boundary | deterministic instruction identity/idempotency and adapter routing |
+| Four-state Dynamic Execution Engine | exactly four states, four boundary policies, and state-associated actions | `PhaseTransitionState`, `BoundaryPolicyOutcome`, `DynamicExecutionState`, `StateActionOutcome`, `DynamicExecutionResult` | `DynamicExecutionService.CalculatePhaseTransition`, `EvaluateDynamicExecution`; internal-only | deterministic transition facts plus governed state/action changes |
+| Governed execution boundary | convey required external action without claiming execution | `GovernedExecutionInstruction`, `ExecutionEvent` | `ExecutorService.SubmitGovernedExecutionInstruction`, `StreamExecutionEvents`; approved internal gRPC when registered | deterministic instruction identity/idempotency and adapter routing |
 | Executors | attempt requested action and report result | execution outcome, `ExecutionEvent`, reconciliation evidence | `ExecutorService`; approved internal gRPC when registered, otherwise internal-only | local simulation or separately approved Alpaca Paper transport only |
 | Evidence/telemetry | publish typed lifecycle, activity, processing, rule, and execution evidence | `RuntimeEvidenceEnvelope` and typed evidence | `RuntimeEvidenceService`; external exposure separately approved | publication ordering, delivery, and recovery policy |
 
@@ -346,9 +359,9 @@ The implementation SHALL preserve the existing Phase 1 behavior while adapting i
 
 1. Freeze current solver vectors, initialization behavior, phase normalization, identity, and mode-equivalence evidence as regression baselines.
 2. Review complete proto changes against existing generated types and identify adapter changes without changing JEH recurrence.
-3. Reconcile DEP-01 reception/admission so every candidate, including rejection, has terminal evidence.
-4. Reconcile DEP-02 state ownership with lifecycle, drain, recovery, and eligibility-controller inputs.
-5. Reconcile DEP-03/04 output with distinct mathematical status and production eligibility contracts.
+3. Align DEP-01 reception/admission so every candidate, including rejection, has terminal evidence.
+4. Align DEP-02 state ownership with lifecycle, drain, recovery, and eligibility-controller inputs.
+5. Align DEP-03/04 output with distinct mathematical status and production eligibility contracts.
 6. Preserve the common ONLINE/OFFLINE `BarEvent` boundary.
 7. Preserve OFFLINE selection by one explicit `DSE_JEH_OFFLINE_COLLECTION_RUN_ID`; no selector never means all runs.
 8. Re-run Phase 1 unit, race, deterministic replay, ONLINE mapping, and phase-equivalence validation after contract integration.
@@ -366,10 +379,20 @@ Items 1 through 7 are complete. Ordinary unit/integration tests, deterministic O
 For current production-eligible `Bar[n]`, deterministic Go/domain mathematics consumes retained predecessor analytical phase $\phi[n-1]$, current phase $\phi[n]$, and sequence integrity. The predecessor phase does not need to belong to a production-eligible bar. The operational result is `PhaseTransitionState`, not experimental evidence.
 
 $$
-\omega[n] = \operatorname{circular\_delta}(\phi[n-1], \phi[n])
+\phi_{normalized} = ((\phi \bmod 360) + 360) \bmod 360
 $$
 
-Its unit is degrees per bar with $\Delta Bar=1$. Phase Velocity supports the `ALLOCATE` ranking action; it is not a strategy state or separate Dynamic Execution stage. The exact 180-degree signed-direction tie remains unresolved.
+$$
+\Delta\phi[n] = \operatorname{circular\_delta}(\phi[n-1], \phi[n]) \in (-180°,180°]
+$$
+
+$$
+\omega[n] = \Delta\phi[n]
+$$
+
+Its unit is degrees per bar with $\Delta Bar=1$. Every exact 180-degree tie is canonically $+180°$; magnitude is $|\Delta\phi|$; direction follows the sign; zero displacement is `STATIONARY`; and non-finite phase input is invalid. Phase Velocity supports the `ALLOCATE` ranking action; it is not a strategy state or separate Dynamic Execution stage.
+
+Status: `COMPLETE` for the bounded V1 `DynamicExecutionService.CalculatePhaseTransition` slice. The authoritative proto was updated as required, generated Go was regenerated by Buf, and focused service tests pass. V1 excludes hysteresis, Schmitt-trigger deadbands, degree buffers, N-bar confirmation, anti-jitter history, smoothing, acceleration, higher-order motion, historical direction lookup, trajectory reconstruction, additional eligibility bars, and a separate Edge Case Handler stage.
 
 ### 11.2 History-Free Transition Model
 
@@ -384,7 +407,7 @@ Deterministic Go/domain code computes factual transition and boundary inputs. Co
 - cross 90 degrees -> `HOP_OFF` -> `LIQUIDATE`; and
 - cross 180 degrees -> `DISREGARD`.
 
-The policy meanings are resolved. The deterministic algorithm for wrap, reverse movement, exact-boundary samples, large or multiple-boundary transitions, and jitter/recrossing remains to be specified. `expr` MUST NOT implement that mathematics.
+The deterministic boundary algorithm is resolved and implemented for the bounded service slice. It traverses only the signed shortest directed arc in `PhaseTransitionState`, excludes the start, includes the end, and emits every encountered boundary from 0, 90, 180, and 270 degrees exactly once in strict directed encounter order. Direction is preserved; wrap through 0 degrees is treated identically; `STATIONARY` emits no facts; reverse crossings remain facts but do not fire the forward policy; and a later-bar recross is a new fact. No hysteresis, deadband, degree buffer, smoothing, N-bar confirmation, acceleration, historical direction inference, or cross-bar suppression is authorized. `expr` evaluates governed meaning and MUST NOT implement the circular mathematics.
 
 ### 11.4 Four Persistent States and Actions
 
@@ -397,11 +420,15 @@ The policy meanings are resolved. The deterministic algorithm for wrap, reverse 
 
 `HOP_ON` and `HOP_OFF` are rule-policy firing events, not states. No additional state or HOP terminology is authorized.
 
+The bounded evaluation implementation produces the resulting four-state value and typed state-action outcome. It marks unresolved ALLOCATE, HOLD & TRAIL, and LIQUIDATE action algorithms as blocked rather than implementing them; `DISREGARD` remains typed no-action behavior. Runtime state persistence and action execution remain future integration work.
+
 ### 11.5 Contract and Execution Integration
 
-After this replacement plan is approved, derive the minimum proto/service changes from the four-state model. Review `PhaseMotionService`, `BoundaryCrossoverService`, `StrategyRegionService`, `UniverseStateService`, `CandidateRankingService`, `StrategyDecisionService`, and `ExecutionIntentService` without presuming that any must survive, combine, disappear, or be replaced.
+The bounded contract review replaced the active seven-service post-phase chain with cohesive `DynamicExecutionService.CalculatePhaseTransition` and `EvaluateDynamicExecution` contracts. Universe/candidate inputs and Phase Velocity ranking results are represented inside the engine context/action boundary. The former seven services remain deprecated only for compatibility.
 
-The engine must still produce the governed execution instruction required to cross into the external executor. Do not force the former `StrategyDecision`/`ExecutionIntent` two-stage model into the design. Mock/local paper remains the first target; future Alpaca PAPER remains later. No live/funded execution is authorized.
+`DynamicExecutionService.EvaluateDynamicExecution` is implemented and focused-tested for the bounded evaluation slice. It consumes current four-state strategy state and `PhaseTransitionState`, derives ordered deterministic boundary facts, evaluates each fact in encounter order through the forward governed policy, and produces typed boundary-policy, resulting-state, and state-action outcomes. It does not generate `GovernedExecutionInstruction`; ranking, trailing, reallocation, instruction, and execution behavior remain gated and unimplemented.
+
+The engine produces `GovernedExecutionInstruction` when external execution is required. `ExecutorService.SubmitGovernedExecutionInstruction` accepts it without a forced `StrategyDecision`/`ExecutionIntent` chain, and `ExecutionEvent` remains separate. Mock/local paper remains the first target; future Alpaca PAPER remains later. No live/funded execution is authorized.
 
 ---
 
@@ -450,7 +477,7 @@ The proto workstream must define exact safe names and semantics corresponding to
 - `hop_off_events`;
 - `state_entries` by four-state value;
 - `state_action_outcomes` by action;
-- `execution_instructions`; and
+- `governed_execution_instructions`; and
 - `execution_events`.
 
 Counters are not interchangeable. Evidence joins must reconstruct each bar's path and terminal outcome, including blocked/no-action cases.
@@ -516,9 +543,11 @@ Approved stored Bar Sequence
   -> common BarEvent boundary
   -> complete DEP-01 through DEP-04
   -> Production Eligibility Controller
-  -> four-state Dynamic Execution Engine
+  -> DynamicExecutionService.CalculatePhaseTransition
+  -> DynamicExecutionService.EvaluateDynamicExecution
+  -> four-state result
   -> state-associated action
-  -> governed execution instruction, when required
+  -> GovernedExecutionInstruction, when required
   -> LocalPaperExecutor / MockExecutor
   -> ExecutionEvent
   -> local reconciliation, runtime evidence, telemetry, and resulting state
@@ -536,7 +565,7 @@ For identical stored input, initial state, and governed configuration, Objective
 
 Objective 1 acceptance requires deterministic E2E evidence, no silent bar loss, stable causal identities, expected counter relationships, executor reconciliation, clean governed start/stop, and repeated-run comparison. Objective 2 cannot begin until human review accepts Objective 1.
 
-Current status: `PARTIALLY COMPLETE`. The stored-bar path is validated through Production Eligibility, including collection run `20260911T161623Z-1` with 3,120 received/admitted bars, but the four-state engine, `LocalPaperExecutor`, `ExecutionEvent`, reconciliation, and full repeated E2E comparison remain absent. Runtime Objective 1 is not accepted.
+Current status: `PARTIALLY COMPLETE`. The stored-bar runtime path is validated through existing Rule #1 eligibility behavior, including collection run `20260911T161623Z-1` with 3,120 received/admitted bars. The bounded `CalculatePhaseTransition` and `EvaluateDynamicExecution` services are complete and focused-tested but not integrated into this E2E runtime path. State-action algorithms, instruction generation, `LocalPaperExecutor`, `ExecutionEvent`, reconciliation, and full repeated E2E comparison remain absent. Runtime Objective 1 is not accepted.
 
 ---
 
@@ -588,14 +617,14 @@ For equivalent input, initial state, configuration, rule identities/versions, an
 - proto lint, generation, compatibility, presence, units, identity, lifecycle, and outcome tests;
 - Rule Registry schema, authorized-variable, compile failure, cache identity, result-type, outcome-mapping, and evidence tests;
 - Rule #1 bars 1 through 63, bar 64, continuity break, and re-establishment tests;
-- `PhaseTransitionState` circular-delta vectors after direction-policy approval;
-- boundary-policy vectors for 270/0/90/180 transitions after deterministic crossing semantics are approved;
-- history-free state-transition and boundary-event tests;
+- completed focused `PhaseTransitionState` vectors for normalization, wrap/reverse displacement, zero, exact +180-degree tie handling, magnitude, direction, velocity, causal references, and non-finite input;
+- completed focused boundary-policy vectors for no crossing, forward/reverse crossings, forward/reverse wrap, start exclusion, end inclusion, `STATIONARY`, later-bar recross, ordered multiple-boundary traversal, exact +180-degree behavior, and ordered typed policy evaluations;
+- completed focused history-free state-transition and boundary-event tests for the bounded service slice;
 - ALLOCATE ranking, HOLD & TRAIL, LIQUIDATE reallocation, and execution-instruction idempotency tests after action-policy approval;
 - lifecycle, zero-input, stop/drain, failure, and activity-accounting tests; and
 - race tests for entity and universe ownership.
 
-Current result: authoritative proto lint/generation/breaking checks, Go tests, vet, and build pass for the implemented slice. The race test is environment-blocked by unavailable CGO/GCC. Tests for blocked Phase 2 behavior cannot exist until the controlling semantics are approved.
+Current result: authoritative proto lint/generation/breaking checks and focused service tests pass for the bounded `CalculatePhaseTransition`, deterministic boundary, and `EvaluateDynamicExecution` slices; earlier Go tests, vet, and build pass for their recorded implemented scopes. The race test is environment-blocked by unavailable CGO/GCC. Tests for blocked state-action and execution behavior cannot exist until the controlling semantics are approved.
 
 ### 16.2 Runtime Objective 1 Validation
 
@@ -630,10 +659,10 @@ The required chain is `System Design -> governed rule/outcome -> proto -> genera
 | §10 / 7 | DEP-02 analytical ownership | `AnalyticalStateService.UpdateAnalyticalState` | `internal/analytical/coordinator.go`, `internal/services/services.go` | Internal direct call; per-entity coordinator | Isolation, causal sequence, sparse-symbol tests | IMPLEMENTED | Persistence/recovery policy remains open |
 | §10 / 7 | DEP-03/04 JEH and phase | `JehPhaseService.UpdateJehPhase` | `internal/jeh`, `internal/analytical/coordinator.go`, `internal/services/services.go` | Internal direct call; durable phase JSONL | Solver vectors, phase comparison, 3,120-record digest | IMPLEMENTED | None for current Phase 1 semantics |
 | §8 / 9 | Governed Rule Registry | `RuleRegistryService.ValidateRuleSet`, `GetActiveRuleSet` | `internal/services/services.go` | Internal-only concrete service; Rule #1 supplied at startup | Rule compilation exercised by service construction/tests | IMPLEMENTED FOR RULE #1 | Additional rules await owning semantics |
-| §9 / 10 | Production Eligibility / Rule #1 | `ProductionEligibilityService.EvaluateProductionEligibility` | `internal/services/services.go` | Internal direct call after phase | Bar 63/64 test; 1,848 initializing and 1,272 eligible replay outcomes | IMPLEMENTED | None for current-bar eligibility ownership |
-| §11.1-11.2 / 6-7 | `PhaseTransitionState` and history-free transition ownership | Contract changes derived after replacement approval | Not implemented | Not wired; current terminal outcome reflects the superseded contract | No four-state tests | NOT STARTED | Circular direction/tie and transition contract review |
-| §11.3-11.4 / 7-9 | Four boundary policies, four states, and state-associated actions | Contract changes derived after replacement approval | Not implemented | Not wired | No boundary/state/action tests | BLOCKED BY SPECIFIED DETAILS | Crossing algorithm, ranking, trailing, capital, sizing, and sequencing details |
-| §11.5, §13-14 / 10-11 | Governed instruction, local execution, reconciliation, and Objective 1 | Existing execution services require design-derived review | No replacement implementation | Not wired | No complete E2E test | NOT STARTED | Contract review and executor/reconciliation semantics |
+| §9 / 10 | Rule #1 analytical-path behavior | `ProductionEligibilityService.EvaluateProductionEligibility` is the target explicit contract | Existing analytical status/state handling | Existing runtime path after phase | Bar 63/64 test; 1,848 initializing and 1,272 eligible replay outcomes | RULE #1 BEHAVIOR IMPLEMENTED | Complete explicit proto-governed controller remains not implemented |
+| §11.1-11.2 / 6 | `PhaseTransitionState` and history-free transition ownership | `DynamicExecutionService.CalculatePhaseTransition` | `internal/services/phase_transition.go` | Not yet wired into the runtime path | Focused service vectors pass; proto lint/breaking/generation previously passed | COMPLETE FOR BOUNDED V1 SLICE | Runtime integration follows the engine path; V1 transition mathematics is closed |
+| §11.3-11.4 / 4-7 | Ordered boundary facts, forward boundary policy, and bounded four-state evaluation | `DynamicExecutionService.EvaluateDynamicExecution` | `internal/services/dynamic_execution.go` | Not yet wired into the runtime path | Focused boundary and ordered typed-policy tests pass | COMPLETE FOR BOUNDED EVALUATION SLICE | State-action algorithms and runtime integration remain |
+| §11.5, §13-14 / 10-11 | Governed instruction, local execution, reconciliation, and Objective 1 | `ExecutorService.SubmitGovernedExecutionInstruction`, `StreamExecutionEvents` | No replacement implementation | Not wired | Generated instruction/event separation verified | CONTRACT COMPLETE / IMPLEMENTATION NOT STARTED | Executor/reconciliation semantics |
 | §15 / 12 | Alpaca Paper and Objective 2 | Same governed execution boundary | No adapter | Not wired | No paper integration test | NOT STARTED | Objective 1 approval and paper-only adapter policy |
 
 Generated stubs prove contract availability, not implemented business behavior. Service definition remains distinct from network exposure.
@@ -642,18 +671,19 @@ Generated stubs prove contract availability, not implemented business behavior. 
 
 ## 18. Dependency-Ordered Implementation Sequence
 
-1. Approve the replacement System Design and this replacement Implementation Plan as the governing architecture.
-2. Preserve the validated DEP-01-through-DEP-04, Production Eligibility, persistent-runtime, and compile-once Rule Registry implementation.
-3. Derive the minimum authoritative proto/service changes from the four-state model; do not preserve the former service split by default.
-4. Human-review the replacement state, boundary-policy, action, execution-instruction, event, status, identity, and audit contracts.
-5. Run approved proto compatibility/lint checks and regenerate bindings only after that review.
-6. Implement deterministic `PhaseTransitionState` calculation for the current eligible bar using retained predecessor analytical context.
-7. Specify and implement deterministic boundary facts plus the four component-scoped `expr` boundary policies for 270, 0, 90, and 180 degrees.
-8. Implement exactly four persistent strategy states with history-free transitions and separate audit/telemetry history.
-9. Implement the four state-associated actions: DISREGARD no action, ALLOCATE ranking by Phase Velocity, HOLD & TRAIL dynamic trailing, and LIQUIDATE capital reallocation.
-10. Implement the governed execution-instruction boundary, `LocalPaperExecutor` / `MockExecutor`, `ExecutionEvent`, and local reconciliation.
-11. Execute and accept Runtime Objective 1 with deterministic E2E, lifecycle, telemetry, every-bar accountability, and repeated-run evidence; freeze the governed instruction semantics.
-12. After explicit approval, implement and validate the paper-only Alpaca adapter, execute Runtime Objective 2, compare at the governed execution-instruction boundary, and produce completion evidence.
+1. Preserve the validated DEP-01-through-DEP-04 implementation and Rule #1 analytical-path behavior, including current eligible `Bar[n]` ownership and retained $\phi[n-1]$ context; keep the complete explicit Production Eligibility Controller status distinct.
+2. Retain the completed four-state proto contract review: 10 active services / 13 active RPCs and 17 services / 21 RPCs including deprecated compatibility surfaces. Make future proto changes only for a concrete implementation blocker or approved new contract requirement.
+3. Retain the completed bounded V1 `DynamicExecutionService.CalculatePhaseTransition` implementation and focused validation without reopening its mathematics.
+4. Retain the completed bounded `DynamicExecutionService.EvaluateDynamicExecution` implementation and focused validation.
+5. Retain the completed deterministic start-excluded/end-included boundary-fact handling, including ordered multiple boundaries, reverse facts without forward firing, and later-bar recrosses without suppression.
+6. Retain the completed forward governed boundary-policy evaluation and typed outcomes for the fixed 270, 0, 90, and 180-degree meanings.
+7. Retain the completed bounded four-state result evaluation; integrate runtime state persistence only with the later approved engine wiring.
+8. Integrate state-associated actions only after their gates: DISREGARD no action; ALLOCATE after ranking formula/timing/tie/candidate/freshness approval; HOLD & TRAIL after trailing-algorithm approval; LIQUIDATE after capital/sizing/sequencing/reallocation approval.
+9. Generate `GovernedExecutionInstruction` where required after instruction behavior is approved.
+10. Implement the approved `MockExecutor` behavior and emit `ExecutionEvent`, preserving the executor as an external action boundary.
+11. Execute and accept the complete governed E2E path through mock execution and `ExecutionEvent` before beginning rich persistence work.
+12. After E2E acceptance, design and implement stage-by-stage persistence, causal execution lineage, and P&L/strategy-performance datasets for implementation-correctness and strategy-efficacy analysis.
+13. Only after explicit approval, implement and validate the paper-only Alpaca adapter and Runtime Objective 2.
 
 The sequence MUST NOT jump from isolated DEP tests directly to Alpaca Paper. Objective 1 is the required complete-application proving gate.
 
@@ -661,18 +691,19 @@ The sequence MUST NOT jump from isolated DEP tests directly to Alpaca Paper. Obj
 
 | Item | Current status | Evidence or blocker |
 | --- | --- | --- |
-| 1 | COMPLETE | Replacement System Design is documented; this plan now reflects it |
-| 2 | COMPLETE | Validated implementation remains through Production Eligibility; Rule #1 and persistent runtime are retained |
-| 3 | NOT STARTED | Existing post-phase proto reflects the superseded design and requires bounded review |
-| 4 | NOT STARTED | Depends on replacement contract proposal |
-| 5 | NOT STARTED | No proto or generated files are changed by this documentation task |
-| 6 | BLOCKED | Circular direction convention, including exact 180-degree handling, remains pending |
-| 7 | BLOCKED | Deterministic wrap, reverse, exact-boundary, jitter, and multi-boundary crossing semantics remain pending |
-| 8 | NOT STARTED | Four states and history-free principle are resolved; implementation follows items 3-7 |
-| 9 | BLOCKED BY ACTION DETAILS | Ranking, trailing, capital, capacity, sizing, sequencing, freshness, and reconciliation policies remain to be specified |
-| 10 | NOT STARTED | Replacement instruction contract and executor/reconciliation semantics require review |
-| 11 | PARTIAL | Existing stored-bar run validates only through Production Eligibility; full Objective 1 is not accepted |
-| 12 | NOT STARTED | Requires accepted Objective 1 and explicit Alpaca Paper authorization |
+| 1 | COMPLETE | DEP-01 through DEP-04 and Rule #1 analytical behavior are implemented and validated; the complete explicit controller remains separate and unimplemented |
+| 2 | COMPLETE | Active post-phase model is 10 services / 13 RPCs; generated compatibility surface is 17 services / 21 RPCs; old post-phase services are deprecated only |
+| 3 | COMPLETE | Approved V1 transition mathematics is implemented and focused-tested; Buf validation and generation previously passed |
+| 4 | COMPLETE | `EvaluateDynamicExecution` is implemented and focused-tested for the bounded evaluation slice |
+| 5 | COMPLETE | Directed start-excluded/end-included facts, exact landings/departures, ordered multiple boundaries, reverse facts, wrap, `STATIONARY`, and later-bar recross behavior are implemented |
+| 6 | COMPLETE | Fixed forward policy meanings are evaluated through compile-once `expr` and mapped to typed outcomes in encounter order |
+| 7 | COMPLETE FOR BOUNDED EVALUATION | Exactly four resulting states and history-free persistence outcomes are produced; runtime state-store wiring remains future work |
+| 8 | GATED BY ACTION DESIGNS | Ranking, trailing, capital, sizing, sequencing, candidate eligibility, freshness, and reallocation require approval |
+| 9 | CONTRACT COMPLETE / BEHAVIOR GATED | `GovernedExecutionInstruction` exists; generation behavior awaits approved state actions and execution policy |
+| 10 | NOT STARTED / GATED | Mock executor and event behavior require approved execution semantics |
+| 11 | PARTIAL | Existing runtime validates through Rule #1 eligibility; both bounded Dynamic Execution services are focused-tested but not E2E-wired; complete Objective 1 is not accepted |
+| 12 | POST-E2E | Rich persistence and P&L datasets deliberately follow complete mock-execution E2E validation |
+| 13 | NOT STARTED | Requires accepted Objective 1 and explicit Alpaca Paper authorization |
 
 ---
 
@@ -680,20 +711,21 @@ The sequence MUST NOT jump from isolated DEP tests directly to Alpaca Paper. Obj
 
 The following remain open and do not prevent approval of this plan. Work stops only at the implementation boundary that needs the decision.
 
-| Boundary | Status | Required decision |
+| Boundary | Status | Decision or remaining requirement |
 | --- | --- | --- |
 | Four-state entry ownership | RESOLVED | Current eligible `Bar[n]` owns processing; retained $\phi[n-1]$ is predecessor context; bar 64 is the first possible engine entry |
-| `PhaseTransitionState` | PARTIALLY RESOLVED | $\omega[n]=\operatorname{circular\_delta}(\phi[n-1],\phi[n])$ in degrees per bar with $\Delta Bar=1$; approve the circular direction convention, including exact 180-degree handling |
-| Boundary facts and policies | POLICY MEANINGS RESOLVED; ALGORITHM BLOCKED | Implement governed 270 -> `HOP_ON` -> `ALLOCATE`, 0 -> `HOLD_AND_TRAIL`, 90 -> `HOP_OFF` -> `LIQUIDATE`, and 180 -> `DISREGARD`; specify wrap, reverse, exact samples, jitter, and large/multiple-boundary transitions |
-| Four-state persistence | RESOLVED | Exactly four states and history-free transition semantics; implementation and contract review remain |
+| `PhaseTransitionState` | RESOLVED AND IMPLEMENTED FOR V1 | Normalize to $[0°,360°)$; shortest signed displacement in $(-180°,180°]$; exact tie $+180°$; magnitude $|\Delta\phi|$; sign-derived direction; zero `STATIONARY`; $\omega=\Delta\phi$ degrees/bar; non-finite input invalid; history-free $\phi[n-1]\rightarrow\phi[n]$ |
+| Boundary facts and policies | RESOLVED AND IMPLEMENTED FOR BOUNDED SLICE | Directed shortest arc; start excluded/end included; ordered 0/90/180/270 facts; wrap and direction retained; reverse facts do not fire forward policy; later-bar recrosses are not suppressed; forward meanings produce typed outcomes |
+| Four-state evaluation and persistence | BOUNDED EVALUATION IMPLEMENTED / RUNTIME WIRING OPEN | Exactly four resulting states and history-free persistence outcomes are focused-tested; integration with runtime state ownership remains incomplete |
 | ALLOCATE action | BLOCKED PENDING DETAIL | Candidate snapshot, freshness, Phase Velocity ranking formula/timing/ties, capacity, and sizing |
 | HOLD & TRAIL action | BLOCKED PENDING DETAIL | Exact dynamic trailing-stop algorithm and execution-update semantics |
 | LIQUIDATE action | BLOCKED PENDING DETAIL | Capital representation, reallocation, capacity, sizing, sequencing, and reconciliation |
-| Governed execution instruction | BLOCKED PENDING CONTRACT REVIEW | Minimum replacement contract, identity, idempotency, expiry/cancellation, sizing, and correlation |
+| Governed execution instruction | MINIMUM CONTRACT RESOLVED; IMPLEMENTATION POLICY BLOCKED | `GovernedExecutionInstruction` defines identity, causality, action, idempotency, correlation, optional validity/quantity, and status; sizing, expiry/cancellation behavior, and adapter policy remain unresolved |
 | Executors/reconciliation | BLOCKED PENDING DESIGN DECISION | Execution outcome state machine, retries, duplicate events, recovery and reconciliation |
 | Lifecycle/recovery | PARTIALLY RESOLVED | OFFLINE completion is distinct from application stop and accepted work drains before stop; checkpoint, restart, pending-work recovery, and future execution reconciliation remain open |
 | ONLINE continuity | BLOCKED FOR STRONG CONTINUITY CLAIMS | Upstream loss detection, finalized-bar guarantee, resume cursor, backpressure |
 | Alpaca Paper | BLOCKED UNTIL OBJECTIVE 1 APPROVAL | Paper-only endpoint/configuration, order mapping, idempotency, fill/cancel/reconciliation policy |
+| Future adaptive policy geometry | FUTURE / NOT IMPLEMENTED | Any controlled, versioned response coefficients must preserve deterministic phase-transition and boundary facts; no coefficient names, formulas, learning logic, or persistence are approved |
 
 No unresolved item may be silently converted into a default implementation assumption.
 
@@ -704,7 +736,7 @@ No unresolved item may be silently converted into a default implementation assum
 Neither this plan nor the completed runtime slice authorizes:
 
 - creation of another DSE_JEH proto;
-- implementation of the four-state engine before the required mathematical, policy, action, and contract details are approved;
+- implementation of state-action, instruction-generation, or remaining runtime behavior before their required policy details are approved;
 - restoration of DEP-05 through DEP-11 as the active architectural decomposition;
 - MongoDB mutation;
 - Alpaca credential configuration or API calls;
@@ -727,6 +759,11 @@ Neither this plan nor the completed runtime slice authorizes:
 | V0.2 implementation reconciliation | 2026-09-13 | Recorded the implemented persistent Go host, two externally exposed observation services, direct internal service composition through Production Eligibility, Rule #1 and Rule Registry support, governed scripts, zero-input persistence, graceful shutdown, and verified 3,120-bar OFFLINE run. Replaced proposed traceability with actual paths and classified sequence items 1-27. DEP-05 through DEP-11, Runtime Objective 1 completion, and Runtime Objective 2 remain blocked or not started. |
 | V0.2 DEP-05/06 entry clarification | 2026-09-13 | Established current eligible `Bar[n]` ownership, removed the bar-64/bar-65 entry blocker, and fixed the DEP-05 relation as single-bar signed circular delta in degrees per bar while retaining only the exact 180-degree signed-direction tie policy as pending. |
 | V0.2 four-state design replacement | 2026-09-13 | Superseded the active DEP-05-through-DEP-11 decomposition with one history-free four-state Dynamic Execution Engine: `DISREGARD`, `ALLOCATE`, `HOLD_AND_TRAIL`, and `LIQUIDATE`, with fixed governed boundary policies, state-associated actions, and one governed external execution boundary. Proto changes are deferred to a later design-derived review. |
+| V0.2 four-state contract reconciliation | 2026-09-13 | Recorded the completed bounded proto review: 10 active services / 13 active RPCs; cohesive `DynamicExecutionService`; operational `PhaseTransitionState`; typed four-state, boundary-policy, and state-action contracts; direct `GovernedExecutionInstruction` executor boundary; seven former services and one former executor RPC retained deprecated for compatibility; Buf lint, breaking, and generation passed. |
+| V0.2 four-state implementation alignment | 2026-09-13 | Aligned the Implementation Plan with the approved replacement Dynamic Execution architecture and current implementation state; marked `CalculatePhaseTransition` complete; established `EvaluateDynamicExecution` as the next bounded implementation target; preserved unresolved state-action algorithms as explicit design gates; sequenced governed mock execution and complete E2E validation before stage-by-stage persistent analytical data work. No code, proto, generated artifacts, tests, scripts, or runtime behavior changed. |
+| V0.2 editorial consistency correction | 2026-09-13 | Corrected the Executive Summary to identify three implementation phases, corrected duplicate §6.3 numbering by renumbering "Phases Versus Runtime Objectives" to §6.4, and removed stale pre-approval wording from the authority hierarchy now that V0.2 is approved. No architecture, implementation status, mathematics, algorithms, contracts, code, tests, runtime behavior, or implementation sequence changed. |
+| V0.2 editorial phase-count correction | 2026-09-13 | Corrected the remaining stale reference in §6.4 from "two implementation phases" to "three implementation phases" so the section is consistent with the approved three-phase implementation structure. No architecture, implementation status, mathematics, algorithms, contracts, code, tests, runtime behavior, authorization, or implementation sequence changed. |
+| V0.2 Dynamic Execution implementation status alignment | 2026-09-13 | Updated the Implementation Plan to reflect the completed bounded `DynamicExecutionService.EvaluateDynamicExecution` implementation, deterministic ordered boundary-fact derivation, forward governed boundary-policy evaluation, reverse-crossing no-fire behavior, multiple-boundary directed encounter ordering, later-bar recross handling, and focused validation. Preserved unresolved state-action, execution, executor, E2E, persistence, P&L, and Alpaca gates. No code, proto, generated artifacts, tests, scripts, configuration, or runtime behavior changed in this documentation-only alignment. |
 
 ---
 
@@ -736,8 +773,8 @@ This Implementation Plan V0.2 is **APPROVED** as the current implementation-plan
 
 V0.1 remains preserved as historical documentation. The approved System Design now governs the four-state replacement. This plan does not resolve any mathematical, action-policy, contract, lifecycle, or execution detail explicitly retained as open.
 
-Approval of this document authorizes implementation planning to proceed through the dependency gates stated here; it does not by itself approve unresolved mathematics, live trading, production deployment, Alpaca Paper execution, or any broker credentials. Each blocked boundary and Runtime Objective 2 requires its stated review and authorization.
+Approval of this document authorizes implementation planning to proceed through the dependency gates stated here; it does not by itself approve unresolved mathematics, live trading, production deployment, Alpaca Paper execution, or any broker credentials. The four-state contract gate is complete; each remaining algorithmic/implementation boundary and Runtime Objective 2 requires its stated review and authorization.
 
-Implementation progress recorded here does not expand authorization. Current eligible `Bar[n]` ownership, bar 64 as the first possible four-state-engine entry, the `PhaseTransitionState` relation, exactly four states, history-free transitions, and the four fixed boundary-policy meanings are resolved. Circular direction/tie handling, deterministic boundary algorithms, state-action details, replacement proto/service contracts, executor/reconciliation behavior, and broker interaction remain subject to their stated approvals. No paper/live order submission, staging, commit, push, or deployment is approved by this replacement.
+Implementation progress recorded here does not expand authorization. Current eligible `Bar[n]` ownership, bar 64 as the first possible four-state-engine entry, the V1 `PhaseTransitionState` mathematics, deterministic ordered boundary facts, bounded `EvaluateDynamicExecution`, exactly four states, history-free transitions, the four fixed forward boundary-policy meanings, and the minimum service model are resolved and implemented for their bounded service slices. State-action algorithms, `GovernedExecutionInstruction` generation, runtime integration, executor/reconciliation behavior, persistence, P&L analysis, adaptive coefficients, and broker interaction remain subject to their stated approvals. No paper/live order submission, staging, commit, push, or deployment is approved by this replacement.
 
 Overall implementation verdict: **V0.2 PLAN REMAINS IN PROGRESS**.

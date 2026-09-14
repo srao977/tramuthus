@@ -689,7 +689,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
 // ProductionEligibilityService is the INTERNAL-ONLY controller between DEP-04
-// and DEP-05. Its typed outcome owns Rule #1 meaning, not raw expr output.
+// and Dynamic Execution. Its typed outcome owns Rule #1 meaning, not raw expr.
 type ProductionEligibilityServiceClient interface {
 	EvaluateProductionEligibility(ctx context.Context, in *EvaluateProductionEligibilityRequest, opts ...grpc.CallOption) (*EvaluateProductionEligibilityResponse, error)
 }
@@ -717,7 +717,7 @@ func (c *productionEligibilityServiceClient) EvaluateProductionEligibility(ctx c
 // for forward compatibility.
 //
 // ProductionEligibilityService is the INTERNAL-ONLY controller between DEP-04
-// and DEP-05. Its typed outcome owns Rule #1 meaning, not raw expr output.
+// and Dynamic Execution. Its typed outcome owns Rule #1 meaning, not raw expr.
 type ProductionEligibilityServiceServer interface {
 	EvaluateProductionEligibility(context.Context, *EvaluateProductionEligibilityRequest) (*EvaluateProductionEligibilityResponse, error)
 	mustEmbedUnimplementedProductionEligibilityServiceServer()
@@ -790,6 +790,157 @@ var ProductionEligibilityService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
+	DynamicExecutionService_CalculatePhaseTransition_FullMethodName = "/dsejeh.v1.DynamicExecutionService/CalculatePhaseTransition"
+	DynamicExecutionService_EvaluateDynamicExecution_FullMethodName = "/dsejeh.v1.DynamicExecutionService/EvaluateDynamicExecution"
+)
+
+// DynamicExecutionServiceClient is the client API for DynamicExecutionService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// DynamicExecutionService is the cohesive INTERNAL-ONLY contract after
+// Production Eligibility. The first RPC owns deterministic transition facts;
+// the second owns governed boundary policy, four-state membership, and the
+// associated action/result boundary. Service topology does not imply RPC hops.
+type DynamicExecutionServiceClient interface {
+	CalculatePhaseTransition(ctx context.Context, in *CalculatePhaseTransitionRequest, opts ...grpc.CallOption) (*CalculatePhaseTransitionResponse, error)
+	EvaluateDynamicExecution(ctx context.Context, in *EvaluateDynamicExecutionRequest, opts ...grpc.CallOption) (*EvaluateDynamicExecutionResponse, error)
+}
+
+type dynamicExecutionServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewDynamicExecutionServiceClient(cc grpc.ClientConnInterface) DynamicExecutionServiceClient {
+	return &dynamicExecutionServiceClient{cc}
+}
+
+func (c *dynamicExecutionServiceClient) CalculatePhaseTransition(ctx context.Context, in *CalculatePhaseTransitionRequest, opts ...grpc.CallOption) (*CalculatePhaseTransitionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CalculatePhaseTransitionResponse)
+	err := c.cc.Invoke(ctx, DynamicExecutionService_CalculatePhaseTransition_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dynamicExecutionServiceClient) EvaluateDynamicExecution(ctx context.Context, in *EvaluateDynamicExecutionRequest, opts ...grpc.CallOption) (*EvaluateDynamicExecutionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EvaluateDynamicExecutionResponse)
+	err := c.cc.Invoke(ctx, DynamicExecutionService_EvaluateDynamicExecution_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// DynamicExecutionServiceServer is the server API for DynamicExecutionService service.
+// All implementations must embed UnimplementedDynamicExecutionServiceServer
+// for forward compatibility.
+//
+// DynamicExecutionService is the cohesive INTERNAL-ONLY contract after
+// Production Eligibility. The first RPC owns deterministic transition facts;
+// the second owns governed boundary policy, four-state membership, and the
+// associated action/result boundary. Service topology does not imply RPC hops.
+type DynamicExecutionServiceServer interface {
+	CalculatePhaseTransition(context.Context, *CalculatePhaseTransitionRequest) (*CalculatePhaseTransitionResponse, error)
+	EvaluateDynamicExecution(context.Context, *EvaluateDynamicExecutionRequest) (*EvaluateDynamicExecutionResponse, error)
+	mustEmbedUnimplementedDynamicExecutionServiceServer()
+}
+
+// UnimplementedDynamicExecutionServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedDynamicExecutionServiceServer struct{}
+
+func (UnimplementedDynamicExecutionServiceServer) CalculatePhaseTransition(context.Context, *CalculatePhaseTransitionRequest) (*CalculatePhaseTransitionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CalculatePhaseTransition not implemented")
+}
+func (UnimplementedDynamicExecutionServiceServer) EvaluateDynamicExecution(context.Context, *EvaluateDynamicExecutionRequest) (*EvaluateDynamicExecutionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method EvaluateDynamicExecution not implemented")
+}
+func (UnimplementedDynamicExecutionServiceServer) mustEmbedUnimplementedDynamicExecutionServiceServer() {
+}
+func (UnimplementedDynamicExecutionServiceServer) testEmbeddedByValue() {}
+
+// UnsafeDynamicExecutionServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DynamicExecutionServiceServer will
+// result in compilation errors.
+type UnsafeDynamicExecutionServiceServer interface {
+	mustEmbedUnimplementedDynamicExecutionServiceServer()
+}
+
+func RegisterDynamicExecutionServiceServer(s grpc.ServiceRegistrar, srv DynamicExecutionServiceServer) {
+	// If the following call panics, it indicates UnimplementedDynamicExecutionServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&DynamicExecutionService_ServiceDesc, srv)
+}
+
+func _DynamicExecutionService_CalculatePhaseTransition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CalculatePhaseTransitionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DynamicExecutionServiceServer).CalculatePhaseTransition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DynamicExecutionService_CalculatePhaseTransition_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DynamicExecutionServiceServer).CalculatePhaseTransition(ctx, req.(*CalculatePhaseTransitionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DynamicExecutionService_EvaluateDynamicExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EvaluateDynamicExecutionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DynamicExecutionServiceServer).EvaluateDynamicExecution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DynamicExecutionService_EvaluateDynamicExecution_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DynamicExecutionServiceServer).EvaluateDynamicExecution(ctx, req.(*EvaluateDynamicExecutionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// DynamicExecutionService_ServiceDesc is the grpc.ServiceDesc for DynamicExecutionService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var DynamicExecutionService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "dsejeh.v1.DynamicExecutionService",
+	HandlerType: (*DynamicExecutionServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CalculatePhaseTransition",
+			Handler:    _DynamicExecutionService_CalculatePhaseTransition_Handler,
+		},
+		{
+			MethodName: "EvaluateDynamicExecution",
+			Handler:    _DynamicExecutionService_EvaluateDynamicExecution_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "dse_jeh/v1/DSE_JEH_TransSat_1.proto",
+}
+
+const (
 	PhaseMotionService_EvaluatePhaseMotion_FullMethodName = "/dsejeh.v1.PhaseMotionService/EvaluatePhaseMotion"
 )
 
@@ -797,8 +948,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// PhaseMotionService is the INTERNAL-ONLY DEP-05 contract. Deterministic motion
-// mathematics remain in Go/domain code; expr may only gate or map typed outcomes.
+// Superseded compatibility contract from the historical DEP-05 architecture.
+//
+// Deprecated: Do not use.
 type PhaseMotionServiceClient interface {
 	EvaluatePhaseMotion(ctx context.Context, in *EvaluatePhaseMotionRequest, opts ...grpc.CallOption) (*EvaluatePhaseMotionResponse, error)
 }
@@ -807,6 +959,7 @@ type phaseMotionServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
+// Deprecated: Do not use.
 func NewPhaseMotionServiceClient(cc grpc.ClientConnInterface) PhaseMotionServiceClient {
 	return &phaseMotionServiceClient{cc}
 }
@@ -825,8 +978,9 @@ func (c *phaseMotionServiceClient) EvaluatePhaseMotion(ctx context.Context, in *
 // All implementations must embed UnimplementedPhaseMotionServiceServer
 // for forward compatibility.
 //
-// PhaseMotionService is the INTERNAL-ONLY DEP-05 contract. Deterministic motion
-// mathematics remain in Go/domain code; expr may only gate or map typed outcomes.
+// Superseded compatibility contract from the historical DEP-05 architecture.
+//
+// Deprecated: Do not use.
 type PhaseMotionServiceServer interface {
 	EvaluatePhaseMotion(context.Context, *EvaluatePhaseMotionRequest) (*EvaluatePhaseMotionResponse, error)
 	mustEmbedUnimplementedPhaseMotionServiceServer()
@@ -852,6 +1006,7 @@ type UnsafePhaseMotionServiceServer interface {
 	mustEmbedUnimplementedPhaseMotionServiceServer()
 }
 
+// Deprecated: Do not use.
 func RegisterPhaseMotionServiceServer(s grpc.ServiceRegistrar, srv PhaseMotionServiceServer) {
 	// If the following call panics, it indicates UnimplementedPhaseMotionServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
@@ -905,7 +1060,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// BoundaryCrossoverService is the INTERNAL-ONLY DEP-06 contract.
+// Superseded compatibility contract from the historical DEP-06 architecture.
+//
+// Deprecated: Do not use.
 type BoundaryCrossoverServiceClient interface {
 	DetectBoundaryCrossover(ctx context.Context, in *DetectBoundaryCrossoverRequest, opts ...grpc.CallOption) (*DetectBoundaryCrossoverResponse, error)
 }
@@ -914,6 +1071,7 @@ type boundaryCrossoverServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
+// Deprecated: Do not use.
 func NewBoundaryCrossoverServiceClient(cc grpc.ClientConnInterface) BoundaryCrossoverServiceClient {
 	return &boundaryCrossoverServiceClient{cc}
 }
@@ -932,7 +1090,9 @@ func (c *boundaryCrossoverServiceClient) DetectBoundaryCrossover(ctx context.Con
 // All implementations must embed UnimplementedBoundaryCrossoverServiceServer
 // for forward compatibility.
 //
-// BoundaryCrossoverService is the INTERNAL-ONLY DEP-06 contract.
+// Superseded compatibility contract from the historical DEP-06 architecture.
+//
+// Deprecated: Do not use.
 type BoundaryCrossoverServiceServer interface {
 	DetectBoundaryCrossover(context.Context, *DetectBoundaryCrossoverRequest) (*DetectBoundaryCrossoverResponse, error)
 	mustEmbedUnimplementedBoundaryCrossoverServiceServer()
@@ -959,6 +1119,7 @@ type UnsafeBoundaryCrossoverServiceServer interface {
 	mustEmbedUnimplementedBoundaryCrossoverServiceServer()
 }
 
+// Deprecated: Do not use.
 func RegisterBoundaryCrossoverServiceServer(s grpc.ServiceRegistrar, srv BoundaryCrossoverServiceServer) {
 	// If the following call panics, it indicates UnimplementedBoundaryCrossoverServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
@@ -1012,8 +1173,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// StrategyRegionService is the INTERNAL-ONLY DEP-07 contract. HOP_ON/HOP_OFF
-// remain crossover events and region outcomes never assert order submission.
+// Superseded compatibility contract from the historical DEP-07 architecture.
+//
+// Deprecated: Do not use.
 type StrategyRegionServiceClient interface {
 	EvaluateStrategyRegion(ctx context.Context, in *EvaluateStrategyRegionRequest, opts ...grpc.CallOption) (*EvaluateStrategyRegionResponse, error)
 }
@@ -1022,6 +1184,7 @@ type strategyRegionServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
+// Deprecated: Do not use.
 func NewStrategyRegionServiceClient(cc grpc.ClientConnInterface) StrategyRegionServiceClient {
 	return &strategyRegionServiceClient{cc}
 }
@@ -1040,8 +1203,9 @@ func (c *strategyRegionServiceClient) EvaluateStrategyRegion(ctx context.Context
 // All implementations must embed UnimplementedStrategyRegionServiceServer
 // for forward compatibility.
 //
-// StrategyRegionService is the INTERNAL-ONLY DEP-07 contract. HOP_ON/HOP_OFF
-// remain crossover events and region outcomes never assert order submission.
+// Superseded compatibility contract from the historical DEP-07 architecture.
+//
+// Deprecated: Do not use.
 type StrategyRegionServiceServer interface {
 	EvaluateStrategyRegion(context.Context, *EvaluateStrategyRegionRequest) (*EvaluateStrategyRegionResponse, error)
 	mustEmbedUnimplementedStrategyRegionServiceServer()
@@ -1067,6 +1231,7 @@ type UnsafeStrategyRegionServiceServer interface {
 	mustEmbedUnimplementedStrategyRegionServiceServer()
 }
 
+// Deprecated: Do not use.
 func RegisterStrategyRegionServiceServer(s grpc.ServiceRegistrar, srv StrategyRegionServiceServer) {
 	// If the following call panics, it indicates UnimplementedStrategyRegionServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
@@ -1120,7 +1285,10 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// UniverseStateService is the INTERNAL-ONLY DEP-08 serialized state contract.
+// Superseded compatibility contract. Universe/action inputs now enter the
+// cohesive DynamicExecutionService through DynamicExecutionContext.
+//
+// Deprecated: Do not use.
 type UniverseStateServiceClient interface {
 	UpdateUniverseState(ctx context.Context, in *UpdateUniverseStateRequest, opts ...grpc.CallOption) (*UpdateUniverseStateResponse, error)
 }
@@ -1129,6 +1297,7 @@ type universeStateServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
+// Deprecated: Do not use.
 func NewUniverseStateServiceClient(cc grpc.ClientConnInterface) UniverseStateServiceClient {
 	return &universeStateServiceClient{cc}
 }
@@ -1147,7 +1316,10 @@ func (c *universeStateServiceClient) UpdateUniverseState(ctx context.Context, in
 // All implementations must embed UnimplementedUniverseStateServiceServer
 // for forward compatibility.
 //
-// UniverseStateService is the INTERNAL-ONLY DEP-08 serialized state contract.
+// Superseded compatibility contract. Universe/action inputs now enter the
+// cohesive DynamicExecutionService through DynamicExecutionContext.
+//
+// Deprecated: Do not use.
 type UniverseStateServiceServer interface {
 	UpdateUniverseState(context.Context, *UpdateUniverseStateRequest) (*UpdateUniverseStateResponse, error)
 	mustEmbedUnimplementedUniverseStateServiceServer()
@@ -1173,6 +1345,7 @@ type UnsafeUniverseStateServiceServer interface {
 	mustEmbedUnimplementedUniverseStateServiceServer()
 }
 
+// Deprecated: Do not use.
 func RegisterUniverseStateServiceServer(s grpc.ServiceRegistrar, srv UniverseStateServiceServer) {
 	// If the following call panics, it indicates UnimplementedUniverseStateServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
@@ -1226,8 +1399,10 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// CandidateRankingService is the INTERNAL-ONLY DEP-09 contract, separate from
-// universe ownership. Ranking mathematics remain deterministic domain logic.
+// Superseded compatibility contract. Phase Velocity ranking is represented as
+// the ALLOCATE state action and does not form a separate active stage.
+//
+// Deprecated: Do not use.
 type CandidateRankingServiceClient interface {
 	RankCandidates(ctx context.Context, in *RankCandidatesRequest, opts ...grpc.CallOption) (*RankCandidatesResponse, error)
 }
@@ -1236,6 +1411,7 @@ type candidateRankingServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
+// Deprecated: Do not use.
 func NewCandidateRankingServiceClient(cc grpc.ClientConnInterface) CandidateRankingServiceClient {
 	return &candidateRankingServiceClient{cc}
 }
@@ -1254,8 +1430,10 @@ func (c *candidateRankingServiceClient) RankCandidates(ctx context.Context, in *
 // All implementations must embed UnimplementedCandidateRankingServiceServer
 // for forward compatibility.
 //
-// CandidateRankingService is the INTERNAL-ONLY DEP-09 contract, separate from
-// universe ownership. Ranking mathematics remain deterministic domain logic.
+// Superseded compatibility contract. Phase Velocity ranking is represented as
+// the ALLOCATE state action and does not form a separate active stage.
+//
+// Deprecated: Do not use.
 type CandidateRankingServiceServer interface {
 	RankCandidates(context.Context, *RankCandidatesRequest) (*RankCandidatesResponse, error)
 	mustEmbedUnimplementedCandidateRankingServiceServer()
@@ -1282,6 +1460,7 @@ type UnsafeCandidateRankingServiceServer interface {
 	mustEmbedUnimplementedCandidateRankingServiceServer()
 }
 
+// Deprecated: Do not use.
 func RegisterCandidateRankingServiceServer(s grpc.ServiceRegistrar, srv CandidateRankingServiceServer) {
 	// If the following call panics, it indicates UnimplementedCandidateRankingServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
@@ -1335,8 +1514,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// StrategyDecisionService is the INTERNAL-ONLY DEP-10 contract. A decision is
-// not an ExecutionIntent and cannot report an ExecutionEvent.
+// Superseded compatibility contract from the historical DEP-10 architecture.
+//
+// Deprecated: Do not use.
 type StrategyDecisionServiceClient interface {
 	GenerateStrategyDecision(ctx context.Context, in *GenerateStrategyDecisionRequest, opts ...grpc.CallOption) (*GenerateStrategyDecisionResponse, error)
 }
@@ -1345,6 +1525,7 @@ type strategyDecisionServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
+// Deprecated: Do not use.
 func NewStrategyDecisionServiceClient(cc grpc.ClientConnInterface) StrategyDecisionServiceClient {
 	return &strategyDecisionServiceClient{cc}
 }
@@ -1363,8 +1544,9 @@ func (c *strategyDecisionServiceClient) GenerateStrategyDecision(ctx context.Con
 // All implementations must embed UnimplementedStrategyDecisionServiceServer
 // for forward compatibility.
 //
-// StrategyDecisionService is the INTERNAL-ONLY DEP-10 contract. A decision is
-// not an ExecutionIntent and cannot report an ExecutionEvent.
+// Superseded compatibility contract from the historical DEP-10 architecture.
+//
+// Deprecated: Do not use.
 type StrategyDecisionServiceServer interface {
 	GenerateStrategyDecision(context.Context, *GenerateStrategyDecisionRequest) (*GenerateStrategyDecisionResponse, error)
 	mustEmbedUnimplementedStrategyDecisionServiceServer()
@@ -1391,6 +1573,7 @@ type UnsafeStrategyDecisionServiceServer interface {
 	mustEmbedUnimplementedStrategyDecisionServiceServer()
 }
 
+// Deprecated: Do not use.
 func RegisterStrategyDecisionServiceServer(s grpc.ServiceRegistrar, srv StrategyDecisionServiceServer) {
 	// If the following call panics, it indicates UnimplementedStrategyDecisionServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
@@ -1444,8 +1627,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// ExecutionIntentService is the INTERNAL-ONLY DEP-11 contract. It converts an
-// approved typed decision into an intent when governed rules permit it.
+// Superseded compatibility contract from the historical DEP-11 architecture.
+//
+// Deprecated: Do not use.
 type ExecutionIntentServiceClient interface {
 	GenerateExecutionIntent(ctx context.Context, in *GenerateExecutionIntentRequest, opts ...grpc.CallOption) (*GenerateExecutionIntentResponse, error)
 }
@@ -1454,6 +1638,7 @@ type executionIntentServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
+// Deprecated: Do not use.
 func NewExecutionIntentServiceClient(cc grpc.ClientConnInterface) ExecutionIntentServiceClient {
 	return &executionIntentServiceClient{cc}
 }
@@ -1472,8 +1657,9 @@ func (c *executionIntentServiceClient) GenerateExecutionIntent(ctx context.Conte
 // All implementations must embed UnimplementedExecutionIntentServiceServer
 // for forward compatibility.
 //
-// ExecutionIntentService is the INTERNAL-ONLY DEP-11 contract. It converts an
-// approved typed decision into an intent when governed rules permit it.
+// Superseded compatibility contract from the historical DEP-11 architecture.
+//
+// Deprecated: Do not use.
 type ExecutionIntentServiceServer interface {
 	GenerateExecutionIntent(context.Context, *GenerateExecutionIntentRequest) (*GenerateExecutionIntentResponse, error)
 	mustEmbedUnimplementedExecutionIntentServiceServer()
@@ -1500,6 +1686,7 @@ type UnsafeExecutionIntentServiceServer interface {
 	mustEmbedUnimplementedExecutionIntentServiceServer()
 }
 
+// Deprecated: Do not use.
 func RegisterExecutionIntentServiceServer(s grpc.ServiceRegistrar, srv ExecutionIntentServiceServer) {
 	// If the following call panics, it indicates UnimplementedExecutionIntentServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
@@ -1694,8 +1881,9 @@ var RuleRegistryService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	ExecutorService_SubmitExecutionIntent_FullMethodName = "/dsejeh.v1.ExecutorService/SubmitExecutionIntent"
-	ExecutorService_StreamExecutionEvents_FullMethodName = "/dsejeh.v1.ExecutorService/StreamExecutionEvents"
+	ExecutorService_SubmitExecutionIntent_FullMethodName              = "/dsejeh.v1.ExecutorService/SubmitExecutionIntent"
+	ExecutorService_SubmitGovernedExecutionInstruction_FullMethodName = "/dsejeh.v1.ExecutorService/SubmitGovernedExecutionInstruction"
+	ExecutorService_StreamExecutionEvents_FullMethodName              = "/dsejeh.v1.ExecutorService/StreamExecutionEvents"
 )
 
 // ExecutorServiceClient is the client API for ExecutorService service.
@@ -1706,8 +1894,11 @@ const (
 // future separately approved Alpaca Paper. It is APPROVED INTERNAL gRPC when
 // registered, but may remain unregistered and in-process. No live mode exists.
 type ExecutorServiceClient interface {
-	// SubmitExecutionIntent acknowledges receipt only; outcomes arrive separately.
+	// Deprecated: Do not use.
+	// Historical compatibility RPC. New implementations consume the governed
+	// execution instruction without a StrategyDecision -> ExecutionIntent chain.
 	SubmitExecutionIntent(ctx context.Context, in *SubmitExecutionIntentRequest, opts ...grpc.CallOption) (*SubmitExecutionIntentResponse, error)
+	SubmitGovernedExecutionInstruction(ctx context.Context, in *SubmitGovernedExecutionInstructionRequest, opts ...grpc.CallOption) (*SubmitGovernedExecutionInstructionResponse, error)
 	// StreamExecutionEvents reports actual paper-executor outcomes and never
 	// changes the upstream StrategyDecision or ExecutionIntent meaning.
 	StreamExecutionEvents(ctx context.Context, in *StreamExecutionEventsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamExecutionEventsResponse], error)
@@ -1721,10 +1912,21 @@ func NewExecutorServiceClient(cc grpc.ClientConnInterface) ExecutorServiceClient
 	return &executorServiceClient{cc}
 }
 
+// Deprecated: Do not use.
 func (c *executorServiceClient) SubmitExecutionIntent(ctx context.Context, in *SubmitExecutionIntentRequest, opts ...grpc.CallOption) (*SubmitExecutionIntentResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SubmitExecutionIntentResponse)
 	err := c.cc.Invoke(ctx, ExecutorService_SubmitExecutionIntent_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *executorServiceClient) SubmitGovernedExecutionInstruction(ctx context.Context, in *SubmitGovernedExecutionInstructionRequest, opts ...grpc.CallOption) (*SubmitGovernedExecutionInstructionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SubmitGovernedExecutionInstructionResponse)
+	err := c.cc.Invoke(ctx, ExecutorService_SubmitGovernedExecutionInstruction_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1758,8 +1960,11 @@ type ExecutorService_StreamExecutionEventsClient = grpc.ServerStreamingClient[St
 // future separately approved Alpaca Paper. It is APPROVED INTERNAL gRPC when
 // registered, but may remain unregistered and in-process. No live mode exists.
 type ExecutorServiceServer interface {
-	// SubmitExecutionIntent acknowledges receipt only; outcomes arrive separately.
+	// Deprecated: Do not use.
+	// Historical compatibility RPC. New implementations consume the governed
+	// execution instruction without a StrategyDecision -> ExecutionIntent chain.
 	SubmitExecutionIntent(context.Context, *SubmitExecutionIntentRequest) (*SubmitExecutionIntentResponse, error)
+	SubmitGovernedExecutionInstruction(context.Context, *SubmitGovernedExecutionInstructionRequest) (*SubmitGovernedExecutionInstructionResponse, error)
 	// StreamExecutionEvents reports actual paper-executor outcomes and never
 	// changes the upstream StrategyDecision or ExecutionIntent meaning.
 	StreamExecutionEvents(*StreamExecutionEventsRequest, grpc.ServerStreamingServer[StreamExecutionEventsResponse]) error
@@ -1775,6 +1980,9 @@ type UnimplementedExecutorServiceServer struct{}
 
 func (UnimplementedExecutorServiceServer) SubmitExecutionIntent(context.Context, *SubmitExecutionIntentRequest) (*SubmitExecutionIntentResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SubmitExecutionIntent not implemented")
+}
+func (UnimplementedExecutorServiceServer) SubmitGovernedExecutionInstruction(context.Context, *SubmitGovernedExecutionInstructionRequest) (*SubmitGovernedExecutionInstructionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SubmitGovernedExecutionInstruction not implemented")
 }
 func (UnimplementedExecutorServiceServer) StreamExecutionEvents(*StreamExecutionEventsRequest, grpc.ServerStreamingServer[StreamExecutionEventsResponse]) error {
 	return status.Error(codes.Unimplemented, "method StreamExecutionEvents not implemented")
@@ -1818,6 +2026,24 @@ func _ExecutorService_SubmitExecutionIntent_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ExecutorService_SubmitGovernedExecutionInstruction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubmitGovernedExecutionInstructionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExecutorServiceServer).SubmitGovernedExecutionInstruction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ExecutorService_SubmitGovernedExecutionInstruction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExecutorServiceServer).SubmitGovernedExecutionInstruction(ctx, req.(*SubmitGovernedExecutionInstructionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ExecutorService_StreamExecutionEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(StreamExecutionEventsRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -1839,6 +2065,10 @@ var ExecutorService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SubmitExecutionIntent",
 			Handler:    _ExecutorService_SubmitExecutionIntent_Handler,
+		},
+		{
+			MethodName: "SubmitGovernedExecutionInstruction",
+			Handler:    _ExecutorService_SubmitGovernedExecutionInstruction_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

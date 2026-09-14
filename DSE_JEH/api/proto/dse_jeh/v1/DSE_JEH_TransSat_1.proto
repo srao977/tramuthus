@@ -101,8 +101,9 @@ enum SequenceIntegrityStatus {
 }
 
 // ProductionEligibilityOutcome is the typed result of the unnumbered
-// Production Eligibility Controller between DEP-04 and DEP-05. It does not
-// decide whether bar 64 or bar 65 can first produce valid motion/crossover.
+// Production Eligibility Controller between DEP-04 and Dynamic Execution.
+// Current eligible Bar[n] owns downstream processing and may use retained
+// phi[n-1] as analytical context; bar 64 is the first possible engine entry.
 enum ProductionEligibilityOutcome {
   PRODUCTION_ELIGIBILITY_OUTCOME_UNSPECIFIED = 0;
   PRODUCTION_ELIGIBILITY_OUTCOME_INITIALIZING = 1;
@@ -124,6 +125,10 @@ enum RuleOwningComponent {
   RULE_OWNING_COMPONENT_CANDIDATE_RANKING = 6;
   RULE_OWNING_COMPONENT_STRATEGY_DECISION = 7;
   RULE_OWNING_COMPONENT_EXECUTION_INTENT = 8;
+  RULE_OWNING_COMPONENT_BOUNDARY_POLICY = 9;
+  RULE_OWNING_COMPONENT_DYNAMIC_EXECUTION = 10;
+  RULE_OWNING_COMPONENT_STATE_ACTION = 11;
+  RULE_OWNING_COMPONENT_EXECUTION_INSTRUCTION = 12;
 }
 
 // RuleEvaluationStatus describes evaluation completion, not a financial action.
@@ -165,6 +170,98 @@ enum PhaseMotionDirection {
   PHASE_MOTION_DIRECTION_REVERSE = 2;
   PHASE_MOTION_DIRECTION_STATIONARY = 3;
   PHASE_MOTION_DIRECTION_INDETERMINATE = 4;
+}
+
+// PhaseTransitionStatus describes the operational current-transition value.
+// It does not imply that a boundary policy fired or that strategy state changed.
+enum PhaseTransitionStatus {
+  PHASE_TRANSITION_STATUS_UNSPECIFIED = 0;
+  PHASE_TRANSITION_STATUS_VALID = 1;
+  PHASE_TRANSITION_STATUS_INVALID = 2;
+  PHASE_TRANSITION_STATUS_ERROR = 3;
+}
+
+// PhaseTransitionDirection is the signed direction of the current transition.
+// INDETERMINATE preserves unresolved cases such as an exact 180-degree tie.
+enum PhaseTransitionDirection {
+  PHASE_TRANSITION_DIRECTION_UNSPECIFIED = 0;
+  PHASE_TRANSITION_DIRECTION_FORWARD = 1;
+  PHASE_TRANSITION_DIRECTION_REVERSE = 2;
+  PHASE_TRANSITION_DIRECTION_STATIONARY = 3;
+  PHASE_TRANSITION_DIRECTION_INDETERMINATE = 4;
+}
+
+// DynamicExecutionState contains exactly four persistent strategy states.
+// UNSPECIFIED is protobuf absence safety and is not a fifth persistent state.
+enum DynamicExecutionState {
+  DYNAMIC_EXECUTION_STATE_UNSPECIFIED = 0;
+  DYNAMIC_EXECUTION_STATE_DISREGARD = 1;
+  DYNAMIC_EXECUTION_STATE_ALLOCATE = 2;
+  DYNAMIC_EXECUTION_STATE_HOLD_AND_TRAIL = 3;
+  DYNAMIC_EXECUTION_STATE_LIQUIDATE = 4;
+}
+
+// BoundaryPolicyOutcome is the typed result of governed boundary policy.
+// HOP_ON and HOP_OFF are firing outcomes, never persistent states.
+enum BoundaryPolicyOutcome {
+  BOUNDARY_POLICY_OUTCOME_UNSPECIFIED = 0;
+  BOUNDARY_POLICY_OUTCOME_NO_TRANSITION = 1;
+  BOUNDARY_POLICY_OUTCOME_HOP_ON_ALLOCATE = 2;
+  BOUNDARY_POLICY_OUTCOME_ENTER_HOLD_AND_TRAIL = 3;
+  BOUNDARY_POLICY_OUTCOME_HOP_OFF_LIQUIDATE = 4;
+  BOUNDARY_POLICY_OUTCOME_ENTER_DISREGARD = 5;
+  BOUNDARY_POLICY_OUTCOME_INVALID = 6;
+  BOUNDARY_POLICY_OUTCOME_ERROR = 7;
+}
+
+// DynamicExecutionStateStatus distinguishes initial classification, persistence,
+// transition, and failure without creating another strategy state.
+enum DynamicExecutionStateStatus {
+  DYNAMIC_EXECUTION_STATE_STATUS_UNSPECIFIED = 0;
+  DYNAMIC_EXECUTION_STATE_STATUS_INITIALIZED = 1;
+  DYNAMIC_EXECUTION_STATE_STATUS_PERSISTED = 2;
+  DYNAMIC_EXECUTION_STATE_STATUS_TRANSITIONED = 3;
+  DYNAMIC_EXECUTION_STATE_STATUS_INVALID = 4;
+  DYNAMIC_EXECUTION_STATE_STATUS_ERROR = 5;
+}
+
+// StateActionType names only the four approved state-associated actions. It
+// does not define unresolved ranking, trailing, sizing, or capital mathematics.
+enum StateActionType {
+  STATE_ACTION_TYPE_UNSPECIFIED = 0;
+  STATE_ACTION_TYPE_NO_ALLOCATION_ACTION = 1;
+  STATE_ACTION_TYPE_RANK_BY_PHASE_VELOCITY = 2;
+  STATE_ACTION_TYPE_TRAIL_STOPS_DYNAMICALLY = 3;
+  STATE_ACTION_TYPE_REALLOCATE_FREED_CAPITAL = 4;
+}
+
+enum StateActionStatus {
+  STATE_ACTION_STATUS_UNSPECIFIED = 0;
+  STATE_ACTION_STATUS_NO_ACTION = 1;
+  STATE_ACTION_STATUS_SELECTED = 2;
+  STATE_ACTION_STATUS_BLOCKED = 3;
+  STATE_ACTION_STATUS_ERROR = 4;
+}
+
+// GovernedExecutionAction is an external request meaning, not an execution
+// result. Exact sizing and adapter mapping remain separately governed.
+enum GovernedExecutionAction {
+  GOVERNED_EXECUTION_ACTION_UNSPECIFIED = 0;
+  GOVERNED_EXECUTION_ACTION_ALLOCATE = 1;
+  GOVERNED_EXECUTION_ACTION_UPDATE_TRAILING_STOP = 2;
+  GOVERNED_EXECUTION_ACTION_LIQUIDATE = 3;
+  GOVERNED_EXECUTION_ACTION_CANCEL = 4;
+}
+
+enum GovernedExecutionInstructionStatus {
+  GOVERNED_EXECUTION_INSTRUCTION_STATUS_UNSPECIFIED = 0;
+  GOVERNED_EXECUTION_INSTRUCTION_STATUS_CREATED = 1;
+  GOVERNED_EXECUTION_INSTRUCTION_STATUS_ELIGIBLE = 2;
+  GOVERNED_EXECUTION_INSTRUCTION_STATUS_BLOCKED = 3;
+  GOVERNED_EXECUTION_INSTRUCTION_STATUS_SENT = 4;
+  GOVERNED_EXECUTION_INSTRUCTION_STATUS_EXPIRED = 5;
+  GOVERNED_EXECUTION_INSTRUCTION_STATUS_CANCELED = 6;
+  GOVERNED_EXECUTION_INSTRUCTION_STATUS_ERROR = 7;
 }
 
 // BoundaryCrossoverStatus separates detection validity from the crossover type.
@@ -345,14 +442,18 @@ enum BarProcessingOutcomeType {
   BAR_PROCESSING_OUTCOME_TYPE_ADMISSION_REJECTED = 1;
   BAR_PROCESSING_OUTCOME_TYPE_INITIALIZING = 2;
   BAR_PROCESSING_OUTCOME_TYPE_PRODUCTION_ELIGIBILITY_BLOCKED = 3;
-  BAR_PROCESSING_OUTCOME_TYPE_PHASE_MOTION_UNAVAILABLE = 4;
-  BAR_PROCESSING_OUTCOME_TYPE_NO_CROSSOVER = 5;
-  BAR_PROCESSING_OUTCOME_TYPE_SAME_REGION_PERSISTENCE = 6;
+  BAR_PROCESSING_OUTCOME_TYPE_PHASE_MOTION_UNAVAILABLE = 4 [deprecated = true];
+  BAR_PROCESSING_OUTCOME_TYPE_NO_CROSSOVER = 5 [deprecated = true];
+  BAR_PROCESSING_OUTCOME_TYPE_SAME_REGION_PERSISTENCE = 6 [deprecated = true];
   BAR_PROCESSING_OUTCOME_TYPE_NO_ACTION = 7;
-  BAR_PROCESSING_OUTCOME_TYPE_STRATEGY_DECISION = 8;
-  BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_INTENT = 9;
+  BAR_PROCESSING_OUTCOME_TYPE_STRATEGY_DECISION = 8 [deprecated = true];
+  BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_INTENT = 9 [deprecated = true];
   BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_EVENT = 10;
   BAR_PROCESSING_OUTCOME_TYPE_PROCESSING_ERROR = 11;
+  BAR_PROCESSING_OUTCOME_TYPE_PHASE_TRANSITION_INVALID = 12;
+  BAR_PROCESSING_OUTCOME_TYPE_FOUR_STATE_RESULT = 13;
+  BAR_PROCESSING_OUTCOME_TYPE_STATE_ACTION_OUTCOME = 14;
+  BAR_PROCESSING_OUTCOME_TYPE_GOVERNED_EXECUTION_INSTRUCTION = 15;
 }
 
 // DiagnosticSeverity classifies governed diagnostics independently of logs.
@@ -654,6 +755,15 @@ message ExecutionIntentRuleOutcome {
   ExecutionIntentStatus status = 1;
 }
 
+// BoundaryPolicyRuleOutcome maps governed expr policy to one fixed boundary
+// meaning and resulting four-state membership. Detection facts are computed
+// before rule evaluation by deterministic domain mathematics.
+message BoundaryPolicyRuleOutcome {
+  BoundaryPolicyOutcome outcome = 1;
+  DynamicExecutionState resulting_state = 2;
+  PhaseTransitionState transition_input = 3;
+}
+
 // RuleOutcomeMapping declares how one expected raw evaluator result maps to one
 // type-safe outcome. Routing and mutation descriptions are governance metadata;
 // they cannot add meanings absent from the selected typed outcome.
@@ -673,7 +783,8 @@ message RuleOutcomeMapping {
     UniverseEligibilityRuleOutcome universe_eligibility_outcome = 10;
     CandidateRankingRuleOutcome candidate_ranking_outcome = 11;
     StrategyDecisionRuleOutcome strategy_decision_outcome = 12;
-    ExecutionIntentRuleOutcome execution_intent_outcome = 13;
+    ExecutionIntentRuleOutcome execution_intent_outcome = 13 [deprecated = true];
+    BoundaryPolicyRuleOutcome boundary_policy_outcome = 17;
   }
   string routing_behavior = 14;
   string permitted_state_mutation = 15;
@@ -723,7 +834,8 @@ message RuleEvaluationEvidence {
     UniverseEligibilityRuleOutcome universe_eligibility_outcome = 16;
     CandidateRankingRuleOutcome candidate_ranking_outcome = 17;
     StrategyDecisionRuleOutcome strategy_decision_outcome = 18;
-    ExecutionIntentRuleOutcome execution_intent_outcome = 19;
+    ExecutionIntentRuleOutcome execution_intent_outcome = 19 [deprecated = true];
+    BoundaryPolicyRuleOutcome boundary_policy_outcome = 22;
   }
   string reason = 20;
   int64 produced_unix_ms = 21;
@@ -742,6 +854,8 @@ message AlgorithmIdentity {
 // motion is unavailable/invalid. Degrees-per-bar is the intended velocity unit;
 // the exact delta, window, smoothing, and acceleration policy remains open.
 message PhaseMotionEvidence {
+  option deprecated = true;
+
   string evidence_id = 1;
   string runtime_id = 2;
   string entity_id = 3;
@@ -762,9 +876,128 @@ message PhaseMotionEvidence {
   string prior_production_eligibility_evidence_id = 16;
 }
 
+// PhaseTransitionState is the operational value for the transition caused by
+// current production-eligible Bar[n], from retained phi[n-1] to current phi[n].
+// It is history-free and contains deterministic facts only; expr does not
+// calculate these values. Delta and velocity are degrees and degrees per bar.
+message PhaseTransitionState {
+  string transition_state_id = 1;
+  string runtime_id = 2;
+  string entity_id = 3;
+  uint64 entity_sequence = 4;
+  string prior_phase_evidence_id = 5;
+  string current_phase_evidence_id = 6;
+  string production_eligibility_evidence_id = 7;
+  PhaseTransitionStatus status = 8;
+  PhaseTransitionDirection direction = 9;
+  optional double signed_circular_displacement_degrees = 10;
+  optional double magnitude_degrees = 11;
+  optional double phase_velocity_degrees_per_bar = 12;
+  AlgorithmIdentity algorithm_identity = 13;
+  string reason = 14;
+  int64 produced_unix_ms = 15;
+}
+
+// BoundaryFact is one deterministic input to governed boundary policy. Facts
+// retain directed encounter order for the start-excluded, end-included shortest
+// circular arc; expr evaluates their policy meaning but does not derive them.
+message BoundaryFact {
+  double boundary_degrees = 1;
+  bool crossed = 2;
+  PhaseTransitionDirection direction = 3;
+  uint32 encounter_order = 4;
+}
+
+// AllocationCandidate supplies the latest asynchronous universe view needed by
+// the ALLOCATE action. It does not imply a synchronized frame or define ranking.
+message AllocationCandidate {
+  string entity_id = 1;
+  string phase_transition_state_id = 2;
+  optional double phase_velocity_degrees_per_bar = 3;
+  CandidateStatus candidate_status = 4;
+  HoldingStatus holding_status = 5;
+  FreshnessStatus freshness_status = 6;
+}
+
+// DynamicExecutionContext is the minimum policy-neutral universe/action input
+// for the current entity. Capacity, candidate freshness, and holdings retain
+// their existing meanings without requiring separate active pipeline services.
+message DynamicExecutionContext {
+  string context_id = 1;
+  repeated AllocationCandidate allocation_candidates = 2;
+  CapacityEvidence capacity = 3;
+  string universe_version = 4;
+  string policy_identity = 5;
+}
+
+message PhaseVelocityRankingEntry {
+  string entity_id = 1;
+  uint32 rank = 2;
+  optional double phase_velocity_degrees_per_bar = 3;
+  bool tied = 4;
+}
+
+// StateActionOutcome represents the boundary of an approved state-associated
+// action without inventing its unresolved algorithm or claiming execution.
+message StateActionOutcome {
+  string action_outcome_id = 1;
+  DynamicExecutionState state = 2;
+  StateActionType action_type = 3;
+  StateActionStatus status = 4;
+  repeated PhaseVelocityRankingEntry phase_velocity_ranking = 5;
+  AlgorithmIdentity action_policy_identity = 6;
+  string reason = 7;
+  int64 produced_unix_ms = 8;
+}
+
+// GovernedExecutionInstruction is the sole active request contract crossing
+// from four-state strategy/action semantics to an external executor. It is not
+// an ExecutionEvent and never claims adapter acceptance or execution outcome.
+message GovernedExecutionInstruction {
+  string instruction_id = 1;
+  string runtime_id = 2;
+  string entity_id = 3;
+  GovernedExecutionAction requested_action = 4;
+  GovernedExecutionInstructionStatus status = 5;
+  string dynamic_execution_result_id = 6;
+  string state_action_outcome_id = 7;
+  optional DecimalValue requested_quantity = 8;
+  string configuration_id = 9;
+  string policy_identity = 10;
+  string idempotency_key = 11;
+  string correlation_id = 12;
+  optional int64 valid_until_unix_ms = 13;
+  string rule_evaluation_evidence_id = 14;
+  int64 produced_unix_ms = 15;
+}
+
+// DynamicExecutionResult establishes or maintains exactly one persistent
+// strategy state, records the governed boundary outcome, and identifies the
+// associated action. Historical results are evidence, not transition inputs.
+message DynamicExecutionResult {
+  string result_id = 1;
+  string runtime_id = 2;
+  string entity_id = 3;
+  uint64 entity_sequence = 4;
+  DynamicExecutionStateStatus status = 5;
+  DynamicExecutionState previous_state = 6;
+  DynamicExecutionState current_state = 7;
+  BoundaryPolicyOutcome boundary_policy_outcome = 8;
+  string phase_transition_state_id = 9;
+  StateActionOutcome state_action_outcome = 10;
+  GovernedExecutionInstruction execution_instruction = 11;
+  string rule_evaluation_evidence_id = 12;
+  string policy_identity = 13;
+  string reason = 14;
+  int64 produced_unix_ms = 15;
+  repeated BoundaryFact boundary_facts = 16;
+}
+
 // BoundaryCrossoverEvidence records DEP-06 output separately from persistent
 // region membership. Exact crossover mathematics remain identified by policy.
 message BoundaryCrossoverEvidence {
+  option deprecated = true;
+
   string evidence_id = 1;
   string runtime_id = 2;
   string entity_id = 3;
@@ -784,6 +1017,8 @@ message BoundaryCrossoverEvidence {
 // StrategyRegionEvidence records DEP-07 persistent membership and whether the
 // result initialized, persisted, or transitioned. It never claims execution.
 message StrategyRegionEvidence {
+  option deprecated = true;
+
   string evidence_id = 1;
   string runtime_id = 2;
   string entity_id = 3;
@@ -837,6 +1072,8 @@ message EntityUniverseState {
 // its latest entity views. Snapshot, staleness, capital, and capacity policies
 // remain attributable rather than embedded in this schema.
 message UniverseStateEvidence {
+  option deprecated = true;
+
   string evidence_id = 1;
   string runtime_id = 2;
   string universe_version = 3;
@@ -864,6 +1101,8 @@ message CandidateRankingEntry {
 // CandidateRankingEvidence records the complete candidate set and ranking
 // result without defining the unresolved ranking formula or tie policy.
 message CandidateRankingEvidence {
+  option deprecated = true;
+
   string evidence_id = 1;
   string runtime_id = 2;
   string universe_state_evidence_id = 3;
@@ -879,6 +1118,8 @@ message CandidateRankingEvidence {
 // StrategyDecision is the distinct DEP-10 result. It is neither a region nor
 // an execution request/outcome, even when a decision label resembles a region.
 message StrategyDecision {
+  option deprecated = true;
+
   string decision_id = 1;
   string runtime_id = 2;
   string entity_id = 3;
@@ -899,6 +1140,8 @@ message StrategyDecision {
 // It never states that execution occurred. Quantity is optional until an
 // approved sizing policy supplies it.
 message ExecutionIntent {
+  option deprecated = true;
+
   string intent_id = 1;
   string runtime_id = 2;
   string entity_id = 3;
@@ -930,7 +1173,7 @@ message ExecutorIdentity {
 message ExecutionEvent {
   string event_id = 1;
   string runtime_id = 2;
-  string execution_intent_id = 3;
+  string execution_intent_id = 3 [deprecated = true];
   string entity_id = 4;
   ExecutionEventStatus status = 5;
   ExecutorIdentity executor_identity = 6;
@@ -942,6 +1185,7 @@ message ExecutionEvent {
   string correlation_id = 12;
   int64 execution_unix_ms = 13;
   int64 produced_unix_ms = 14;
+  string governed_execution_instruction_id = 15;
 }
 
 // ExecutionReconciliationEvidence compares the latest executor event with the
@@ -949,11 +1193,12 @@ message ExecutionEvent {
 message ExecutionReconciliationEvidence {
   string evidence_id = 1;
   string runtime_id = 2;
-  string execution_intent_id = 3;
+  string execution_intent_id = 3 [deprecated = true];
   string execution_event_id = 4;
   ReconciliationStatus status = 5;
   string reason = 6;
   int64 produced_unix_ms = 7;
+  string governed_execution_instruction_id = 8;
 }
 
 // RuntimeActivitySnapshot holds independent monotonic counters for one runtime
@@ -967,15 +1212,27 @@ message RuntimeActivitySnapshot {
   uint64 bars_initializing = 6;
   // Counts bars with PRODUCTION_ELIGIBILITY_OUTCOME_PRODUCTION_ELIGIBLE.
   uint64 bars_phase_eligible = 7;
-  uint64 phase_motion_evaluations = 8;
-  uint64 boundary_crossovers = 9;
+  uint64 phase_motion_evaluations = 8 [deprecated = true];
+  uint64 boundary_crossovers = 9 [deprecated = true];
   uint64 hop_on_events = 10;
   uint64 hop_off_events = 11;
-  uint64 strategy_decisions = 12;
-  uint64 execution_intents = 13;
+  uint64 strategy_decisions = 12 [deprecated = true];
+  uint64 execution_intents = 13 [deprecated = true];
   uint64 execution_events = 14;
   int64 window_start_unix_ms = 15;
   int64 produced_unix_ms = 16;
+  uint64 phase_transition_calculations = 17;
+  uint64 boundary_policy_evaluations = 18;
+  uint64 disregard_state_entries = 19;
+  uint64 allocate_state_entries = 20;
+  uint64 hold_and_trail_state_entries = 21;
+  uint64 liquidate_state_entries = 22;
+  uint64 disregard_state_persistence = 23;
+  uint64 allocate_state_persistence = 24;
+  uint64 hold_and_trail_state_persistence = 25;
+  uint64 liquidate_state_persistence = 26;
+  uint64 state_action_outcomes = 27;
+  uint64 governed_execution_instructions = 28;
 }
 
 // DiagnosticEvidence is structured operational evidence, not a replacement for
@@ -1037,6 +1294,10 @@ message BarProcessingOutcomeEvidence {
   string reason = 20;
   int64 produced_unix_ms = 21;
   string analytical_state_evidence_id = 22;
+  string phase_transition_state_id = 23;
+  string dynamic_execution_result_id = 24;
+  string state_action_outcome_id = 25;
+  string governed_execution_instruction_id = 26;
 }
 
 // RuntimeEvidenceEnvelope is the neutral outbound publication contract. It does
@@ -1054,19 +1315,23 @@ message RuntimeEvidenceEnvelope {
     PhaseEvidence phase = 9;
     ProductionEligibilityEvidence production_eligibility = 10;
     RuleEvaluationEvidence rule_evaluation = 11;
-    PhaseMotionEvidence phase_motion = 12;
-    BoundaryCrossoverEvidence boundary_crossover = 13;
-    StrategyRegionEvidence strategy_region = 14;
-    UniverseStateEvidence universe_state = 15;
-    CandidateRankingEvidence candidate_ranking = 16;
-    StrategyDecision strategy_decision = 17;
-    ExecutionIntent execution_intent = 18;
+    PhaseMotionEvidence phase_motion = 12 [deprecated = true];
+    BoundaryCrossoverEvidence boundary_crossover = 13 [deprecated = true];
+    StrategyRegionEvidence strategy_region = 14 [deprecated = true];
+    UniverseStateEvidence universe_state = 15 [deprecated = true];
+    CandidateRankingEvidence candidate_ranking = 16 [deprecated = true];
+    StrategyDecision strategy_decision = 17 [deprecated = true];
+    ExecutionIntent execution_intent = 18 [deprecated = true];
     ExecutionEvent execution_event = 19;
     ExecutionReconciliationEvidence execution_reconciliation = 20;
     RuntimeActivitySnapshot runtime_activity = 21;
     BarProcessingOutcomeEvidence bar_processing_outcome = 22;
     DiagnosticEvidence diagnostic = 23;
     RuleSetDefinition rule_set_definition = 24;
+    PhaseTransitionState phase_transition_state = 26;
+    DynamicExecutionResult dynamic_execution_result = 27;
+    StateActionOutcome state_action_outcome = 28;
+    GovernedExecutionInstruction governed_execution_instruction = 29;
   }
   int64 produced_unix_ms = 25;
 }
@@ -1122,6 +1387,20 @@ message StreamExecutionEventsRequest {
 // StreamExecutionEventsResponse carries one executor-reported outcome.
 message StreamExecutionEventsResponse {
   ExecutionEvent execution_event = 1;
+}
+
+message SubmitGovernedExecutionInstructionRequest {
+  GovernedExecutionInstruction execution_instruction = 1;
+}
+
+// Receipt acknowledges transport admission only. ExecutionEvent remains the
+// sole contract that reports execution acceptance, rejection, or fill outcome.
+message SubmitGovernedExecutionInstructionResponse {
+  string instruction_id = 1;
+  string executor_id = 2;
+  bool received = 3;
+  string reason = 4;
+  int64 received_unix_ms = 5;
 }
 
 // ReceiveBarRequest enters one source-independent candidate at the authoritative
@@ -1188,10 +1467,47 @@ message EvaluateProductionEligibilityResponse {
   RuleEvaluationEvidence rule_evaluation_evidence = 2;
 }
 
+// CalculatePhaseTransition performs deterministic current-transition
+// mathematics for eligible Bar[n]. Retained phi[n-1] is analytical context and
+// does not require predecessor production eligibility.
+message CalculatePhaseTransitionRequest {
+  string runtime_id = 1;
+  PhaseEvidence prior_phase_evidence = 2;
+  PhaseEvidence current_phase_evidence = 3;
+  ProductionEligibilityEvidence production_eligibility_evidence = 4;
+  AlgorithmIdentity algorithm_identity = 5;
+}
+
+message CalculatePhaseTransitionResponse {
+  PhaseTransitionState phase_transition_state = 1;
+}
+
+// EvaluateDynamicExecution applies component-scoped boundary policy to
+// deterministic facts, establishes or maintains one of the four states, and
+// represents its associated action. prior_state is the only strategy-state
+// history input; prior transition values are intentionally absent.
+message EvaluateDynamicExecutionRequest {
+  string runtime_id = 1;
+  PhaseEvidence current_phase_evidence = 2;
+  PhaseTransitionState phase_transition_state = 3;
+  DynamicExecutionState prior_state = 4;
+  repeated BoundaryFact boundary_facts = 5;
+  DynamicExecutionContext context = 6;
+  RuleIdentity boundary_policy_rule_identity = 7;
+}
+
+message EvaluateDynamicExecutionResponse {
+  DynamicExecutionResult dynamic_execution_result = 1;
+  RuleEvaluationEvidence boundary_policy_rule_evaluation_evidence = 2;
+  repeated RuleEvaluationEvidence boundary_policy_rule_evaluation_evidences = 3;
+}
+
 // EvaluatePhaseMotionRequest carries both phase observations explicitly. The
 // contract preserves the unresolved decision whether bar 64 or bar 65 can first
 // produce valid motion/crossover; no eligibility answer is inferred here.
 message EvaluatePhaseMotionRequest {
+  option deprecated = true;
+
   string runtime_id = 1;
   PhaseEvidence prior_phase_evidence = 2;
   PhaseEvidence current_phase_evidence = 3;
@@ -1208,6 +1524,8 @@ message EvaluatePhaseMotionResponse {
 }
 
 message DetectBoundaryCrossoverRequest {
+  option deprecated = true;
+
   string runtime_id = 1;
   PhaseEvidence prior_phase_evidence = 2;
   PhaseEvidence current_phase_evidence = 3;
@@ -1221,6 +1539,8 @@ message DetectBoundaryCrossoverResponse {
 }
 
 message EvaluateStrategyRegionRequest {
+  option deprecated = true;
+
   string runtime_id = 1;
   PhaseEvidence phase_evidence = 2;
   BoundaryCrossoverEvidence boundary_crossover_evidence = 3;
@@ -1234,6 +1554,8 @@ message EvaluateStrategyRegionResponse {
 }
 
 message UpdateUniverseStateRequest {
+  option deprecated = true;
+
   string runtime_id = 1;
   StrategyRegionEvidence strategy_region_evidence = 2;
   UniverseStateEvidence prior_universe_state_evidence = 3;
@@ -1247,6 +1569,8 @@ message UpdateUniverseStateResponse {
 }
 
 message RankCandidatesRequest {
+  option deprecated = true;
+
   string runtime_id = 1;
   UniverseStateEvidence universe_state_evidence = 2;
   RuleIdentity rule_identity = 3;
@@ -1261,6 +1585,8 @@ message RankCandidatesResponse {
 }
 
 message GenerateStrategyDecisionRequest {
+  option deprecated = true;
+
   string runtime_id = 1;
   StrategyRegionEvidence strategy_region_evidence = 2;
   UniverseStateEvidence universe_state_evidence = 3;
@@ -1275,6 +1601,8 @@ message GenerateStrategyDecisionResponse {
 }
 
 message GenerateExecutionIntentRequest {
+  option deprecated = true;
+
   string runtime_id = 1;
   StrategyDecision strategy_decision = 2;
   UniverseStateEvidence universe_state_evidence = 3;
@@ -1349,48 +1677,61 @@ service JehPhaseService {
 }
 
 // ProductionEligibilityService is the INTERNAL-ONLY controller between DEP-04
-// and DEP-05. Its typed outcome owns Rule #1 meaning, not raw expr output.
+// and Dynamic Execution. Its typed outcome owns Rule #1 meaning, not raw expr.
 service ProductionEligibilityService {
   rpc EvaluateProductionEligibility(EvaluateProductionEligibilityRequest) returns (EvaluateProductionEligibilityResponse);
 }
 
-// PhaseMotionService is the INTERNAL-ONLY DEP-05 contract. Deterministic motion
-// mathematics remain in Go/domain code; expr may only gate or map typed outcomes.
+// DynamicExecutionService is the cohesive INTERNAL-ONLY contract after
+// Production Eligibility. The first RPC owns deterministic transition facts;
+// the second owns governed boundary policy, four-state membership, and the
+// associated action/result boundary. Service topology does not imply RPC hops.
+service DynamicExecutionService {
+  rpc CalculatePhaseTransition(CalculatePhaseTransitionRequest) returns (CalculatePhaseTransitionResponse);
+  rpc EvaluateDynamicExecution(EvaluateDynamicExecutionRequest) returns (EvaluateDynamicExecutionResponse);
+}
+
+// Superseded compatibility contract from the historical DEP-05 architecture.
 service PhaseMotionService {
+  option deprecated = true;
   rpc EvaluatePhaseMotion(EvaluatePhaseMotionRequest) returns (EvaluatePhaseMotionResponse);
 }
 
-// BoundaryCrossoverService is the INTERNAL-ONLY DEP-06 contract.
+// Superseded compatibility contract from the historical DEP-06 architecture.
 service BoundaryCrossoverService {
+  option deprecated = true;
   rpc DetectBoundaryCrossover(DetectBoundaryCrossoverRequest) returns (DetectBoundaryCrossoverResponse);
 }
 
-// StrategyRegionService is the INTERNAL-ONLY DEP-07 contract. HOP_ON/HOP_OFF
-// remain crossover events and region outcomes never assert order submission.
+// Superseded compatibility contract from the historical DEP-07 architecture.
 service StrategyRegionService {
+  option deprecated = true;
   rpc EvaluateStrategyRegion(EvaluateStrategyRegionRequest) returns (EvaluateStrategyRegionResponse);
 }
 
-// UniverseStateService is the INTERNAL-ONLY DEP-08 serialized state contract.
+// Superseded compatibility contract. Universe/action inputs now enter the
+// cohesive DynamicExecutionService through DynamicExecutionContext.
 service UniverseStateService {
+  option deprecated = true;
   rpc UpdateUniverseState(UpdateUniverseStateRequest) returns (UpdateUniverseStateResponse);
 }
 
-// CandidateRankingService is the INTERNAL-ONLY DEP-09 contract, separate from
-// universe ownership. Ranking mathematics remain deterministic domain logic.
+// Superseded compatibility contract. Phase Velocity ranking is represented as
+// the ALLOCATE state action and does not form a separate active stage.
 service CandidateRankingService {
+  option deprecated = true;
   rpc RankCandidates(RankCandidatesRequest) returns (RankCandidatesResponse);
 }
 
-// StrategyDecisionService is the INTERNAL-ONLY DEP-10 contract. A decision is
-// not an ExecutionIntent and cannot report an ExecutionEvent.
+// Superseded compatibility contract from the historical DEP-10 architecture.
 service StrategyDecisionService {
+  option deprecated = true;
   rpc GenerateStrategyDecision(GenerateStrategyDecisionRequest) returns (GenerateStrategyDecisionResponse);
 }
 
-// ExecutionIntentService is the INTERNAL-ONLY DEP-11 contract. It converts an
-// approved typed decision into an intent when governed rules permit it.
+// Superseded compatibility contract from the historical DEP-11 architecture.
 service ExecutionIntentService {
+  option deprecated = true;
   rpc GenerateExecutionIntent(GenerateExecutionIntentRequest) returns (GenerateExecutionIntentResponse);
 }
 
@@ -1406,8 +1747,13 @@ service RuleRegistryService {
 // future separately approved Alpaca Paper. It is APPROVED INTERNAL gRPC when
 // registered, but may remain unregistered and in-process. No live mode exists.
 service ExecutorService {
-  // SubmitExecutionIntent acknowledges receipt only; outcomes arrive separately.
-  rpc SubmitExecutionIntent(SubmitExecutionIntentRequest) returns (SubmitExecutionIntentResponse);
+  // Historical compatibility RPC. New implementations consume the governed
+  // execution instruction without a StrategyDecision -> ExecutionIntent chain.
+  rpc SubmitExecutionIntent(SubmitExecutionIntentRequest) returns (SubmitExecutionIntentResponse) {
+    option deprecated = true;
+  }
+
+  rpc SubmitGovernedExecutionInstruction(SubmitGovernedExecutionInstructionRequest) returns (SubmitGovernedExecutionInstructionResponse);
 
   // StreamExecutionEvents reports actual paper-executor outcomes and never
   // changes the upstream StrategyDecision or ExecutionIntent meaning.

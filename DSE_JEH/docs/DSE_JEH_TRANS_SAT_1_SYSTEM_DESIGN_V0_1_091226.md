@@ -11,7 +11,7 @@
 | Physical documentation location | `DSE_JEH/docs` |
 | Relationship to `DSE_JEH_provers` | Experimental proving and regression apparatus; not a TransSat and not operational runtime code |
 
-**Purpose.** Define the complete production application architecture for the first concrete runtime instance of the portable John Ehlers-Hilbert Decision Strategy Engine family. This in-place V0.1 reconciliation governs the persistent runtime, the **Dynamic Execution Pipeline**, its single authoritative protobuf vocabulary, lifecycle, rule evaluation, evidence, telemetry, and execution boundary. It records the existing DEP-01 through DEP-04 implementation without authorizing further implementation in this documentation task.
+**Purpose.** Define the complete production application architecture for the first concrete runtime instance of the portable John Ehlers-Hilbert Decision Strategy Engine family. This in-place V0.1 architectural replacement governs the persistent runtime, the **Dynamic Execution Pipeline**, its single authoritative protobuf vocabulary, lifecycle, rule evaluation, evidence, telemetry, and execution boundary. It records the existing DEP-01 through DEP-04 implementation and the subsequently authorized and completed bounded `CalculatePhaseTransition` and `EvaluateDynamicExecution` implementations without authorizing broader state-action or execution work.
 
 Normative terms `MUST`, `MUST NOT`, `SHOULD`, and `MAY` express design requirements. Strategy interpretations are hypotheses until separately validated; deterministic behavior alone does not establish scientific validity or efficacy.
 
@@ -100,9 +100,9 @@ Before implementation of any governed process, its required services, messages, 
 
 The target proto MUST comprehensively govern runtime lifecycle, mode, health, input source/subscription state, bar reception, admission and admission evidence, per-entity analytical identity/state, JEH evidence, production eligibility, the four-state Dynamic Execution Engine, `PhaseTransitionState`, boundary policy events, state-associated actions, the governed execution boundary, `ExecutionEvent`, rule identity/evaluation/outcomes/evidence, activity telemetry, diagnostics, degraded/error states, and governed outbound publication/producer behavior. Names MUST be fully descriptive where analytical, operational, or financial meaning is carried.
 
-The current proto service structure after Production Eligibility was derived from the superseded DEP-05-through-DEP-11 decomposition. It remains unchanged by this documentation task and MUST be reviewed only after this replacement design is approved. This design does not decide which existing services survive, combine, disappear, or are replaced.
+The bounded post-approval proto review replaced the active DEP-05-through-DEP-11 service decomposition with one cohesive `DynamicExecutionService`. Its separate `CalculatePhaseTransition` and `EvaluateDynamicExecution` RPCs preserve deterministic mathematics versus governed policy while representing the four states and their associated action boundary. Seven former services remain generated only as deprecated compatibility surfaces.
 
-The existing proto was inspected during this reconciliation and truthfully covers only the Phase 1 analytical slice (`RuntimeMode`, phase/admission statuses, source/bar/admission/solver/phase messages). It is too thin for the complete application and MUST be expanded in a later authorized proto task; this document does not modify it.
+The authoritative proto now has 10 active services and 13 active RPCs. It includes `PhaseTransitionState`, typed boundary-policy outcomes, exactly four persistent `DynamicExecutionState` values, state-action outcomes, `GovernedExecutionInstruction`, the separate `ExecutionEvent`, current telemetry, and the Rule Registry. Including deprecated compatibility surfaces, generated code contains 17 services and 21 RPCs. This factual inventory does not claim that the corresponding hand-written Dynamic Execution or executor behavior is implemented.
 
 ## 4. Overall System Context
 
@@ -374,7 +374,7 @@ The wheel is one full circular phase space, interpreted clockwise from top as `H
 
 **Strategy-state membership is not a boundary event.** `HOP-ON` and `HOP-OFF` are typed rule-policy firing events, never persistent states. Five successive bars in `ALLOCATE` represent persistent membership, not five `HOP-ON` events. Operational state/value/result objects describe current engine behavior; separate telemetry, audit, and trace records establish attribution.
 
-No additional HOP terminology is defined. Deterministic Go/domain code establishes factual phase and crossing values. Component-scoped `expr` rules evaluate the four governed boundary policies and map them to typed outcomes and state/action changes. Exact algorithmic treatment of wrap, reverse movement, exact-boundary samples, large transitions, and jitter/recrossing remains to be specified without reopening the four policy meanings.
+No additional HOP terminology is defined. Deterministic Go/domain code establishes factual phase and crossing values. Component-scoped `expr` rules evaluate the four governed boundary policies and map them to typed outcomes and state/action changes. Boundary derivation traverses only the signed shortest directed arc in `PhaseTransitionState`, excludes the start phase, includes the end phase, and emits each encountered authoritative boundary exactly once in strict directed encounter order. Wrap through 0 degrees is treated identically to 90, 180, and 270 degrees. Reverse crossings are valid facts but do not fire the forward state-wheel policy. A later-bar recross is a new fact and is not suppressed.
 
 ---
 
@@ -390,15 +390,29 @@ flowchart LR
 
 `PhaseTransitionState` is the operational value describing the transition caused by current production-eligible `Bar[n]`. It contains the current signed circular displacement, direction, magnitude, Phase Velocity, validity, and causal references to retained $\phi[n-1]$ and current $\phi[n]$. It is not experimental proof. Separate telemetry/audit/trace records may record it for attribution and analysis.
 
-The V1 fundamental quantity is
+For V1, both retained and current phase are normalized to the half-open interval $[0°,360°)$ before displacement is calculated. Thus 360 degrees is equivalent to 0 degrees. An implementation may use equivalent modulo arithmetic:
 
 $$
-\omega[n] = \operatorname{circular\_delta}(\phi[n-1],\phi[n])
+\phi_{normalized} = ((\phi \bmod 360) + 360) \bmod 360
 $$
 
-measured in **degrees per bar**. Because the transition is from one accepted bar state to the next, $\Delta Bar=1$ for V1. V1 does not use wall-clock velocity, a multi-bar estimator, smoothing, acceleration, another motion model, or an additional eligibility bar.
+Normalization is part of deterministic transition mathematics. It does not create an Edge Case Handler or any additional architectural stage.
 
-Signed reverse motion MUST remain representable. The naive unsigned positive-modulo expression is insufficient: $\phi[n-1]=10°$ to $\phi[n]=350°$ may represent approximately $-20°/bar$, not $+340°/bar$. The deterministic convention for an exactly 180-degree directional tie remains a narrow exceptional policy decision.
+The V1 fundamental quantities are
+
+$$
+\Delta\phi[n] = \operatorname{circular\_delta}(\phi[n-1],\phi[n]) \in (-180°,180°]
+$$
+
+$$
+\omega[n] = \Delta\phi[n]
+$$
+
+where $\Delta Bar=1$ and $\omega$ is measured in **degrees per bar**. The displacement is the signed shortest circular displacement: 350 degrees to 10 degrees is +20 degrees, and 10 degrees to 350 degrees is -20 degrees. When the two shortest displacements are the exact +180/-180-degree tie, V1 canonically returns +180 degrees. The tie is deterministic mathematics, not a strategy-policy event, and MUST NOT consult $\phi[n-2]$, prior direction, prior $\omega$, or any other historical value.
+
+`PhaseTransitionState.signed_circular_displacement_degrees` is $\Delta\phi[n]$; magnitude is $|\Delta\phi[n]|$; Phase Velocity is $\Delta\phi[n]$ degrees per bar; and direction is derived solely from its sign, with zero displacement represented as `STATIONARY`. Non-finite phase input is invalid. A small implementation epsilon MAY be used only for floating-point equivalence and MUST NOT move or widen the 0-, 90-, 180-, or 270-degree strategy boundaries.
+
+V1 does not use wall-clock velocity, hysteresis, Schmitt-trigger deadbands, degree buffers, N-bar confirmation, anti-jitter history, smoothing, acceleration, higher-order motion, chaotic-volatility rules, trajectory reconstruction, or additional eligibility bars. Because $\Delta\phi \in (-180°,180°]$ and $\Delta Bar=1$, V1 does not add policy for velocity outside that representable range.
 
 Phase Velocity is supporting mathematics used by the `ALLOCATE` state's ranking action. It is not a strategy state and does not create a separate conceptual Dynamic Execution stage. Velocity MUST NOT be called acceleration.
 
@@ -408,9 +422,26 @@ A state transition is defined by its input state and resulting output state. His
 
 Derived values may describe the current transition and may be retained for telemetry, diagnostics, auditability, or analysis. They do not become historical inputs that alter current strategy state. The design prohibits historical trajectory inference, multi-transition lookback, transition smoothing, acceleration as a state determinant, and downstream reconstruction of an earlier state.
 
+History creates the retained analytical input state upstream; transition calculation does not re-consult history after that state is established. Current production-eligible `Bar[n]` owns the calculation from retained $\phi[n-1]$ to current $\phi[n]$. In particular, bar 64 may calculate $\phi[63] \rightarrow \phi[64]$ even though bar 63 remained `INITIALIZING` and did not enter Dynamic Execution.
+
 ### 11.2 Deterministic Mathematics and Governed Policy
 
 Go/domain code computes `PhaseTransitionState`, Phase Velocity, and factual boundary-crossing inputs. `expr` MUST NOT implement circular mathematics or crossover algorithms. Component-scoped `expr` rules evaluate the authoritative boundary policies and produce typed outcomes that govern the resulting state/action change.
+
+For every valid transition, deterministic boundary derivation traverses from normalized $\phi[n-1]$ along the signed displacement to normalized $\phi[n]$. The traversal interval is start-exclusive and end-inclusive. It emits every encountered boundary from the fixed ordered set $\{0°,90°,180°,270°\}$ exactly once, preserving forward or reverse direction and strict directed encounter order when one transition crosses multiple boundaries. `STATIONARY` emits no facts. Starting on a boundary does not re-emit it; ending on a boundary emits it once. A reverse crossing remains observable but produces no forward policy firing, and a recross on a later bar is a distinct factual crossing.
+
+The forward governed meanings remain fixed: 270 degrees produces `HOP_ON_ALLOCATE` and `ALLOCATE`; 0 degrees produces `ENTER_HOLD_AND_TRAIL` and `HOLD_AND_TRAIL`; 90 degrees produces `HOP_OFF_LIQUIDATE` and `LIQUIDATE`; and 180 degrees produces `ENTER_DISREGARD` and `DISREGARD`. When no forward fact fires, `NO_TRANSITION` preserves the current strategy state. Multiple forward facts are evaluated in encounter order rather than collapsed to final quadrant membership. Boundary derivation introduces no architectural service or processing stage and uses no hysteresis, deadband, degree buffer, smoothing, N-bar confirmation, acceleration, historical direction inference, or cross-bar duplicate suppression.
+
+### 11.3 Stable Policy and Future Adaptive Geometry
+
+DSE_JEH adaptiveness refines governed policy geometry and response parameters while preserving deterministic phase-transition and boundary facts. It therefore adapts an existing policy rather than generating a new policy for each observation or run.
+
+- **Deterministic model:** establishes what happened: phase, signed transition, direction, Phase Velocity, and ordered boundary facts.
+- **Stable governed policy:** establishes what a forward boundary event means.
+- **Future adaptive policy geometry:** may later tune governed response through controlled, versioned coefficients.
+- **Execution:** determines what governed action or instruction is ultimately issued.
+
+The authoritative 0-, 90-, 180-, and 270-degree phase boundaries remain deterministic reference facts. Future adaptive coefficients MUST NOT falsify whether a boundary crossing occurred. Coefficient names, formulas, ranges, learning algorithms, and persistence are not approved or implemented by this design change.
 
 ---
 
@@ -627,7 +658,7 @@ DSE_JEH_TransSat_1
 +-- Persistence and Publication Adapters
 ```
 
-These are logical proto-governed operational responsibilities. They do not imply one process or RPC service per component, and this documentation change does not authorize implementation.
+These are logical proto-governed operational responsibilities. They do not imply one process or RPC service per component. The bounded `CalculatePhaseTransition` and `EvaluateDynamicExecution` slices have been implemented under explicit authorization; no broader state-action or execution implementation is authorized here.
 
 ---
 
@@ -726,15 +757,15 @@ No answer is invented where evidence does not yet exist. `RESOLVED` below closes
 
 ### 22.2 Four-state engine decisions and remaining open questions
 
-20. **RESOLVED:** `PhaseTransitionState` uses signed `circular_delta` from retained $\phi[n-1]$ to current $\phi[n]$ in degrees per bar with $\Delta Bar=1$; deterministic handling of an exact 180-degree directional tie remains open.
+20. **RESOLVED:** `PhaseTransitionState` normalizes phases to $[0°,360°)$ and uses shortest signed `circular_delta` from retained $\phi[n-1]$ to current $\phi[n]$ in $(-180°,180°]$, with every exact 180-degree tie represented as +180 degrees. With $\Delta Bar=1$, $\omega=\Delta\phi$ degrees per bar.
 21. **RESOLVED:** State transitions are history-free; no multi-transition lookback, smoothing, acceleration, or historical reconstruction determines current state.
 22. **RESOLVED:** The strategy-policy meanings are fixed: 270° -> `HOP-ON`/`ALLOCATE`; 0° -> `HOLD & TRAIL`; 90° -> `HOP-OFF`/`LIQUIDATE`; 180° -> `DISREGARD`.
-23. What deterministic algorithm handles wrap, reverse movement, exact-boundary samples, large or multiple-boundary transitions, and jitter/recrossing while preserving those fixed policy meanings?
+23. **RESOLVED:** Boundary derivation traverses the signed shortest directed arc in `PhaseTransitionState`, excludes the start, includes the end, emits every 0-, 90-, 180-, and 270-degree boundary exactly once in directed encounter order, preserves crossing direction, emits no facts for `STATIONARY`, treats wrap through 0 degrees identically, and records later-bar recrosses without suppression. Reverse crossings are facts but do not fire the forward policy. No hysteresis, deadband, degree buffer, smoothing, N-bar confirmation, acceleration, historical direction inference, or cross-bar duplicate suppression is authorized.
 24. What ALLOCATE ranking formula, timing, tie-breaking, staleness, and candidate-eligibility policy are approved?
 25. What exact dynamic trailing algorithm implements the authoritative `HOLD & TRAIL` action?
 26. What capital representation, capacity, sizing, sequencing, and reconciliation implement the authoritative `LIQUIDATE` freed-capital reallocation action?
 27. What minimum governed execution-instruction and `ExecutionEvent` contracts are required by the four-state engine?
-28. What minimum proto/service changes are required after review of the superseded post-phase service structure?
+28. **RESOLVED BY BOUNDED PROTO REVIEW:** one cohesive `DynamicExecutionService` owns deterministic `PhaseTransitionState` calculation and governed four-state evaluation; `ExecutorService` accepts `GovernedExecutionInstruction`; the seven former post-phase services remain deprecated compatibility surfaces.
 29. **RESOLVED:** Current production-eligible `Bar[n]` owns the complete Dynamic Execution path. Retained $\phi[n-1]$ is analytical context and need not come from an eligible predecessor; bar 64 is the first possible four-state-engine entry.
 
 ### 22.3 Stage A proto gate
@@ -751,8 +782,8 @@ No answer is invented where evidence does not yet exist. `RESOLVED` below closes
 | `phase_angle_series_generator` docs and implementation | Median-price solver behavior, 63-bar initialization, normalized phase, independent reference path | Standalone batch generator; not runtime or strategy authority |
 | `DSE_JEH_provers` | PhaseEvidence admission, zone/transition regression evidence, deterministic proving patterns | Precomputed-phase apparatus; not runtime input architecture or efficacy evidence |
 | `bar_sequence_db.bar_sequence` | Initial realtime-equivalent replay source; 4,519 observations verified 2026-09-12 | Dataset and MongoDB are not architectural dependencies |
-| Rule-engine examples named for this reconciliation (not present in the inspected workspace) | Architectural examples of typed contexts and `expr` use only | Not DSE_JEH business-rule authority; sample combined allocation/buy and region-only liquidation logic are expressly rejected |
-| This document | Complete V0.1 target runtime boundary and requirements | This reconciliation does not authorize implementation |
+| Rule-engine examples named for this architectural replacement (not present in the inspected workspace) | Architectural examples of typed contexts and `expr` use only | Not DSE_JEH business-rule authority; sample combined allocation/buy and region-only liquidation logic are expressly rejected |
+| This document | Complete V0.1 target runtime boundary and requirements | Records the authorized and completed bounded `CalculatePhaseTransition` and `EvaluateDynamicExecution` slices; does not authorize broader state-action or execution implementation |
 
 The source strategy's polar interpretation motivates the four states and dynamic behavior. It does not establish that a particular phase means a universal trough/peak, that one-bar motion proves acceleration, or that historical $\omega$ examples prove optimal allocation.
 
@@ -760,21 +791,21 @@ The source strategy's polar interpretation motivates the four states and dynamic
 
 ## 24. Non-Goals
 
-This reconciliation does not authorize or perform:
+The completed bounded work includes the approved `PhaseTransitionState` mathematics, deterministic ordered boundary derivation, governed forward-policy evaluation, required authoritative proto updates, Buf-generated Go contract regeneration, hand-written `CalculatePhaseTransition` and `EvaluateDynamicExecution` implementations, and focused unit/service validation. This bounded implementation does not authorize or perform:
 
-- Go implementation, gRPC client implementation, protobuf modification, or generated-code changes;
+- further Go implementation, gRPC client implementation, protobuf architecture modification, or generated-code changes beyond the approved boundary-fact/result representation;
 - modification of `Fin_Feed_Sat_1`;
-- implementation of the Production Eligibility Controller, four-state Dynamic Execution Engine, state-associated actions, or execution adapters;
+- implementation of the Production Eligibility Controller, state-action algorithms, governed execution-instruction generation, or execution adapters;
 - replay or experimental Go execution;
 - modification of `phase_angle_series_generator`, Bar Sequence Lab, or `DSE_JEH_provers`;
 - MongoDB data modification or repository restructuring;
 - live broker, Alpaca, real-capital, or live-order execution;
 - trailing-stop implementation;
-- final transition-detection, ranking, trailing, capital/reallocation, or execution-instruction algorithms;
+- ranking, trailing, capital/reallocation, or execution-instruction algorithms;
 - a separate backtest strategy;
 - startup/stop-script changes, viewer changes, deployment, commit, or push.
 
-### 24.1 Truthful Implementation Status at Reconciliation
+### 24.1 Truthful Current Implementation Status
 
 | Responsibility | Status on 2026-09-13 |
 | --- | --- |
@@ -784,26 +815,28 @@ This reconciliation does not authorize or perform:
 | DEP-04 Circular Phase State | IMPLEMENTED and validated in Phase 1 |
 | Rule #1 behavior | IMPLEMENTED inside analytical status/state handling: contiguous bars 1-63 initialize and bar 64 can become `OBSERVABLE` |
 | Explicit proto-governed Production Eligibility Controller | NOT IMPLEMENTED |
-| Four-state Dynamic Execution Engine and state-associated actions | NOT IMPLEMENTED; former DEP-05-through-DEP-11 contracts remain generated but are superseded as design authority and await review |
-| Governed Rule Engine / Rule Registry / mandatory expr integration | NOT IMPLEMENTED |
-| Complete proto operational vocabulary | NOT IMPLEMENTED; current proto covers only the Phase 1 analytical slice |
+| `DynamicExecutionService.CalculatePhaseTransition` | IMPLEMENTED and focused-unit-tested against the approved V1 `PhaseTransitionState` mathematics; authoritative proto updated as required; generated Go regenerated by Buf; focused service tests PASS |
+| `DynamicExecutionService.EvaluateDynamicExecution` | IMPLEMENTED and focused-tested for deterministic ordered boundary facts and governed forward four-state policy; reverse facts do not fire forward policy; no downstream execution instruction is generated |
+| State-associated action algorithms | NOT IMPLEMENTED; typed outcomes identify `DISREGARD` no-action and block unresolved ALLOCATE ranking, HOLD & TRAIL, and LIQUIDATE/reallocation behavior |
+| Governed Rule Engine / Rule Registry / mandatory expr integration | PARTIALLY IMPLEMENTED: Rule #1 and fixed forward boundary policy use compile-once `expr`; complete shared Rule Registry integration remains NOT IMPLEMENTED |
+| Complete proto operational vocabulary | FOUR-STATE CONTRACT REVIEW COMPLETE; current proto has 10 active services / 13 active RPCs plus deprecated compatibility surfaces; unresolved algorithms remain intentionally unspecified |
 | Complete persistent lifecycle, stop mechanism, health, telemetry, and full bar outcome evidence | NOT IMPLEMENTED; current runtime/build/start path is partial |
 | Mock/future approved paper execution adapter and complete `ExecutionEvent` path | NOT IMPLEMENTED |
 
 The current runtime is useful Phase 1 implementation evidence, but completion of DEP-01 through DEP-04 does not make the complete Transformation Satellite or Phase 2 complete.
 
-### 24.2 Reconciled Consistency Invariants
+### 24.2 Current Consistency Invariants
 
 - The complete target is one independently startable and stoppable persistent built application; startup and stop are governed, `go run` is prohibited, and zero input is a valid running state.
 - **Mode convergence:** ONLINE and one-selector OFFLINE input converge at the same `BarEvent` boundary and use one E2E path.
 - The single proto is authoritative for governed internal and external vocabulary while in-process implementation does not require artificial RPC hops.
 - Rule #1 processes bars 1 through 63 as `INITIALIZING`; current eligible `Bar[n]` owns its complete downstream path; retained $\phi[n-1]$ is analytical context rather than another Dynamic Execution event; and bar 64 is the first possible four-state-engine entry.
 - `expr` programs are identified/versioned and compiled once per startup or governed load; a raw boolean has no global business meaning and maps to a rule-specific typed proto outcome before Go routing.
-- **Every-bar accountability and named metrics:** every received bar ends with attributable typed evidence. Activity separately tracks `bars_received`, `bars_admitted`, `bars_rejected`, `bars_initializing`, `bars_phase_eligible`, `phase_motion_evaluations`, `boundary_crossovers`, `hop_on_events`, `hop_off_events`, `strategy_decisions`, `execution_intents`, and `execution_events`.
+- **Every-bar accountability and named metrics:** every received bar ends with attributable typed evidence. Current activity separately tracks `bars_received`, `bars_admitted`, `bars_rejected`, `bars_initializing`, `bars_phase_eligible`, `phase_transition_calculations`, `boundary_policy_evaluations`, `hop_on_events`, `hop_off_events`, four-state entries/persistence, `state_action_outcomes`, `governed_execution_instructions`, and `execution_events`. Superseded metric fields remain deprecated for compatibility.
 - **Four-state authority:** `DISREGARD`, `ALLOCATE`, `HOLD & TRAIL`, and `LIQUIDATE` are the only strategy states. `HOP_ON` and `HOP_OFF` are rule-policy firing events, not states.
 - **History-free transitions:** only input state and resulting output state define the current transition; retained transition values are telemetry/audit data, not state-determining history.
-- `PhaseTransitionState` uses signed single-bar circular delta in degrees per bar without smoothing or acceleration. Exact 180-degree tie handling and deterministic crossing algorithms remain unresolved, as do ranking, trailing, capital/reallocation, execution-instruction, and reconciliation details.
-- This documentation task authorizes no changes to proto, generated code, Go implementation, startup/stop scripts, tests, or broker integration.
+- `PhaseTransitionState` normalizes phase to $[0°,360°)$ and uses shortest signed single-bar circular delta in $(-180°,180°]$, with exact 180-degree ties represented as +180 degrees and $\omega=\Delta\phi$ degrees per bar. Directed boundary derivation is resolved; ranking, trailing, capital/reallocation, execution-instruction behavior, and reconciliation details remain unresolved.
+- The bounded `CalculatePhaseTransition` and `EvaluateDynamicExecution` proto, generated-contract, Go, and focused-test work is complete under explicit authorization. This task authorizes no further proto architecture, generated-code, Go, test, script, runtime, executor, broker-integration, or deployment changes.
 
 ---
 
@@ -819,6 +852,10 @@ The current runtime is useful Phase 1 implementation evidence, but completion of
 | V0.1 complete-application reconciliation | 2026-09-13 | Revised in place to define an independently startable/stoppable persistent application; make the single proto authoritative for all governed operational vocabulary; add the explicit Production Eligibility Controller, outcome-based `expr` rule architecture, component-scoped contexts, Rule Registry, typed outcomes/evidence, complete bar accountability and telemetry; preserve execution separation and financial terminology; record truthful implementation status; and retain unresolved Phase 2 mathematics and policy. |
 | V0.1 final Dynamic Execution Pipeline reconciliation | 2026-09-13 | Established current eligible `Bar[n]` as owner of the complete Dynamic Execution Pipeline, made $\phi[n-1]$ retained analytical context rather than a separately eligible bar, removed the bar-65 prerequisite, defined DEP-05 as the current bar's single-bar phase-state-transition mathematics, separated DEP-06 crossover interpretation from DEP-05 motion and DEP-07 persistent strategy state, and aligned diagrams, lifecycle, open questions, and consistency invariants. |
 | V0.1 four-state Dynamic Execution replacement | 2026-09-13 | Superseded the former DEP-05-through-DEP-11 conceptual decomposition with the authoritative four-state Hop-On/Hop-Off Dynamic Execution Engine; established history-free transitions, `PhaseTransitionState`, fixed boundary-policy meanings, state-associated actions, deterministic-mathematics versus `expr` separation, and a design-derived future proto review. |
+| V0.1 four-state proto inventory update | 2026-09-13 | Recorded the completed bounded proto review: cohesive `DynamicExecutionService`, 10 active services / 13 active RPCs, deprecated compatibility retention for the seven former post-phase services, direct governed execution-instruction boundary, regenerated Go contracts, and passing Buf lint/breaking validation. No approved engine semantics or unresolved algorithm was changed. |
+| V0.1 V1 PhaseTransitionState mathematics approval | 2026-09-13 | Approved normalization to $[0°,360°)$, shortest signed displacement in $(-180°,180°]$, canonical +180-degree tie handling, $\omega=\Delta\phi$ degrees per bar, sign-derived direction, history-free two-phase input, and explicit exclusion of hysteresis, N-bar confirmation, smoothing, acceleration, higher-order motion, and any extra edge-case stage. Authorized only the bounded `CalculatePhaseTransition` implementation. |
+| V0.1 post-implementation consistency correction | 2026-09-13 | Updated the authoritative System Design to reflect completed bounded `CalculatePhaseTransition` implementation and validation; removed obsolete documentation-only authorization language; aligned active architectural terminology with replacement/supersession of the former DEP-05-through-DEP-11 decomposition; no code, proto, generated artifacts, tests, mathematics, or runtime behavior changed by this correction. |
+| V0.1 directed boundary semantics and adaptive-policy principle | 2026-09-13 | Approved deterministic start-excluded/end-included directed boundary traversal, ordered multiple-boundary facts, reverse-fact versus forward-policy treatment, and later-bar recross behavior so `EvaluateDynamicExecution` can be implemented without hysteresis or historical suppression; established that future adaptiveness may tune governed policy geometry while deterministic phase-transition and boundary facts remain authoritative. |
 
 ---
 
@@ -826,6 +863,6 @@ The current runtime is useful Phase 1 implementation evidence, but completion of
 
 This document is **APPROVED** as the V0.1 complete-application architectural authority.
 
-**DEP-01 through DEP-04 are implemented and validated by existing Phase 1 evidence. The four-state Dynamic Execution Engine, its state-associated actions, its design-derived proto contracts, and the complete execution path are not implemented. Existing post-phase proto services remain unchanged pending later review and do not control this replacement design.**
+**DEP-01 through DEP-04 are implemented and validated by existing Phase 1 evidence. The bounded `CalculatePhaseTransition` and `EvaluateDynamicExecution` slices are implemented and focused-tested. State-associated action algorithms, governed instruction generation, executor behavior, and the complete execution path are not implemented. Existing post-phase services remain only as deprecated compatibility contracts and do not control this replacement design.**
 
-This in-place reconciliation freezes the corrected application architecture. It does not authorize proto, generated-code, Go, script, broker-integration, deployment, or trading changes.
+This in-place architectural replacement freezes the corrected application architecture. The bounded `PhaseTransitionState` mathematics, directed boundary facts, forward boundary policy, required authoritative proto updates, Buf-generated Go contract regeneration, hand-written Dynamic Execution implementations, and focused unit/service validation are complete. No adaptive coefficients, state-action algorithms, execution submission, executor expansion, broker integration, deployment, or unrelated runtime changes are authorized or implemented by this task.

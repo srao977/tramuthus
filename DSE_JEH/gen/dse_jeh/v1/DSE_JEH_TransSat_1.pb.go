@@ -516,8 +516,9 @@ func (SequenceIntegrityStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 // ProductionEligibilityOutcome is the typed result of the unnumbered
-// Production Eligibility Controller between DEP-04 and DEP-05. It does not
-// decide whether bar 64 or bar 65 can first produce valid motion/crossover.
+// Production Eligibility Controller between DEP-04 and Dynamic Execution.
+// Current eligible Bar[n] owns downstream processing and may use retained
+// phi[n-1] as analytical context; bar 64 is the first possible engine entry.
 type ProductionEligibilityOutcome int32
 
 const (
@@ -590,20 +591,28 @@ const (
 	RuleOwningComponent_RULE_OWNING_COMPONENT_CANDIDATE_RANKING      RuleOwningComponent = 6
 	RuleOwningComponent_RULE_OWNING_COMPONENT_STRATEGY_DECISION      RuleOwningComponent = 7
 	RuleOwningComponent_RULE_OWNING_COMPONENT_EXECUTION_INTENT       RuleOwningComponent = 8
+	RuleOwningComponent_RULE_OWNING_COMPONENT_BOUNDARY_POLICY        RuleOwningComponent = 9
+	RuleOwningComponent_RULE_OWNING_COMPONENT_DYNAMIC_EXECUTION      RuleOwningComponent = 10
+	RuleOwningComponent_RULE_OWNING_COMPONENT_STATE_ACTION           RuleOwningComponent = 11
+	RuleOwningComponent_RULE_OWNING_COMPONENT_EXECUTION_INSTRUCTION  RuleOwningComponent = 12
 )
 
 // Enum value maps for RuleOwningComponent.
 var (
 	RuleOwningComponent_name = map[int32]string{
-		0: "RULE_OWNING_COMPONENT_UNSPECIFIED",
-		1: "RULE_OWNING_COMPONENT_PRODUCTION_ELIGIBILITY",
-		2: "RULE_OWNING_COMPONENT_PHASE_MOTION",
-		3: "RULE_OWNING_COMPONENT_BOUNDARY_CROSSOVER",
-		4: "RULE_OWNING_COMPONENT_STRATEGY_REGION",
-		5: "RULE_OWNING_COMPONENT_UNIVERSE",
-		6: "RULE_OWNING_COMPONENT_CANDIDATE_RANKING",
-		7: "RULE_OWNING_COMPONENT_STRATEGY_DECISION",
-		8: "RULE_OWNING_COMPONENT_EXECUTION_INTENT",
+		0:  "RULE_OWNING_COMPONENT_UNSPECIFIED",
+		1:  "RULE_OWNING_COMPONENT_PRODUCTION_ELIGIBILITY",
+		2:  "RULE_OWNING_COMPONENT_PHASE_MOTION",
+		3:  "RULE_OWNING_COMPONENT_BOUNDARY_CROSSOVER",
+		4:  "RULE_OWNING_COMPONENT_STRATEGY_REGION",
+		5:  "RULE_OWNING_COMPONENT_UNIVERSE",
+		6:  "RULE_OWNING_COMPONENT_CANDIDATE_RANKING",
+		7:  "RULE_OWNING_COMPONENT_STRATEGY_DECISION",
+		8:  "RULE_OWNING_COMPONENT_EXECUTION_INTENT",
+		9:  "RULE_OWNING_COMPONENT_BOUNDARY_POLICY",
+		10: "RULE_OWNING_COMPONENT_DYNAMIC_EXECUTION",
+		11: "RULE_OWNING_COMPONENT_STATE_ACTION",
+		12: "RULE_OWNING_COMPONENT_EXECUTION_INSTRUCTION",
 	}
 	RuleOwningComponent_value = map[string]int32{
 		"RULE_OWNING_COMPONENT_UNSPECIFIED":            0,
@@ -615,6 +624,10 @@ var (
 		"RULE_OWNING_COMPONENT_CANDIDATE_RANKING":      6,
 		"RULE_OWNING_COMPONENT_STRATEGY_DECISION":      7,
 		"RULE_OWNING_COMPONENT_EXECUTION_INTENT":       8,
+		"RULE_OWNING_COMPONENT_BOUNDARY_POLICY":        9,
+		"RULE_OWNING_COMPONENT_DYNAMIC_EXECUTION":      10,
+		"RULE_OWNING_COMPONENT_STATE_ACTION":           11,
+		"RULE_OWNING_COMPONENT_EXECUTION_INSTRUCTION":  12,
 	}
 )
 
@@ -876,6 +889,533 @@ func (PhaseMotionDirection) EnumDescriptor() ([]byte, []int) {
 	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{13}
 }
 
+// PhaseTransitionStatus describes the operational current-transition value.
+// It does not imply that a boundary policy fired or that strategy state changed.
+type PhaseTransitionStatus int32
+
+const (
+	PhaseTransitionStatus_PHASE_TRANSITION_STATUS_UNSPECIFIED PhaseTransitionStatus = 0
+	PhaseTransitionStatus_PHASE_TRANSITION_STATUS_VALID       PhaseTransitionStatus = 1
+	PhaseTransitionStatus_PHASE_TRANSITION_STATUS_INVALID     PhaseTransitionStatus = 2
+	PhaseTransitionStatus_PHASE_TRANSITION_STATUS_ERROR       PhaseTransitionStatus = 3
+)
+
+// Enum value maps for PhaseTransitionStatus.
+var (
+	PhaseTransitionStatus_name = map[int32]string{
+		0: "PHASE_TRANSITION_STATUS_UNSPECIFIED",
+		1: "PHASE_TRANSITION_STATUS_VALID",
+		2: "PHASE_TRANSITION_STATUS_INVALID",
+		3: "PHASE_TRANSITION_STATUS_ERROR",
+	}
+	PhaseTransitionStatus_value = map[string]int32{
+		"PHASE_TRANSITION_STATUS_UNSPECIFIED": 0,
+		"PHASE_TRANSITION_STATUS_VALID":       1,
+		"PHASE_TRANSITION_STATUS_INVALID":     2,
+		"PHASE_TRANSITION_STATUS_ERROR":       3,
+	}
+)
+
+func (x PhaseTransitionStatus) Enum() *PhaseTransitionStatus {
+	p := new(PhaseTransitionStatus)
+	*p = x
+	return p
+}
+
+func (x PhaseTransitionStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PhaseTransitionStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[14].Descriptor()
+}
+
+func (PhaseTransitionStatus) Type() protoreflect.EnumType {
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[14]
+}
+
+func (x PhaseTransitionStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PhaseTransitionStatus.Descriptor instead.
+func (PhaseTransitionStatus) EnumDescriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{14}
+}
+
+// PhaseTransitionDirection is the signed direction of the current transition.
+// INDETERMINATE preserves unresolved cases such as an exact 180-degree tie.
+type PhaseTransitionDirection int32
+
+const (
+	PhaseTransitionDirection_PHASE_TRANSITION_DIRECTION_UNSPECIFIED   PhaseTransitionDirection = 0
+	PhaseTransitionDirection_PHASE_TRANSITION_DIRECTION_FORWARD       PhaseTransitionDirection = 1
+	PhaseTransitionDirection_PHASE_TRANSITION_DIRECTION_REVERSE       PhaseTransitionDirection = 2
+	PhaseTransitionDirection_PHASE_TRANSITION_DIRECTION_STATIONARY    PhaseTransitionDirection = 3
+	PhaseTransitionDirection_PHASE_TRANSITION_DIRECTION_INDETERMINATE PhaseTransitionDirection = 4
+)
+
+// Enum value maps for PhaseTransitionDirection.
+var (
+	PhaseTransitionDirection_name = map[int32]string{
+		0: "PHASE_TRANSITION_DIRECTION_UNSPECIFIED",
+		1: "PHASE_TRANSITION_DIRECTION_FORWARD",
+		2: "PHASE_TRANSITION_DIRECTION_REVERSE",
+		3: "PHASE_TRANSITION_DIRECTION_STATIONARY",
+		4: "PHASE_TRANSITION_DIRECTION_INDETERMINATE",
+	}
+	PhaseTransitionDirection_value = map[string]int32{
+		"PHASE_TRANSITION_DIRECTION_UNSPECIFIED":   0,
+		"PHASE_TRANSITION_DIRECTION_FORWARD":       1,
+		"PHASE_TRANSITION_DIRECTION_REVERSE":       2,
+		"PHASE_TRANSITION_DIRECTION_STATIONARY":    3,
+		"PHASE_TRANSITION_DIRECTION_INDETERMINATE": 4,
+	}
+)
+
+func (x PhaseTransitionDirection) Enum() *PhaseTransitionDirection {
+	p := new(PhaseTransitionDirection)
+	*p = x
+	return p
+}
+
+func (x PhaseTransitionDirection) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PhaseTransitionDirection) Descriptor() protoreflect.EnumDescriptor {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[15].Descriptor()
+}
+
+func (PhaseTransitionDirection) Type() protoreflect.EnumType {
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[15]
+}
+
+func (x PhaseTransitionDirection) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PhaseTransitionDirection.Descriptor instead.
+func (PhaseTransitionDirection) EnumDescriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{15}
+}
+
+// DynamicExecutionState contains exactly four persistent strategy states.
+// UNSPECIFIED is protobuf absence safety and is not a fifth persistent state.
+type DynamicExecutionState int32
+
+const (
+	DynamicExecutionState_DYNAMIC_EXECUTION_STATE_UNSPECIFIED    DynamicExecutionState = 0
+	DynamicExecutionState_DYNAMIC_EXECUTION_STATE_DISREGARD      DynamicExecutionState = 1
+	DynamicExecutionState_DYNAMIC_EXECUTION_STATE_ALLOCATE       DynamicExecutionState = 2
+	DynamicExecutionState_DYNAMIC_EXECUTION_STATE_HOLD_AND_TRAIL DynamicExecutionState = 3
+	DynamicExecutionState_DYNAMIC_EXECUTION_STATE_LIQUIDATE      DynamicExecutionState = 4
+)
+
+// Enum value maps for DynamicExecutionState.
+var (
+	DynamicExecutionState_name = map[int32]string{
+		0: "DYNAMIC_EXECUTION_STATE_UNSPECIFIED",
+		1: "DYNAMIC_EXECUTION_STATE_DISREGARD",
+		2: "DYNAMIC_EXECUTION_STATE_ALLOCATE",
+		3: "DYNAMIC_EXECUTION_STATE_HOLD_AND_TRAIL",
+		4: "DYNAMIC_EXECUTION_STATE_LIQUIDATE",
+	}
+	DynamicExecutionState_value = map[string]int32{
+		"DYNAMIC_EXECUTION_STATE_UNSPECIFIED":    0,
+		"DYNAMIC_EXECUTION_STATE_DISREGARD":      1,
+		"DYNAMIC_EXECUTION_STATE_ALLOCATE":       2,
+		"DYNAMIC_EXECUTION_STATE_HOLD_AND_TRAIL": 3,
+		"DYNAMIC_EXECUTION_STATE_LIQUIDATE":      4,
+	}
+)
+
+func (x DynamicExecutionState) Enum() *DynamicExecutionState {
+	p := new(DynamicExecutionState)
+	*p = x
+	return p
+}
+
+func (x DynamicExecutionState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DynamicExecutionState) Descriptor() protoreflect.EnumDescriptor {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[16].Descriptor()
+}
+
+func (DynamicExecutionState) Type() protoreflect.EnumType {
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[16]
+}
+
+func (x DynamicExecutionState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DynamicExecutionState.Descriptor instead.
+func (DynamicExecutionState) EnumDescriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{16}
+}
+
+// BoundaryPolicyOutcome is the typed result of governed boundary policy.
+// HOP_ON and HOP_OFF are firing outcomes, never persistent states.
+type BoundaryPolicyOutcome int32
+
+const (
+	BoundaryPolicyOutcome_BOUNDARY_POLICY_OUTCOME_UNSPECIFIED          BoundaryPolicyOutcome = 0
+	BoundaryPolicyOutcome_BOUNDARY_POLICY_OUTCOME_NO_TRANSITION        BoundaryPolicyOutcome = 1
+	BoundaryPolicyOutcome_BOUNDARY_POLICY_OUTCOME_HOP_ON_ALLOCATE      BoundaryPolicyOutcome = 2
+	BoundaryPolicyOutcome_BOUNDARY_POLICY_OUTCOME_ENTER_HOLD_AND_TRAIL BoundaryPolicyOutcome = 3
+	BoundaryPolicyOutcome_BOUNDARY_POLICY_OUTCOME_HOP_OFF_LIQUIDATE    BoundaryPolicyOutcome = 4
+	BoundaryPolicyOutcome_BOUNDARY_POLICY_OUTCOME_ENTER_DISREGARD      BoundaryPolicyOutcome = 5
+	BoundaryPolicyOutcome_BOUNDARY_POLICY_OUTCOME_INVALID              BoundaryPolicyOutcome = 6
+	BoundaryPolicyOutcome_BOUNDARY_POLICY_OUTCOME_ERROR                BoundaryPolicyOutcome = 7
+)
+
+// Enum value maps for BoundaryPolicyOutcome.
+var (
+	BoundaryPolicyOutcome_name = map[int32]string{
+		0: "BOUNDARY_POLICY_OUTCOME_UNSPECIFIED",
+		1: "BOUNDARY_POLICY_OUTCOME_NO_TRANSITION",
+		2: "BOUNDARY_POLICY_OUTCOME_HOP_ON_ALLOCATE",
+		3: "BOUNDARY_POLICY_OUTCOME_ENTER_HOLD_AND_TRAIL",
+		4: "BOUNDARY_POLICY_OUTCOME_HOP_OFF_LIQUIDATE",
+		5: "BOUNDARY_POLICY_OUTCOME_ENTER_DISREGARD",
+		6: "BOUNDARY_POLICY_OUTCOME_INVALID",
+		7: "BOUNDARY_POLICY_OUTCOME_ERROR",
+	}
+	BoundaryPolicyOutcome_value = map[string]int32{
+		"BOUNDARY_POLICY_OUTCOME_UNSPECIFIED":          0,
+		"BOUNDARY_POLICY_OUTCOME_NO_TRANSITION":        1,
+		"BOUNDARY_POLICY_OUTCOME_HOP_ON_ALLOCATE":      2,
+		"BOUNDARY_POLICY_OUTCOME_ENTER_HOLD_AND_TRAIL": 3,
+		"BOUNDARY_POLICY_OUTCOME_HOP_OFF_LIQUIDATE":    4,
+		"BOUNDARY_POLICY_OUTCOME_ENTER_DISREGARD":      5,
+		"BOUNDARY_POLICY_OUTCOME_INVALID":              6,
+		"BOUNDARY_POLICY_OUTCOME_ERROR":                7,
+	}
+)
+
+func (x BoundaryPolicyOutcome) Enum() *BoundaryPolicyOutcome {
+	p := new(BoundaryPolicyOutcome)
+	*p = x
+	return p
+}
+
+func (x BoundaryPolicyOutcome) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (BoundaryPolicyOutcome) Descriptor() protoreflect.EnumDescriptor {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[17].Descriptor()
+}
+
+func (BoundaryPolicyOutcome) Type() protoreflect.EnumType {
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[17]
+}
+
+func (x BoundaryPolicyOutcome) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use BoundaryPolicyOutcome.Descriptor instead.
+func (BoundaryPolicyOutcome) EnumDescriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{17}
+}
+
+// DynamicExecutionStateStatus distinguishes initial classification, persistence,
+// transition, and failure without creating another strategy state.
+type DynamicExecutionStateStatus int32
+
+const (
+	DynamicExecutionStateStatus_DYNAMIC_EXECUTION_STATE_STATUS_UNSPECIFIED  DynamicExecutionStateStatus = 0
+	DynamicExecutionStateStatus_DYNAMIC_EXECUTION_STATE_STATUS_INITIALIZED  DynamicExecutionStateStatus = 1
+	DynamicExecutionStateStatus_DYNAMIC_EXECUTION_STATE_STATUS_PERSISTED    DynamicExecutionStateStatus = 2
+	DynamicExecutionStateStatus_DYNAMIC_EXECUTION_STATE_STATUS_TRANSITIONED DynamicExecutionStateStatus = 3
+	DynamicExecutionStateStatus_DYNAMIC_EXECUTION_STATE_STATUS_INVALID      DynamicExecutionStateStatus = 4
+	DynamicExecutionStateStatus_DYNAMIC_EXECUTION_STATE_STATUS_ERROR        DynamicExecutionStateStatus = 5
+)
+
+// Enum value maps for DynamicExecutionStateStatus.
+var (
+	DynamicExecutionStateStatus_name = map[int32]string{
+		0: "DYNAMIC_EXECUTION_STATE_STATUS_UNSPECIFIED",
+		1: "DYNAMIC_EXECUTION_STATE_STATUS_INITIALIZED",
+		2: "DYNAMIC_EXECUTION_STATE_STATUS_PERSISTED",
+		3: "DYNAMIC_EXECUTION_STATE_STATUS_TRANSITIONED",
+		4: "DYNAMIC_EXECUTION_STATE_STATUS_INVALID",
+		5: "DYNAMIC_EXECUTION_STATE_STATUS_ERROR",
+	}
+	DynamicExecutionStateStatus_value = map[string]int32{
+		"DYNAMIC_EXECUTION_STATE_STATUS_UNSPECIFIED":  0,
+		"DYNAMIC_EXECUTION_STATE_STATUS_INITIALIZED":  1,
+		"DYNAMIC_EXECUTION_STATE_STATUS_PERSISTED":    2,
+		"DYNAMIC_EXECUTION_STATE_STATUS_TRANSITIONED": 3,
+		"DYNAMIC_EXECUTION_STATE_STATUS_INVALID":      4,
+		"DYNAMIC_EXECUTION_STATE_STATUS_ERROR":        5,
+	}
+)
+
+func (x DynamicExecutionStateStatus) Enum() *DynamicExecutionStateStatus {
+	p := new(DynamicExecutionStateStatus)
+	*p = x
+	return p
+}
+
+func (x DynamicExecutionStateStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DynamicExecutionStateStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[18].Descriptor()
+}
+
+func (DynamicExecutionStateStatus) Type() protoreflect.EnumType {
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[18]
+}
+
+func (x DynamicExecutionStateStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DynamicExecutionStateStatus.Descriptor instead.
+func (DynamicExecutionStateStatus) EnumDescriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{18}
+}
+
+// StateActionType names only the four approved state-associated actions. It
+// does not define unresolved ranking, trailing, sizing, or capital mathematics.
+type StateActionType int32
+
+const (
+	StateActionType_STATE_ACTION_TYPE_UNSPECIFIED              StateActionType = 0
+	StateActionType_STATE_ACTION_TYPE_NO_ALLOCATION_ACTION     StateActionType = 1
+	StateActionType_STATE_ACTION_TYPE_RANK_BY_PHASE_VELOCITY   StateActionType = 2
+	StateActionType_STATE_ACTION_TYPE_TRAIL_STOPS_DYNAMICALLY  StateActionType = 3
+	StateActionType_STATE_ACTION_TYPE_REALLOCATE_FREED_CAPITAL StateActionType = 4
+)
+
+// Enum value maps for StateActionType.
+var (
+	StateActionType_name = map[int32]string{
+		0: "STATE_ACTION_TYPE_UNSPECIFIED",
+		1: "STATE_ACTION_TYPE_NO_ALLOCATION_ACTION",
+		2: "STATE_ACTION_TYPE_RANK_BY_PHASE_VELOCITY",
+		3: "STATE_ACTION_TYPE_TRAIL_STOPS_DYNAMICALLY",
+		4: "STATE_ACTION_TYPE_REALLOCATE_FREED_CAPITAL",
+	}
+	StateActionType_value = map[string]int32{
+		"STATE_ACTION_TYPE_UNSPECIFIED":              0,
+		"STATE_ACTION_TYPE_NO_ALLOCATION_ACTION":     1,
+		"STATE_ACTION_TYPE_RANK_BY_PHASE_VELOCITY":   2,
+		"STATE_ACTION_TYPE_TRAIL_STOPS_DYNAMICALLY":  3,
+		"STATE_ACTION_TYPE_REALLOCATE_FREED_CAPITAL": 4,
+	}
+)
+
+func (x StateActionType) Enum() *StateActionType {
+	p := new(StateActionType)
+	*p = x
+	return p
+}
+
+func (x StateActionType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (StateActionType) Descriptor() protoreflect.EnumDescriptor {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[19].Descriptor()
+}
+
+func (StateActionType) Type() protoreflect.EnumType {
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[19]
+}
+
+func (x StateActionType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use StateActionType.Descriptor instead.
+func (StateActionType) EnumDescriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{19}
+}
+
+type StateActionStatus int32
+
+const (
+	StateActionStatus_STATE_ACTION_STATUS_UNSPECIFIED StateActionStatus = 0
+	StateActionStatus_STATE_ACTION_STATUS_NO_ACTION   StateActionStatus = 1
+	StateActionStatus_STATE_ACTION_STATUS_SELECTED    StateActionStatus = 2
+	StateActionStatus_STATE_ACTION_STATUS_BLOCKED     StateActionStatus = 3
+	StateActionStatus_STATE_ACTION_STATUS_ERROR       StateActionStatus = 4
+)
+
+// Enum value maps for StateActionStatus.
+var (
+	StateActionStatus_name = map[int32]string{
+		0: "STATE_ACTION_STATUS_UNSPECIFIED",
+		1: "STATE_ACTION_STATUS_NO_ACTION",
+		2: "STATE_ACTION_STATUS_SELECTED",
+		3: "STATE_ACTION_STATUS_BLOCKED",
+		4: "STATE_ACTION_STATUS_ERROR",
+	}
+	StateActionStatus_value = map[string]int32{
+		"STATE_ACTION_STATUS_UNSPECIFIED": 0,
+		"STATE_ACTION_STATUS_NO_ACTION":   1,
+		"STATE_ACTION_STATUS_SELECTED":    2,
+		"STATE_ACTION_STATUS_BLOCKED":     3,
+		"STATE_ACTION_STATUS_ERROR":       4,
+	}
+)
+
+func (x StateActionStatus) Enum() *StateActionStatus {
+	p := new(StateActionStatus)
+	*p = x
+	return p
+}
+
+func (x StateActionStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (StateActionStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[20].Descriptor()
+}
+
+func (StateActionStatus) Type() protoreflect.EnumType {
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[20]
+}
+
+func (x StateActionStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use StateActionStatus.Descriptor instead.
+func (StateActionStatus) EnumDescriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{20}
+}
+
+// GovernedExecutionAction is an external request meaning, not an execution
+// result. Exact sizing and adapter mapping remain separately governed.
+type GovernedExecutionAction int32
+
+const (
+	GovernedExecutionAction_GOVERNED_EXECUTION_ACTION_UNSPECIFIED          GovernedExecutionAction = 0
+	GovernedExecutionAction_GOVERNED_EXECUTION_ACTION_ALLOCATE             GovernedExecutionAction = 1
+	GovernedExecutionAction_GOVERNED_EXECUTION_ACTION_UPDATE_TRAILING_STOP GovernedExecutionAction = 2
+	GovernedExecutionAction_GOVERNED_EXECUTION_ACTION_LIQUIDATE            GovernedExecutionAction = 3
+	GovernedExecutionAction_GOVERNED_EXECUTION_ACTION_CANCEL               GovernedExecutionAction = 4
+)
+
+// Enum value maps for GovernedExecutionAction.
+var (
+	GovernedExecutionAction_name = map[int32]string{
+		0: "GOVERNED_EXECUTION_ACTION_UNSPECIFIED",
+		1: "GOVERNED_EXECUTION_ACTION_ALLOCATE",
+		2: "GOVERNED_EXECUTION_ACTION_UPDATE_TRAILING_STOP",
+		3: "GOVERNED_EXECUTION_ACTION_LIQUIDATE",
+		4: "GOVERNED_EXECUTION_ACTION_CANCEL",
+	}
+	GovernedExecutionAction_value = map[string]int32{
+		"GOVERNED_EXECUTION_ACTION_UNSPECIFIED":          0,
+		"GOVERNED_EXECUTION_ACTION_ALLOCATE":             1,
+		"GOVERNED_EXECUTION_ACTION_UPDATE_TRAILING_STOP": 2,
+		"GOVERNED_EXECUTION_ACTION_LIQUIDATE":            3,
+		"GOVERNED_EXECUTION_ACTION_CANCEL":               4,
+	}
+)
+
+func (x GovernedExecutionAction) Enum() *GovernedExecutionAction {
+	p := new(GovernedExecutionAction)
+	*p = x
+	return p
+}
+
+func (x GovernedExecutionAction) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (GovernedExecutionAction) Descriptor() protoreflect.EnumDescriptor {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[21].Descriptor()
+}
+
+func (GovernedExecutionAction) Type() protoreflect.EnumType {
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[21]
+}
+
+func (x GovernedExecutionAction) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use GovernedExecutionAction.Descriptor instead.
+func (GovernedExecutionAction) EnumDescriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{21}
+}
+
+type GovernedExecutionInstructionStatus int32
+
+const (
+	GovernedExecutionInstructionStatus_GOVERNED_EXECUTION_INSTRUCTION_STATUS_UNSPECIFIED GovernedExecutionInstructionStatus = 0
+	GovernedExecutionInstructionStatus_GOVERNED_EXECUTION_INSTRUCTION_STATUS_CREATED     GovernedExecutionInstructionStatus = 1
+	GovernedExecutionInstructionStatus_GOVERNED_EXECUTION_INSTRUCTION_STATUS_ELIGIBLE    GovernedExecutionInstructionStatus = 2
+	GovernedExecutionInstructionStatus_GOVERNED_EXECUTION_INSTRUCTION_STATUS_BLOCKED     GovernedExecutionInstructionStatus = 3
+	GovernedExecutionInstructionStatus_GOVERNED_EXECUTION_INSTRUCTION_STATUS_SENT        GovernedExecutionInstructionStatus = 4
+	GovernedExecutionInstructionStatus_GOVERNED_EXECUTION_INSTRUCTION_STATUS_EXPIRED     GovernedExecutionInstructionStatus = 5
+	GovernedExecutionInstructionStatus_GOVERNED_EXECUTION_INSTRUCTION_STATUS_CANCELED    GovernedExecutionInstructionStatus = 6
+	GovernedExecutionInstructionStatus_GOVERNED_EXECUTION_INSTRUCTION_STATUS_ERROR       GovernedExecutionInstructionStatus = 7
+)
+
+// Enum value maps for GovernedExecutionInstructionStatus.
+var (
+	GovernedExecutionInstructionStatus_name = map[int32]string{
+		0: "GOVERNED_EXECUTION_INSTRUCTION_STATUS_UNSPECIFIED",
+		1: "GOVERNED_EXECUTION_INSTRUCTION_STATUS_CREATED",
+		2: "GOVERNED_EXECUTION_INSTRUCTION_STATUS_ELIGIBLE",
+		3: "GOVERNED_EXECUTION_INSTRUCTION_STATUS_BLOCKED",
+		4: "GOVERNED_EXECUTION_INSTRUCTION_STATUS_SENT",
+		5: "GOVERNED_EXECUTION_INSTRUCTION_STATUS_EXPIRED",
+		6: "GOVERNED_EXECUTION_INSTRUCTION_STATUS_CANCELED",
+		7: "GOVERNED_EXECUTION_INSTRUCTION_STATUS_ERROR",
+	}
+	GovernedExecutionInstructionStatus_value = map[string]int32{
+		"GOVERNED_EXECUTION_INSTRUCTION_STATUS_UNSPECIFIED": 0,
+		"GOVERNED_EXECUTION_INSTRUCTION_STATUS_CREATED":     1,
+		"GOVERNED_EXECUTION_INSTRUCTION_STATUS_ELIGIBLE":    2,
+		"GOVERNED_EXECUTION_INSTRUCTION_STATUS_BLOCKED":     3,
+		"GOVERNED_EXECUTION_INSTRUCTION_STATUS_SENT":        4,
+		"GOVERNED_EXECUTION_INSTRUCTION_STATUS_EXPIRED":     5,
+		"GOVERNED_EXECUTION_INSTRUCTION_STATUS_CANCELED":    6,
+		"GOVERNED_EXECUTION_INSTRUCTION_STATUS_ERROR":       7,
+	}
+)
+
+func (x GovernedExecutionInstructionStatus) Enum() *GovernedExecutionInstructionStatus {
+	p := new(GovernedExecutionInstructionStatus)
+	*p = x
+	return p
+}
+
+func (x GovernedExecutionInstructionStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (GovernedExecutionInstructionStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[22].Descriptor()
+}
+
+func (GovernedExecutionInstructionStatus) Type() protoreflect.EnumType {
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[22]
+}
+
+func (x GovernedExecutionInstructionStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use GovernedExecutionInstructionStatus.Descriptor instead.
+func (GovernedExecutionInstructionStatus) EnumDescriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{22}
+}
+
 // BoundaryCrossoverStatus separates detection validity from the crossover type.
 type BoundaryCrossoverStatus int32
 
@@ -919,11 +1459,11 @@ func (x BoundaryCrossoverStatus) String() string {
 }
 
 func (BoundaryCrossoverStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[14].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[23].Descriptor()
 }
 
 func (BoundaryCrossoverStatus) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[14]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[23]
 }
 
 func (x BoundaryCrossoverStatus) Number() protoreflect.EnumNumber {
@@ -932,7 +1472,7 @@ func (x BoundaryCrossoverStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use BoundaryCrossoverStatus.Descriptor instead.
 func (BoundaryCrossoverStatus) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{14}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{23}
 }
 
 // BoundaryCrossoverType identifies a governed transition event. HOP_ON and
@@ -979,11 +1519,11 @@ func (x BoundaryCrossoverType) String() string {
 }
 
 func (BoundaryCrossoverType) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[15].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[24].Descriptor()
 }
 
 func (BoundaryCrossoverType) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[15]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[24]
 }
 
 func (x BoundaryCrossoverType) Number() protoreflect.EnumNumber {
@@ -992,7 +1532,7 @@ func (x BoundaryCrossoverType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use BoundaryCrossoverType.Descriptor instead.
 func (BoundaryCrossoverType) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{15}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{24}
 }
 
 // StrategyRegion is persistent strategy-region membership. Region membership
@@ -1036,11 +1576,11 @@ func (x StrategyRegion) String() string {
 }
 
 func (StrategyRegion) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[16].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[25].Descriptor()
 }
 
 func (StrategyRegion) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[16]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[25]
 }
 
 func (x StrategyRegion) Number() protoreflect.EnumNumber {
@@ -1049,7 +1589,7 @@ func (x StrategyRegion) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use StrategyRegion.Descriptor instead.
 func (StrategyRegion) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{16}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{25}
 }
 
 // StrategyRegionStatus identifies whether region evidence initializes,
@@ -1096,11 +1636,11 @@ func (x StrategyRegionStatus) String() string {
 }
 
 func (StrategyRegionStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[17].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[26].Descriptor()
 }
 
 func (StrategyRegionStatus) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[17]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[26]
 }
 
 func (x StrategyRegionStatus) Number() protoreflect.EnumNumber {
@@ -1109,7 +1649,7 @@ func (x StrategyRegionStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use StrategyRegionStatus.Descriptor instead.
 func (StrategyRegionStatus) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{17}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{26}
 }
 
 // CandidateStatus describes universe candidacy without authorizing allocation.
@@ -1158,11 +1698,11 @@ func (x CandidateStatus) String() string {
 }
 
 func (CandidateStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[18].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[27].Descriptor()
 }
 
 func (CandidateStatus) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[18]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[27]
 }
 
 func (x CandidateStatus) Number() protoreflect.EnumNumber {
@@ -1171,7 +1711,7 @@ func (x CandidateStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use CandidateStatus.Descriptor instead.
 func (CandidateStatus) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{18}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{27}
 }
 
 // HoldingStatus describes governed holding knowledge, not broker truth beyond
@@ -1221,11 +1761,11 @@ func (x HoldingStatus) String() string {
 }
 
 func (HoldingStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[19].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[28].Descriptor()
 }
 
 func (HoldingStatus) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[19]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[28]
 }
 
 func (x HoldingStatus) Number() protoreflect.EnumNumber {
@@ -1234,7 +1774,7 @@ func (x HoldingStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use HoldingStatus.Descriptor instead.
 func (HoldingStatus) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{19}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{28}
 }
 
 // CapacityStatus carries policy-neutral capacity availability. Exact capital
@@ -1281,11 +1821,11 @@ func (x CapacityStatus) String() string {
 }
 
 func (CapacityStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[20].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[29].Descriptor()
 }
 
 func (CapacityStatus) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[20]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[29]
 }
 
 func (x CapacityStatus) Number() protoreflect.EnumNumber {
@@ -1294,7 +1834,7 @@ func (x CapacityStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use CapacityStatus.Descriptor instead.
 func (CapacityStatus) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{20}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{29}
 }
 
 // FreshnessStatus records whether an entity view is usable under an identified
@@ -1335,11 +1875,11 @@ func (x FreshnessStatus) String() string {
 }
 
 func (FreshnessStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[21].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[30].Descriptor()
 }
 
 func (FreshnessStatus) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[21]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[30]
 }
 
 func (x FreshnessStatus) Number() protoreflect.EnumNumber {
@@ -1348,7 +1888,7 @@ func (x FreshnessStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use FreshnessStatus.Descriptor instead.
 func (FreshnessStatus) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{21}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{30}
 }
 
 // CandidateRankingStatus describes ranking production without defining its
@@ -1395,11 +1935,11 @@ func (x CandidateRankingStatus) String() string {
 }
 
 func (CandidateRankingStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[22].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[31].Descriptor()
 }
 
 func (CandidateRankingStatus) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[22]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[31]
 }
 
 func (x CandidateRankingStatus) Number() protoreflect.EnumNumber {
@@ -1408,7 +1948,7 @@ func (x CandidateRankingStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use CandidateRankingStatus.Descriptor instead.
 func (CandidateRankingStatus) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{22}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{31}
 }
 
 // StrategyDecisionType is distinct from StrategyRegion even where names overlap.
@@ -1455,11 +1995,11 @@ func (x StrategyDecisionType) String() string {
 }
 
 func (StrategyDecisionType) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[23].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[32].Descriptor()
 }
 
 func (StrategyDecisionType) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[23]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[32]
 }
 
 func (x StrategyDecisionType) Number() protoreflect.EnumNumber {
@@ -1468,7 +2008,7 @@ func (x StrategyDecisionType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use StrategyDecisionType.Descriptor instead.
 func (StrategyDecisionType) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{23}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{32}
 }
 
 // StrategyDecisionStatus describes whether a decision was produced, blocked,
@@ -1512,11 +2052,11 @@ func (x StrategyDecisionStatus) String() string {
 }
 
 func (StrategyDecisionStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[24].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[33].Descriptor()
 }
 
 func (StrategyDecisionStatus) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[24]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[33]
 }
 
 func (x StrategyDecisionStatus) Number() protoreflect.EnumNumber {
@@ -1525,7 +2065,7 @@ func (x StrategyDecisionStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use StrategyDecisionStatus.Descriptor instead.
 func (StrategyDecisionStatus) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{24}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{33}
 }
 
 // ExecutionMode identifies only the approved paper execution objectives. No
@@ -1563,11 +2103,11 @@ func (x ExecutionMode) String() string {
 }
 
 func (ExecutionMode) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[25].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[34].Descriptor()
 }
 
 func (ExecutionMode) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[25]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[34]
 }
 
 func (x ExecutionMode) Number() protoreflect.EnumNumber {
@@ -1576,7 +2116,7 @@ func (x ExecutionMode) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ExecutionMode.Descriptor instead.
 func (ExecutionMode) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{25}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{34}
 }
 
 // ExecutionIntentAction is a requested action, not an execution outcome.
@@ -1619,11 +2159,11 @@ func (x ExecutionIntentAction) String() string {
 }
 
 func (ExecutionIntentAction) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[26].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[35].Descriptor()
 }
 
 func (ExecutionIntentAction) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[26]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[35]
 }
 
 func (x ExecutionIntentAction) Number() protoreflect.EnumNumber {
@@ -1632,7 +2172,7 @@ func (x ExecutionIntentAction) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ExecutionIntentAction.Descriptor instead.
 func (ExecutionIntentAction) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{26}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{35}
 }
 
 // ExecutionIntentStatus describes the lifecycle of a request before execution
@@ -1685,11 +2225,11 @@ func (x ExecutionIntentStatus) String() string {
 }
 
 func (ExecutionIntentStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[27].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[36].Descriptor()
 }
 
 func (ExecutionIntentStatus) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[27]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[36]
 }
 
 func (x ExecutionIntentStatus) Number() protoreflect.EnumNumber {
@@ -1698,7 +2238,7 @@ func (x ExecutionIntentStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ExecutionIntentStatus.Descriptor instead.
 func (ExecutionIntentStatus) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{27}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{36}
 }
 
 // ExecutionEventStatus is the executor-reported result. Only ExecutionEvent can
@@ -1751,11 +2291,11 @@ func (x ExecutionEventStatus) String() string {
 }
 
 func (ExecutionEventStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[28].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[37].Descriptor()
 }
 
 func (ExecutionEventStatus) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[28]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[37]
 }
 
 func (x ExecutionEventStatus) Number() protoreflect.EnumNumber {
@@ -1764,7 +2304,7 @@ func (x ExecutionEventStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ExecutionEventStatus.Descriptor instead.
 func (ExecutionEventStatus) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{28}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{37}
 }
 
 // ReconciliationStatus describes comparison of internal intent state with the
@@ -1811,11 +2351,11 @@ func (x ReconciliationStatus) String() string {
 }
 
 func (ReconciliationStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[29].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[38].Descriptor()
 }
 
 func (ReconciliationStatus) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[29]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[38]
 }
 
 func (x ReconciliationStatus) Number() protoreflect.EnumNumber {
@@ -1824,7 +2364,7 @@ func (x ReconciliationStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ReconciliationStatus.Descriptor instead.
 func (ReconciliationStatus) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{29}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{38}
 }
 
 // BarProcessingOutcomeType identifies the terminal application outcome for one
@@ -1836,14 +2376,23 @@ const (
 	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_ADMISSION_REJECTED             BarProcessingOutcomeType = 1
 	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_INITIALIZING                   BarProcessingOutcomeType = 2
 	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_PRODUCTION_ELIGIBILITY_BLOCKED BarProcessingOutcomeType = 3
-	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_PHASE_MOTION_UNAVAILABLE       BarProcessingOutcomeType = 4
-	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_NO_CROSSOVER                   BarProcessingOutcomeType = 5
-	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_SAME_REGION_PERSISTENCE        BarProcessingOutcomeType = 6
-	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_NO_ACTION                      BarProcessingOutcomeType = 7
-	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_STRATEGY_DECISION              BarProcessingOutcomeType = 8
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
+	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_PHASE_MOTION_UNAVAILABLE BarProcessingOutcomeType = 4
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
+	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_NO_CROSSOVER BarProcessingOutcomeType = 5
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
+	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_SAME_REGION_PERSISTENCE BarProcessingOutcomeType = 6
+	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_NO_ACTION               BarProcessingOutcomeType = 7
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
+	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_STRATEGY_DECISION BarProcessingOutcomeType = 8
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_INTENT               BarProcessingOutcomeType = 9
 	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_EVENT                BarProcessingOutcomeType = 10
 	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_PROCESSING_ERROR               BarProcessingOutcomeType = 11
+	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_PHASE_TRANSITION_INVALID       BarProcessingOutcomeType = 12
+	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_FOUR_STATE_RESULT              BarProcessingOutcomeType = 13
+	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_STATE_ACTION_OUTCOME           BarProcessingOutcomeType = 14
+	BarProcessingOutcomeType_BAR_PROCESSING_OUTCOME_TYPE_GOVERNED_EXECUTION_INSTRUCTION BarProcessingOutcomeType = 15
 )
 
 // Enum value maps for BarProcessingOutcomeType.
@@ -1861,6 +2410,10 @@ var (
 		9:  "BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_INTENT",
 		10: "BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_EVENT",
 		11: "BAR_PROCESSING_OUTCOME_TYPE_PROCESSING_ERROR",
+		12: "BAR_PROCESSING_OUTCOME_TYPE_PHASE_TRANSITION_INVALID",
+		13: "BAR_PROCESSING_OUTCOME_TYPE_FOUR_STATE_RESULT",
+		14: "BAR_PROCESSING_OUTCOME_TYPE_STATE_ACTION_OUTCOME",
+		15: "BAR_PROCESSING_OUTCOME_TYPE_GOVERNED_EXECUTION_INSTRUCTION",
 	}
 	BarProcessingOutcomeType_value = map[string]int32{
 		"BAR_PROCESSING_OUTCOME_TYPE_UNSPECIFIED":                    0,
@@ -1875,6 +2428,10 @@ var (
 		"BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_INTENT":               9,
 		"BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_EVENT":                10,
 		"BAR_PROCESSING_OUTCOME_TYPE_PROCESSING_ERROR":               11,
+		"BAR_PROCESSING_OUTCOME_TYPE_PHASE_TRANSITION_INVALID":       12,
+		"BAR_PROCESSING_OUTCOME_TYPE_FOUR_STATE_RESULT":              13,
+		"BAR_PROCESSING_OUTCOME_TYPE_STATE_ACTION_OUTCOME":           14,
+		"BAR_PROCESSING_OUTCOME_TYPE_GOVERNED_EXECUTION_INSTRUCTION": 15,
 	}
 )
 
@@ -1889,11 +2446,11 @@ func (x BarProcessingOutcomeType) String() string {
 }
 
 func (BarProcessingOutcomeType) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[30].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[39].Descriptor()
 }
 
 func (BarProcessingOutcomeType) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[30]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[39]
 }
 
 func (x BarProcessingOutcomeType) Number() protoreflect.EnumNumber {
@@ -1902,7 +2459,7 @@ func (x BarProcessingOutcomeType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use BarProcessingOutcomeType.Descriptor instead.
 func (BarProcessingOutcomeType) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{30}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{39}
 }
 
 // DiagnosticSeverity classifies governed diagnostics independently of logs.
@@ -1945,11 +2502,11 @@ func (x DiagnosticSeverity) String() string {
 }
 
 func (DiagnosticSeverity) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[31].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[40].Descriptor()
 }
 
 func (DiagnosticSeverity) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[31]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[40]
 }
 
 func (x DiagnosticSeverity) Number() protoreflect.EnumNumber {
@@ -1958,7 +2515,7 @@ func (x DiagnosticSeverity) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DiagnosticSeverity.Descriptor instead.
 func (DiagnosticSeverity) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{31}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{40}
 }
 
 // ErrorClassification provides stable operational categories without exposing
@@ -2023,11 +2580,11 @@ func (x ErrorClassification) String() string {
 }
 
 func (ErrorClassification) Descriptor() protoreflect.EnumDescriptor {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[32].Descriptor()
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[41].Descriptor()
 }
 
 func (ErrorClassification) Type() protoreflect.EnumType {
-	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[32]
+	return &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes[41]
 }
 
 func (x ErrorClassification) Number() protoreflect.EnumNumber {
@@ -2036,7 +2593,7 @@ func (x ErrorClassification) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ErrorClassification.Descriptor instead.
 func (ErrorClassification) EnumDescriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{32}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{41}
 }
 
 // SourceProvenance identifies the observation supplied by an ONLINE or OFFLINE
@@ -4044,6 +4601,69 @@ func (x *ExecutionIntentRuleOutcome) GetStatus() ExecutionIntentStatus {
 	return ExecutionIntentStatus_EXECUTION_INTENT_STATUS_UNSPECIFIED
 }
 
+// BoundaryPolicyRuleOutcome maps governed expr policy to one fixed boundary
+// meaning and resulting four-state membership. Detection facts are computed
+// before rule evaluation by deterministic domain mathematics.
+type BoundaryPolicyRuleOutcome struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Outcome         BoundaryPolicyOutcome  `protobuf:"varint,1,opt,name=outcome,proto3,enum=dsejeh.v1.BoundaryPolicyOutcome" json:"outcome,omitempty"`
+	ResultingState  DynamicExecutionState  `protobuf:"varint,2,opt,name=resulting_state,json=resultingState,proto3,enum=dsejeh.v1.DynamicExecutionState" json:"resulting_state,omitempty"`
+	TransitionInput *PhaseTransitionState  `protobuf:"bytes,3,opt,name=transition_input,json=transitionInput,proto3" json:"transition_input,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *BoundaryPolicyRuleOutcome) Reset() {
+	*x = BoundaryPolicyRuleOutcome{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BoundaryPolicyRuleOutcome) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BoundaryPolicyRuleOutcome) ProtoMessage() {}
+
+func (x *BoundaryPolicyRuleOutcome) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BoundaryPolicyRuleOutcome.ProtoReflect.Descriptor instead.
+func (*BoundaryPolicyRuleOutcome) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *BoundaryPolicyRuleOutcome) GetOutcome() BoundaryPolicyOutcome {
+	if x != nil {
+		return x.Outcome
+	}
+	return BoundaryPolicyOutcome_BOUNDARY_POLICY_OUTCOME_UNSPECIFIED
+}
+
+func (x *BoundaryPolicyRuleOutcome) GetResultingState() DynamicExecutionState {
+	if x != nil {
+		return x.ResultingState
+	}
+	return DynamicExecutionState_DYNAMIC_EXECUTION_STATE_UNSPECIFIED
+}
+
+func (x *BoundaryPolicyRuleOutcome) GetTransitionInput() *PhaseTransitionState {
+	if x != nil {
+		return x.TransitionInput
+	}
+	return nil
+}
+
 // RuleOutcomeMapping declares how one expected raw evaluator result maps to one
 // type-safe outcome. Routing and mutation descriptions are governance metadata;
 // they cannot add meanings absent from the selected typed outcome.
@@ -4067,6 +4687,7 @@ type RuleOutcomeMapping struct {
 	//	*RuleOutcomeMapping_CandidateRankingOutcome
 	//	*RuleOutcomeMapping_StrategyDecisionOutcome
 	//	*RuleOutcomeMapping_ExecutionIntentOutcome
+	//	*RuleOutcomeMapping_BoundaryPolicyOutcome
 	TypedOutcome           isRuleOutcomeMapping_TypedOutcome `protobuf_oneof:"typed_outcome"`
 	RoutingBehavior        string                            `protobuf:"bytes,14,opt,name=routing_behavior,json=routingBehavior,proto3" json:"routing_behavior,omitempty"`
 	PermittedStateMutation string                            `protobuf:"bytes,15,opt,name=permitted_state_mutation,json=permittedStateMutation,proto3" json:"permitted_state_mutation,omitempty"`
@@ -4077,7 +4698,7 @@ type RuleOutcomeMapping struct {
 
 func (x *RuleOutcomeMapping) Reset() {
 	*x = RuleOutcomeMapping{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[23]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4089,7 +4710,7 @@ func (x *RuleOutcomeMapping) String() string {
 func (*RuleOutcomeMapping) ProtoMessage() {}
 
 func (x *RuleOutcomeMapping) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[23]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4102,7 +4723,7 @@ func (x *RuleOutcomeMapping) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuleOutcomeMapping.ProtoReflect.Descriptor instead.
 func (*RuleOutcomeMapping) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{23}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *RuleOutcomeMapping) GetMappingId() string {
@@ -4225,10 +4846,20 @@ func (x *RuleOutcomeMapping) GetStrategyDecisionOutcome() *StrategyDecisionRuleO
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuleOutcomeMapping) GetExecutionIntentOutcome() *ExecutionIntentRuleOutcome {
 	if x != nil {
 		if x, ok := x.TypedOutcome.(*RuleOutcomeMapping_ExecutionIntentOutcome); ok {
 			return x.ExecutionIntentOutcome
+		}
+	}
+	return nil
+}
+
+func (x *RuleOutcomeMapping) GetBoundaryPolicyOutcome() *BoundaryPolicyRuleOutcome {
+	if x != nil {
+		if x, ok := x.TypedOutcome.(*RuleOutcomeMapping_BoundaryPolicyOutcome); ok {
+			return x.BoundaryPolicyOutcome
 		}
 	}
 	return nil
@@ -4316,7 +4947,12 @@ type RuleOutcomeMapping_StrategyDecisionOutcome struct {
 }
 
 type RuleOutcomeMapping_ExecutionIntentOutcome struct {
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 	ExecutionIntentOutcome *ExecutionIntentRuleOutcome `protobuf:"bytes,13,opt,name=execution_intent_outcome,json=executionIntentOutcome,proto3,oneof"`
+}
+
+type RuleOutcomeMapping_BoundaryPolicyOutcome struct {
+	BoundaryPolicyOutcome *BoundaryPolicyRuleOutcome `protobuf:"bytes,17,opt,name=boundary_policy_outcome,json=boundaryPolicyOutcome,proto3,oneof"`
 }
 
 func (*RuleOutcomeMapping_ProductionEligibilityOutcome) isRuleOutcomeMapping_TypedOutcome() {}
@@ -4335,6 +4971,8 @@ func (*RuleOutcomeMapping_StrategyDecisionOutcome) isRuleOutcomeMapping_TypedOut
 
 func (*RuleOutcomeMapping_ExecutionIntentOutcome) isRuleOutcomeMapping_TypedOutcome() {}
 
+func (*RuleOutcomeMapping_BoundaryPolicyOutcome) isRuleOutcomeMapping_TypedOutcome() {}
+
 // RuleDefinition is the governed logical Rule Registry entry. expr_expression is
 // compiled at startup or an approved load operation; no compiled program or
 // runtime object is serialized in this contract.
@@ -4351,7 +4989,7 @@ type RuleDefinition struct {
 
 func (x *RuleDefinition) Reset() {
 	*x = RuleDefinition{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[24]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4363,7 +5001,7 @@ func (x *RuleDefinition) String() string {
 func (*RuleDefinition) ProtoMessage() {}
 
 func (x *RuleDefinition) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[24]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4376,7 +5014,7 @@ func (x *RuleDefinition) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuleDefinition.ProtoReflect.Descriptor instead.
 func (*RuleDefinition) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{24}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *RuleDefinition) GetRuleIdentity() *RuleIdentity {
@@ -4426,7 +5064,7 @@ type RuleSetDefinition struct {
 
 func (x *RuleSetDefinition) Reset() {
 	*x = RuleSetDefinition{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[25]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4438,7 +5076,7 @@ func (x *RuleSetDefinition) String() string {
 func (*RuleSetDefinition) ProtoMessage() {}
 
 func (x *RuleSetDefinition) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[25]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4451,7 +5089,7 @@ func (x *RuleSetDefinition) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuleSetDefinition.ProtoReflect.Descriptor instead.
 func (*RuleSetDefinition) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{25}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *RuleSetDefinition) GetRuleSetIdentity() *RuleSetIdentity {
@@ -4497,6 +5135,7 @@ type RuleEvaluationEvidence struct {
 	//	*RuleEvaluationEvidence_CandidateRankingOutcome
 	//	*RuleEvaluationEvidence_StrategyDecisionOutcome
 	//	*RuleEvaluationEvidence_ExecutionIntentOutcome
+	//	*RuleEvaluationEvidence_BoundaryPolicyOutcome
 	TypedOutcome   isRuleEvaluationEvidence_TypedOutcome `protobuf_oneof:"typed_outcome"`
 	Reason         string                                `protobuf:"bytes,20,opt,name=reason,proto3" json:"reason,omitempty"`
 	ProducedUnixMs int64                                 `protobuf:"varint,21,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
@@ -4506,7 +5145,7 @@ type RuleEvaluationEvidence struct {
 
 func (x *RuleEvaluationEvidence) Reset() {
 	*x = RuleEvaluationEvidence{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[26]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4518,7 +5157,7 @@ func (x *RuleEvaluationEvidence) String() string {
 func (*RuleEvaluationEvidence) ProtoMessage() {}
 
 func (x *RuleEvaluationEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[26]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4531,7 +5170,7 @@ func (x *RuleEvaluationEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuleEvaluationEvidence.ProtoReflect.Descriptor instead.
 func (*RuleEvaluationEvidence) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{26}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *RuleEvaluationEvidence) GetEvidenceId() string {
@@ -4696,10 +5335,20 @@ func (x *RuleEvaluationEvidence) GetStrategyDecisionOutcome() *StrategyDecisionR
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuleEvaluationEvidence) GetExecutionIntentOutcome() *ExecutionIntentRuleOutcome {
 	if x != nil {
 		if x, ok := x.TypedOutcome.(*RuleEvaluationEvidence_ExecutionIntentOutcome); ok {
 			return x.ExecutionIntentOutcome
+		}
+	}
+	return nil
+}
+
+func (x *RuleEvaluationEvidence) GetBoundaryPolicyOutcome() *BoundaryPolicyRuleOutcome {
+	if x != nil {
+		if x, ok := x.TypedOutcome.(*RuleEvaluationEvidence_BoundaryPolicyOutcome); ok {
+			return x.BoundaryPolicyOutcome
 		}
 	}
 	return nil
@@ -4780,7 +5429,12 @@ type RuleEvaluationEvidence_StrategyDecisionOutcome struct {
 }
 
 type RuleEvaluationEvidence_ExecutionIntentOutcome struct {
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 	ExecutionIntentOutcome *ExecutionIntentRuleOutcome `protobuf:"bytes,19,opt,name=execution_intent_outcome,json=executionIntentOutcome,proto3,oneof"`
+}
+
+type RuleEvaluationEvidence_BoundaryPolicyOutcome struct {
+	BoundaryPolicyOutcome *BoundaryPolicyRuleOutcome `protobuf:"bytes,22,opt,name=boundary_policy_outcome,json=boundaryPolicyOutcome,proto3,oneof"`
 }
 
 func (*RuleEvaluationEvidence_ProductionEligibilityOutcome) isRuleEvaluationEvidence_TypedOutcome() {}
@@ -4799,6 +5453,8 @@ func (*RuleEvaluationEvidence_StrategyDecisionOutcome) isRuleEvaluationEvidence_
 
 func (*RuleEvaluationEvidence_ExecutionIntentOutcome) isRuleEvaluationEvidence_TypedOutcome() {}
 
+func (*RuleEvaluationEvidence_BoundaryPolicyOutcome) isRuleEvaluationEvidence_TypedOutcome() {}
+
 // AlgorithmIdentity attributes deterministic mathematics without freezing its
 // unresolved formula in this schema.
 type AlgorithmIdentity struct {
@@ -4813,7 +5469,7 @@ type AlgorithmIdentity struct {
 
 func (x *AlgorithmIdentity) Reset() {
 	*x = AlgorithmIdentity{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[27]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4825,7 +5481,7 @@ func (x *AlgorithmIdentity) String() string {
 func (*AlgorithmIdentity) ProtoMessage() {}
 
 func (x *AlgorithmIdentity) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[27]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4838,7 +5494,7 @@ func (x *AlgorithmIdentity) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AlgorithmIdentity.ProtoReflect.Descriptor instead.
 func (*AlgorithmIdentity) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{27}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *AlgorithmIdentity) GetAlgorithmId() string {
@@ -4872,6 +5528,8 @@ func (x *AlgorithmIdentity) GetImplementationId() string {
 // PhaseMotionEvidence records DEP-05 output. Optional values are absent when
 // motion is unavailable/invalid. Degrees-per-bar is the intended velocity unit;
 // the exact delta, window, smoothing, and acceleration policy remains open.
+//
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type PhaseMotionEvidence struct {
 	state                  protoimpl.MessageState `protogen:"open.v1"`
 	EvidenceId             string                 `protobuf:"bytes,1,opt,name=evidence_id,json=evidenceId,proto3" json:"evidence_id,omitempty"`
@@ -4898,7 +5556,7 @@ type PhaseMotionEvidence struct {
 
 func (x *PhaseMotionEvidence) Reset() {
 	*x = PhaseMotionEvidence{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[28]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4910,7 +5568,7 @@ func (x *PhaseMotionEvidence) String() string {
 func (*PhaseMotionEvidence) ProtoMessage() {}
 
 func (x *PhaseMotionEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[28]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4923,7 +5581,7 @@ func (x *PhaseMotionEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PhaseMotionEvidence.ProtoReflect.Descriptor instead.
 func (*PhaseMotionEvidence) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{28}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *PhaseMotionEvidence) GetEvidenceId() string {
@@ -5038,8 +5696,902 @@ func (x *PhaseMotionEvidence) GetPriorProductionEligibilityEvidenceId() string {
 	return ""
 }
 
+// PhaseTransitionState is the operational value for the transition caused by
+// current production-eligible Bar[n], from retained phi[n-1] to current phi[n].
+// It is history-free and contains deterministic facts only; expr does not
+// calculate these values. Delta and velocity are degrees and degrees per bar.
+type PhaseTransitionState struct {
+	state                             protoimpl.MessageState   `protogen:"open.v1"`
+	TransitionStateId                 string                   `protobuf:"bytes,1,opt,name=transition_state_id,json=transitionStateId,proto3" json:"transition_state_id,omitempty"`
+	RuntimeId                         string                   `protobuf:"bytes,2,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
+	EntityId                          string                   `protobuf:"bytes,3,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
+	EntitySequence                    uint64                   `protobuf:"varint,4,opt,name=entity_sequence,json=entitySequence,proto3" json:"entity_sequence,omitempty"`
+	PriorPhaseEvidenceId              string                   `protobuf:"bytes,5,opt,name=prior_phase_evidence_id,json=priorPhaseEvidenceId,proto3" json:"prior_phase_evidence_id,omitempty"`
+	CurrentPhaseEvidenceId            string                   `protobuf:"bytes,6,opt,name=current_phase_evidence_id,json=currentPhaseEvidenceId,proto3" json:"current_phase_evidence_id,omitempty"`
+	ProductionEligibilityEvidenceId   string                   `protobuf:"bytes,7,opt,name=production_eligibility_evidence_id,json=productionEligibilityEvidenceId,proto3" json:"production_eligibility_evidence_id,omitempty"`
+	Status                            PhaseTransitionStatus    `protobuf:"varint,8,opt,name=status,proto3,enum=dsejeh.v1.PhaseTransitionStatus" json:"status,omitempty"`
+	Direction                         PhaseTransitionDirection `protobuf:"varint,9,opt,name=direction,proto3,enum=dsejeh.v1.PhaseTransitionDirection" json:"direction,omitempty"`
+	SignedCircularDisplacementDegrees *float64                 `protobuf:"fixed64,10,opt,name=signed_circular_displacement_degrees,json=signedCircularDisplacementDegrees,proto3,oneof" json:"signed_circular_displacement_degrees,omitempty"`
+	MagnitudeDegrees                  *float64                 `protobuf:"fixed64,11,opt,name=magnitude_degrees,json=magnitudeDegrees,proto3,oneof" json:"magnitude_degrees,omitempty"`
+	PhaseVelocityDegreesPerBar        *float64                 `protobuf:"fixed64,12,opt,name=phase_velocity_degrees_per_bar,json=phaseVelocityDegreesPerBar,proto3,oneof" json:"phase_velocity_degrees_per_bar,omitempty"`
+	AlgorithmIdentity                 *AlgorithmIdentity       `protobuf:"bytes,13,opt,name=algorithm_identity,json=algorithmIdentity,proto3" json:"algorithm_identity,omitempty"`
+	Reason                            string                   `protobuf:"bytes,14,opt,name=reason,proto3" json:"reason,omitempty"`
+	ProducedUnixMs                    int64                    `protobuf:"varint,15,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
+	unknownFields                     protoimpl.UnknownFields
+	sizeCache                         protoimpl.SizeCache
+}
+
+func (x *PhaseTransitionState) Reset() {
+	*x = PhaseTransitionState{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PhaseTransitionState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PhaseTransitionState) ProtoMessage() {}
+
+func (x *PhaseTransitionState) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PhaseTransitionState.ProtoReflect.Descriptor instead.
+func (*PhaseTransitionState) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *PhaseTransitionState) GetTransitionStateId() string {
+	if x != nil {
+		return x.TransitionStateId
+	}
+	return ""
+}
+
+func (x *PhaseTransitionState) GetRuntimeId() string {
+	if x != nil {
+		return x.RuntimeId
+	}
+	return ""
+}
+
+func (x *PhaseTransitionState) GetEntityId() string {
+	if x != nil {
+		return x.EntityId
+	}
+	return ""
+}
+
+func (x *PhaseTransitionState) GetEntitySequence() uint64 {
+	if x != nil {
+		return x.EntitySequence
+	}
+	return 0
+}
+
+func (x *PhaseTransitionState) GetPriorPhaseEvidenceId() string {
+	if x != nil {
+		return x.PriorPhaseEvidenceId
+	}
+	return ""
+}
+
+func (x *PhaseTransitionState) GetCurrentPhaseEvidenceId() string {
+	if x != nil {
+		return x.CurrentPhaseEvidenceId
+	}
+	return ""
+}
+
+func (x *PhaseTransitionState) GetProductionEligibilityEvidenceId() string {
+	if x != nil {
+		return x.ProductionEligibilityEvidenceId
+	}
+	return ""
+}
+
+func (x *PhaseTransitionState) GetStatus() PhaseTransitionStatus {
+	if x != nil {
+		return x.Status
+	}
+	return PhaseTransitionStatus_PHASE_TRANSITION_STATUS_UNSPECIFIED
+}
+
+func (x *PhaseTransitionState) GetDirection() PhaseTransitionDirection {
+	if x != nil {
+		return x.Direction
+	}
+	return PhaseTransitionDirection_PHASE_TRANSITION_DIRECTION_UNSPECIFIED
+}
+
+func (x *PhaseTransitionState) GetSignedCircularDisplacementDegrees() float64 {
+	if x != nil && x.SignedCircularDisplacementDegrees != nil {
+		return *x.SignedCircularDisplacementDegrees
+	}
+	return 0
+}
+
+func (x *PhaseTransitionState) GetMagnitudeDegrees() float64 {
+	if x != nil && x.MagnitudeDegrees != nil {
+		return *x.MagnitudeDegrees
+	}
+	return 0
+}
+
+func (x *PhaseTransitionState) GetPhaseVelocityDegreesPerBar() float64 {
+	if x != nil && x.PhaseVelocityDegreesPerBar != nil {
+		return *x.PhaseVelocityDegreesPerBar
+	}
+	return 0
+}
+
+func (x *PhaseTransitionState) GetAlgorithmIdentity() *AlgorithmIdentity {
+	if x != nil {
+		return x.AlgorithmIdentity
+	}
+	return nil
+}
+
+func (x *PhaseTransitionState) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *PhaseTransitionState) GetProducedUnixMs() int64 {
+	if x != nil {
+		return x.ProducedUnixMs
+	}
+	return 0
+}
+
+// BoundaryFact is one deterministic input to governed boundary policy. Facts
+// retain directed encounter order for the start-excluded, end-included shortest
+// circular arc; expr evaluates their policy meaning but does not derive them.
+type BoundaryFact struct {
+	state           protoimpl.MessageState   `protogen:"open.v1"`
+	BoundaryDegrees float64                  `protobuf:"fixed64,1,opt,name=boundary_degrees,json=boundaryDegrees,proto3" json:"boundary_degrees,omitempty"`
+	Crossed         bool                     `protobuf:"varint,2,opt,name=crossed,proto3" json:"crossed,omitempty"`
+	Direction       PhaseTransitionDirection `protobuf:"varint,3,opt,name=direction,proto3,enum=dsejeh.v1.PhaseTransitionDirection" json:"direction,omitempty"`
+	EncounterOrder  uint32                   `protobuf:"varint,4,opt,name=encounter_order,json=encounterOrder,proto3" json:"encounter_order,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *BoundaryFact) Reset() {
+	*x = BoundaryFact{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BoundaryFact) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BoundaryFact) ProtoMessage() {}
+
+func (x *BoundaryFact) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BoundaryFact.ProtoReflect.Descriptor instead.
+func (*BoundaryFact) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *BoundaryFact) GetBoundaryDegrees() float64 {
+	if x != nil {
+		return x.BoundaryDegrees
+	}
+	return 0
+}
+
+func (x *BoundaryFact) GetCrossed() bool {
+	if x != nil {
+		return x.Crossed
+	}
+	return false
+}
+
+func (x *BoundaryFact) GetDirection() PhaseTransitionDirection {
+	if x != nil {
+		return x.Direction
+	}
+	return PhaseTransitionDirection_PHASE_TRANSITION_DIRECTION_UNSPECIFIED
+}
+
+func (x *BoundaryFact) GetEncounterOrder() uint32 {
+	if x != nil {
+		return x.EncounterOrder
+	}
+	return 0
+}
+
+// AllocationCandidate supplies the latest asynchronous universe view needed by
+// the ALLOCATE action. It does not imply a synchronized frame or define ranking.
+type AllocationCandidate struct {
+	state                      protoimpl.MessageState `protogen:"open.v1"`
+	EntityId                   string                 `protobuf:"bytes,1,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
+	PhaseTransitionStateId     string                 `protobuf:"bytes,2,opt,name=phase_transition_state_id,json=phaseTransitionStateId,proto3" json:"phase_transition_state_id,omitempty"`
+	PhaseVelocityDegreesPerBar *float64               `protobuf:"fixed64,3,opt,name=phase_velocity_degrees_per_bar,json=phaseVelocityDegreesPerBar,proto3,oneof" json:"phase_velocity_degrees_per_bar,omitempty"`
+	CandidateStatus            CandidateStatus        `protobuf:"varint,4,opt,name=candidate_status,json=candidateStatus,proto3,enum=dsejeh.v1.CandidateStatus" json:"candidate_status,omitempty"`
+	HoldingStatus              HoldingStatus          `protobuf:"varint,5,opt,name=holding_status,json=holdingStatus,proto3,enum=dsejeh.v1.HoldingStatus" json:"holding_status,omitempty"`
+	FreshnessStatus            FreshnessStatus        `protobuf:"varint,6,opt,name=freshness_status,json=freshnessStatus,proto3,enum=dsejeh.v1.FreshnessStatus" json:"freshness_status,omitempty"`
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
+}
+
+func (x *AllocationCandidate) Reset() {
+	*x = AllocationCandidate{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AllocationCandidate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AllocationCandidate) ProtoMessage() {}
+
+func (x *AllocationCandidate) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AllocationCandidate.ProtoReflect.Descriptor instead.
+func (*AllocationCandidate) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *AllocationCandidate) GetEntityId() string {
+	if x != nil {
+		return x.EntityId
+	}
+	return ""
+}
+
+func (x *AllocationCandidate) GetPhaseTransitionStateId() string {
+	if x != nil {
+		return x.PhaseTransitionStateId
+	}
+	return ""
+}
+
+func (x *AllocationCandidate) GetPhaseVelocityDegreesPerBar() float64 {
+	if x != nil && x.PhaseVelocityDegreesPerBar != nil {
+		return *x.PhaseVelocityDegreesPerBar
+	}
+	return 0
+}
+
+func (x *AllocationCandidate) GetCandidateStatus() CandidateStatus {
+	if x != nil {
+		return x.CandidateStatus
+	}
+	return CandidateStatus_CANDIDATE_STATUS_UNSPECIFIED
+}
+
+func (x *AllocationCandidate) GetHoldingStatus() HoldingStatus {
+	if x != nil {
+		return x.HoldingStatus
+	}
+	return HoldingStatus_HOLDING_STATUS_UNSPECIFIED
+}
+
+func (x *AllocationCandidate) GetFreshnessStatus() FreshnessStatus {
+	if x != nil {
+		return x.FreshnessStatus
+	}
+	return FreshnessStatus_FRESHNESS_STATUS_UNSPECIFIED
+}
+
+// DynamicExecutionContext is the minimum policy-neutral universe/action input
+// for the current entity. Capacity, candidate freshness, and holdings retain
+// their existing meanings without requiring separate active pipeline services.
+type DynamicExecutionContext struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	ContextId            string                 `protobuf:"bytes,1,opt,name=context_id,json=contextId,proto3" json:"context_id,omitempty"`
+	AllocationCandidates []*AllocationCandidate `protobuf:"bytes,2,rep,name=allocation_candidates,json=allocationCandidates,proto3" json:"allocation_candidates,omitempty"`
+	Capacity             *CapacityEvidence      `protobuf:"bytes,3,opt,name=capacity,proto3" json:"capacity,omitempty"`
+	UniverseVersion      string                 `protobuf:"bytes,4,opt,name=universe_version,json=universeVersion,proto3" json:"universe_version,omitempty"`
+	PolicyIdentity       string                 `protobuf:"bytes,5,opt,name=policy_identity,json=policyIdentity,proto3" json:"policy_identity,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *DynamicExecutionContext) Reset() {
+	*x = DynamicExecutionContext{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DynamicExecutionContext) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DynamicExecutionContext) ProtoMessage() {}
+
+func (x *DynamicExecutionContext) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DynamicExecutionContext.ProtoReflect.Descriptor instead.
+func (*DynamicExecutionContext) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *DynamicExecutionContext) GetContextId() string {
+	if x != nil {
+		return x.ContextId
+	}
+	return ""
+}
+
+func (x *DynamicExecutionContext) GetAllocationCandidates() []*AllocationCandidate {
+	if x != nil {
+		return x.AllocationCandidates
+	}
+	return nil
+}
+
+func (x *DynamicExecutionContext) GetCapacity() *CapacityEvidence {
+	if x != nil {
+		return x.Capacity
+	}
+	return nil
+}
+
+func (x *DynamicExecutionContext) GetUniverseVersion() string {
+	if x != nil {
+		return x.UniverseVersion
+	}
+	return ""
+}
+
+func (x *DynamicExecutionContext) GetPolicyIdentity() string {
+	if x != nil {
+		return x.PolicyIdentity
+	}
+	return ""
+}
+
+type PhaseVelocityRankingEntry struct {
+	state                      protoimpl.MessageState `protogen:"open.v1"`
+	EntityId                   string                 `protobuf:"bytes,1,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
+	Rank                       uint32                 `protobuf:"varint,2,opt,name=rank,proto3" json:"rank,omitempty"`
+	PhaseVelocityDegreesPerBar *float64               `protobuf:"fixed64,3,opt,name=phase_velocity_degrees_per_bar,json=phaseVelocityDegreesPerBar,proto3,oneof" json:"phase_velocity_degrees_per_bar,omitempty"`
+	Tied                       bool                   `protobuf:"varint,4,opt,name=tied,proto3" json:"tied,omitempty"`
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
+}
+
+func (x *PhaseVelocityRankingEntry) Reset() {
+	*x = PhaseVelocityRankingEntry{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PhaseVelocityRankingEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PhaseVelocityRankingEntry) ProtoMessage() {}
+
+func (x *PhaseVelocityRankingEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PhaseVelocityRankingEntry.ProtoReflect.Descriptor instead.
+func (*PhaseVelocityRankingEntry) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *PhaseVelocityRankingEntry) GetEntityId() string {
+	if x != nil {
+		return x.EntityId
+	}
+	return ""
+}
+
+func (x *PhaseVelocityRankingEntry) GetRank() uint32 {
+	if x != nil {
+		return x.Rank
+	}
+	return 0
+}
+
+func (x *PhaseVelocityRankingEntry) GetPhaseVelocityDegreesPerBar() float64 {
+	if x != nil && x.PhaseVelocityDegreesPerBar != nil {
+		return *x.PhaseVelocityDegreesPerBar
+	}
+	return 0
+}
+
+func (x *PhaseVelocityRankingEntry) GetTied() bool {
+	if x != nil {
+		return x.Tied
+	}
+	return false
+}
+
+// StateActionOutcome represents the boundary of an approved state-associated
+// action without inventing its unresolved algorithm or claiming execution.
+type StateActionOutcome struct {
+	state                protoimpl.MessageState       `protogen:"open.v1"`
+	ActionOutcomeId      string                       `protobuf:"bytes,1,opt,name=action_outcome_id,json=actionOutcomeId,proto3" json:"action_outcome_id,omitempty"`
+	State                DynamicExecutionState        `protobuf:"varint,2,opt,name=state,proto3,enum=dsejeh.v1.DynamicExecutionState" json:"state,omitempty"`
+	ActionType           StateActionType              `protobuf:"varint,3,opt,name=action_type,json=actionType,proto3,enum=dsejeh.v1.StateActionType" json:"action_type,omitempty"`
+	Status               StateActionStatus            `protobuf:"varint,4,opt,name=status,proto3,enum=dsejeh.v1.StateActionStatus" json:"status,omitempty"`
+	PhaseVelocityRanking []*PhaseVelocityRankingEntry `protobuf:"bytes,5,rep,name=phase_velocity_ranking,json=phaseVelocityRanking,proto3" json:"phase_velocity_ranking,omitempty"`
+	ActionPolicyIdentity *AlgorithmIdentity           `protobuf:"bytes,6,opt,name=action_policy_identity,json=actionPolicyIdentity,proto3" json:"action_policy_identity,omitempty"`
+	Reason               string                       `protobuf:"bytes,7,opt,name=reason,proto3" json:"reason,omitempty"`
+	ProducedUnixMs       int64                        `protobuf:"varint,8,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *StateActionOutcome) Reset() {
+	*x = StateActionOutcome{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StateActionOutcome) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StateActionOutcome) ProtoMessage() {}
+
+func (x *StateActionOutcome) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StateActionOutcome.ProtoReflect.Descriptor instead.
+func (*StateActionOutcome) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *StateActionOutcome) GetActionOutcomeId() string {
+	if x != nil {
+		return x.ActionOutcomeId
+	}
+	return ""
+}
+
+func (x *StateActionOutcome) GetState() DynamicExecutionState {
+	if x != nil {
+		return x.State
+	}
+	return DynamicExecutionState_DYNAMIC_EXECUTION_STATE_UNSPECIFIED
+}
+
+func (x *StateActionOutcome) GetActionType() StateActionType {
+	if x != nil {
+		return x.ActionType
+	}
+	return StateActionType_STATE_ACTION_TYPE_UNSPECIFIED
+}
+
+func (x *StateActionOutcome) GetStatus() StateActionStatus {
+	if x != nil {
+		return x.Status
+	}
+	return StateActionStatus_STATE_ACTION_STATUS_UNSPECIFIED
+}
+
+func (x *StateActionOutcome) GetPhaseVelocityRanking() []*PhaseVelocityRankingEntry {
+	if x != nil {
+		return x.PhaseVelocityRanking
+	}
+	return nil
+}
+
+func (x *StateActionOutcome) GetActionPolicyIdentity() *AlgorithmIdentity {
+	if x != nil {
+		return x.ActionPolicyIdentity
+	}
+	return nil
+}
+
+func (x *StateActionOutcome) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *StateActionOutcome) GetProducedUnixMs() int64 {
+	if x != nil {
+		return x.ProducedUnixMs
+	}
+	return 0
+}
+
+// GovernedExecutionInstruction is the sole active request contract crossing
+// from four-state strategy/action semantics to an external executor. It is not
+// an ExecutionEvent and never claims adapter acceptance or execution outcome.
+type GovernedExecutionInstruction struct {
+	state                    protoimpl.MessageState             `protogen:"open.v1"`
+	InstructionId            string                             `protobuf:"bytes,1,opt,name=instruction_id,json=instructionId,proto3" json:"instruction_id,omitempty"`
+	RuntimeId                string                             `protobuf:"bytes,2,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
+	EntityId                 string                             `protobuf:"bytes,3,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
+	RequestedAction          GovernedExecutionAction            `protobuf:"varint,4,opt,name=requested_action,json=requestedAction,proto3,enum=dsejeh.v1.GovernedExecutionAction" json:"requested_action,omitempty"`
+	Status                   GovernedExecutionInstructionStatus `protobuf:"varint,5,opt,name=status,proto3,enum=dsejeh.v1.GovernedExecutionInstructionStatus" json:"status,omitempty"`
+	DynamicExecutionResultId string                             `protobuf:"bytes,6,opt,name=dynamic_execution_result_id,json=dynamicExecutionResultId,proto3" json:"dynamic_execution_result_id,omitempty"`
+	StateActionOutcomeId     string                             `protobuf:"bytes,7,opt,name=state_action_outcome_id,json=stateActionOutcomeId,proto3" json:"state_action_outcome_id,omitempty"`
+	RequestedQuantity        *DecimalValue                      `protobuf:"bytes,8,opt,name=requested_quantity,json=requestedQuantity,proto3,oneof" json:"requested_quantity,omitempty"`
+	ConfigurationId          string                             `protobuf:"bytes,9,opt,name=configuration_id,json=configurationId,proto3" json:"configuration_id,omitempty"`
+	PolicyIdentity           string                             `protobuf:"bytes,10,opt,name=policy_identity,json=policyIdentity,proto3" json:"policy_identity,omitempty"`
+	IdempotencyKey           string                             `protobuf:"bytes,11,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	CorrelationId            string                             `protobuf:"bytes,12,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+	ValidUntilUnixMs         *int64                             `protobuf:"varint,13,opt,name=valid_until_unix_ms,json=validUntilUnixMs,proto3,oneof" json:"valid_until_unix_ms,omitempty"`
+	RuleEvaluationEvidenceId string                             `protobuf:"bytes,14,opt,name=rule_evaluation_evidence_id,json=ruleEvaluationEvidenceId,proto3" json:"rule_evaluation_evidence_id,omitempty"`
+	ProducedUnixMs           int64                              `protobuf:"varint,15,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
+}
+
+func (x *GovernedExecutionInstruction) Reset() {
+	*x = GovernedExecutionInstruction{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GovernedExecutionInstruction) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GovernedExecutionInstruction) ProtoMessage() {}
+
+func (x *GovernedExecutionInstruction) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GovernedExecutionInstruction.ProtoReflect.Descriptor instead.
+func (*GovernedExecutionInstruction) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *GovernedExecutionInstruction) GetInstructionId() string {
+	if x != nil {
+		return x.InstructionId
+	}
+	return ""
+}
+
+func (x *GovernedExecutionInstruction) GetRuntimeId() string {
+	if x != nil {
+		return x.RuntimeId
+	}
+	return ""
+}
+
+func (x *GovernedExecutionInstruction) GetEntityId() string {
+	if x != nil {
+		return x.EntityId
+	}
+	return ""
+}
+
+func (x *GovernedExecutionInstruction) GetRequestedAction() GovernedExecutionAction {
+	if x != nil {
+		return x.RequestedAction
+	}
+	return GovernedExecutionAction_GOVERNED_EXECUTION_ACTION_UNSPECIFIED
+}
+
+func (x *GovernedExecutionInstruction) GetStatus() GovernedExecutionInstructionStatus {
+	if x != nil {
+		return x.Status
+	}
+	return GovernedExecutionInstructionStatus_GOVERNED_EXECUTION_INSTRUCTION_STATUS_UNSPECIFIED
+}
+
+func (x *GovernedExecutionInstruction) GetDynamicExecutionResultId() string {
+	if x != nil {
+		return x.DynamicExecutionResultId
+	}
+	return ""
+}
+
+func (x *GovernedExecutionInstruction) GetStateActionOutcomeId() string {
+	if x != nil {
+		return x.StateActionOutcomeId
+	}
+	return ""
+}
+
+func (x *GovernedExecutionInstruction) GetRequestedQuantity() *DecimalValue {
+	if x != nil {
+		return x.RequestedQuantity
+	}
+	return nil
+}
+
+func (x *GovernedExecutionInstruction) GetConfigurationId() string {
+	if x != nil {
+		return x.ConfigurationId
+	}
+	return ""
+}
+
+func (x *GovernedExecutionInstruction) GetPolicyIdentity() string {
+	if x != nil {
+		return x.PolicyIdentity
+	}
+	return ""
+}
+
+func (x *GovernedExecutionInstruction) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+func (x *GovernedExecutionInstruction) GetCorrelationId() string {
+	if x != nil {
+		return x.CorrelationId
+	}
+	return ""
+}
+
+func (x *GovernedExecutionInstruction) GetValidUntilUnixMs() int64 {
+	if x != nil && x.ValidUntilUnixMs != nil {
+		return *x.ValidUntilUnixMs
+	}
+	return 0
+}
+
+func (x *GovernedExecutionInstruction) GetRuleEvaluationEvidenceId() string {
+	if x != nil {
+		return x.RuleEvaluationEvidenceId
+	}
+	return ""
+}
+
+func (x *GovernedExecutionInstruction) GetProducedUnixMs() int64 {
+	if x != nil {
+		return x.ProducedUnixMs
+	}
+	return 0
+}
+
+// DynamicExecutionResult establishes or maintains exactly one persistent
+// strategy state, records the governed boundary outcome, and identifies the
+// associated action. Historical results are evidence, not transition inputs.
+type DynamicExecutionResult struct {
+	state                    protoimpl.MessageState        `protogen:"open.v1"`
+	ResultId                 string                        `protobuf:"bytes,1,opt,name=result_id,json=resultId,proto3" json:"result_id,omitempty"`
+	RuntimeId                string                        `protobuf:"bytes,2,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
+	EntityId                 string                        `protobuf:"bytes,3,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
+	EntitySequence           uint64                        `protobuf:"varint,4,opt,name=entity_sequence,json=entitySequence,proto3" json:"entity_sequence,omitempty"`
+	Status                   DynamicExecutionStateStatus   `protobuf:"varint,5,opt,name=status,proto3,enum=dsejeh.v1.DynamicExecutionStateStatus" json:"status,omitempty"`
+	PreviousState            DynamicExecutionState         `protobuf:"varint,6,opt,name=previous_state,json=previousState,proto3,enum=dsejeh.v1.DynamicExecutionState" json:"previous_state,omitempty"`
+	CurrentState             DynamicExecutionState         `protobuf:"varint,7,opt,name=current_state,json=currentState,proto3,enum=dsejeh.v1.DynamicExecutionState" json:"current_state,omitempty"`
+	BoundaryPolicyOutcome    BoundaryPolicyOutcome         `protobuf:"varint,8,opt,name=boundary_policy_outcome,json=boundaryPolicyOutcome,proto3,enum=dsejeh.v1.BoundaryPolicyOutcome" json:"boundary_policy_outcome,omitempty"`
+	PhaseTransitionStateId   string                        `protobuf:"bytes,9,opt,name=phase_transition_state_id,json=phaseTransitionStateId,proto3" json:"phase_transition_state_id,omitempty"`
+	StateActionOutcome       *StateActionOutcome           `protobuf:"bytes,10,opt,name=state_action_outcome,json=stateActionOutcome,proto3" json:"state_action_outcome,omitempty"`
+	ExecutionInstruction     *GovernedExecutionInstruction `protobuf:"bytes,11,opt,name=execution_instruction,json=executionInstruction,proto3" json:"execution_instruction,omitempty"`
+	RuleEvaluationEvidenceId string                        `protobuf:"bytes,12,opt,name=rule_evaluation_evidence_id,json=ruleEvaluationEvidenceId,proto3" json:"rule_evaluation_evidence_id,omitempty"`
+	PolicyIdentity           string                        `protobuf:"bytes,13,opt,name=policy_identity,json=policyIdentity,proto3" json:"policy_identity,omitempty"`
+	Reason                   string                        `protobuf:"bytes,14,opt,name=reason,proto3" json:"reason,omitempty"`
+	ProducedUnixMs           int64                         `protobuf:"varint,15,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
+	BoundaryFacts            []*BoundaryFact               `protobuf:"bytes,16,rep,name=boundary_facts,json=boundaryFacts,proto3" json:"boundary_facts,omitempty"`
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
+}
+
+func (x *DynamicExecutionResult) Reset() {
+	*x = DynamicExecutionResult{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DynamicExecutionResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DynamicExecutionResult) ProtoMessage() {}
+
+func (x *DynamicExecutionResult) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DynamicExecutionResult.ProtoReflect.Descriptor instead.
+func (*DynamicExecutionResult) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *DynamicExecutionResult) GetResultId() string {
+	if x != nil {
+		return x.ResultId
+	}
+	return ""
+}
+
+func (x *DynamicExecutionResult) GetRuntimeId() string {
+	if x != nil {
+		return x.RuntimeId
+	}
+	return ""
+}
+
+func (x *DynamicExecutionResult) GetEntityId() string {
+	if x != nil {
+		return x.EntityId
+	}
+	return ""
+}
+
+func (x *DynamicExecutionResult) GetEntitySequence() uint64 {
+	if x != nil {
+		return x.EntitySequence
+	}
+	return 0
+}
+
+func (x *DynamicExecutionResult) GetStatus() DynamicExecutionStateStatus {
+	if x != nil {
+		return x.Status
+	}
+	return DynamicExecutionStateStatus_DYNAMIC_EXECUTION_STATE_STATUS_UNSPECIFIED
+}
+
+func (x *DynamicExecutionResult) GetPreviousState() DynamicExecutionState {
+	if x != nil {
+		return x.PreviousState
+	}
+	return DynamicExecutionState_DYNAMIC_EXECUTION_STATE_UNSPECIFIED
+}
+
+func (x *DynamicExecutionResult) GetCurrentState() DynamicExecutionState {
+	if x != nil {
+		return x.CurrentState
+	}
+	return DynamicExecutionState_DYNAMIC_EXECUTION_STATE_UNSPECIFIED
+}
+
+func (x *DynamicExecutionResult) GetBoundaryPolicyOutcome() BoundaryPolicyOutcome {
+	if x != nil {
+		return x.BoundaryPolicyOutcome
+	}
+	return BoundaryPolicyOutcome_BOUNDARY_POLICY_OUTCOME_UNSPECIFIED
+}
+
+func (x *DynamicExecutionResult) GetPhaseTransitionStateId() string {
+	if x != nil {
+		return x.PhaseTransitionStateId
+	}
+	return ""
+}
+
+func (x *DynamicExecutionResult) GetStateActionOutcome() *StateActionOutcome {
+	if x != nil {
+		return x.StateActionOutcome
+	}
+	return nil
+}
+
+func (x *DynamicExecutionResult) GetExecutionInstruction() *GovernedExecutionInstruction {
+	if x != nil {
+		return x.ExecutionInstruction
+	}
+	return nil
+}
+
+func (x *DynamicExecutionResult) GetRuleEvaluationEvidenceId() string {
+	if x != nil {
+		return x.RuleEvaluationEvidenceId
+	}
+	return ""
+}
+
+func (x *DynamicExecutionResult) GetPolicyIdentity() string {
+	if x != nil {
+		return x.PolicyIdentity
+	}
+	return ""
+}
+
+func (x *DynamicExecutionResult) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *DynamicExecutionResult) GetProducedUnixMs() int64 {
+	if x != nil {
+		return x.ProducedUnixMs
+	}
+	return 0
+}
+
+func (x *DynamicExecutionResult) GetBoundaryFacts() []*BoundaryFact {
+	if x != nil {
+		return x.BoundaryFacts
+	}
+	return nil
+}
+
 // BoundaryCrossoverEvidence records DEP-06 output separately from persistent
 // region membership. Exact crossover mathematics remain identified by policy.
+//
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type BoundaryCrossoverEvidence struct {
 	state                    protoimpl.MessageState  `protogen:"open.v1"`
 	EvidenceId               string                  `protobuf:"bytes,1,opt,name=evidence_id,json=evidenceId,proto3" json:"evidence_id,omitempty"`
@@ -5062,7 +6614,7 @@ type BoundaryCrossoverEvidence struct {
 
 func (x *BoundaryCrossoverEvidence) Reset() {
 	*x = BoundaryCrossoverEvidence{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[29]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5074,7 +6626,7 @@ func (x *BoundaryCrossoverEvidence) String() string {
 func (*BoundaryCrossoverEvidence) ProtoMessage() {}
 
 func (x *BoundaryCrossoverEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[29]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5087,7 +6639,7 @@ func (x *BoundaryCrossoverEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BoundaryCrossoverEvidence.ProtoReflect.Descriptor instead.
 func (*BoundaryCrossoverEvidence) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{29}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *BoundaryCrossoverEvidence) GetEvidenceId() string {
@@ -5190,6 +6742,8 @@ func (x *BoundaryCrossoverEvidence) GetCurrentPhaseEvidenceId() string {
 
 // StrategyRegionEvidence records DEP-07 persistent membership and whether the
 // result initialized, persisted, or transitioned. It never claims execution.
+//
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type StrategyRegionEvidence struct {
 	state                         protoimpl.MessageState `protogen:"open.v1"`
 	EvidenceId                    string                 `protobuf:"bytes,1,opt,name=evidence_id,json=evidenceId,proto3" json:"evidence_id,omitempty"`
@@ -5211,7 +6765,7 @@ type StrategyRegionEvidence struct {
 
 func (x *StrategyRegionEvidence) Reset() {
 	*x = StrategyRegionEvidence{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[30]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5223,7 +6777,7 @@ func (x *StrategyRegionEvidence) String() string {
 func (*StrategyRegionEvidence) ProtoMessage() {}
 
 func (x *StrategyRegionEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[30]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5236,7 +6790,7 @@ func (x *StrategyRegionEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StrategyRegionEvidence.ProtoReflect.Descriptor instead.
 func (*StrategyRegionEvidence) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{30}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *StrategyRegionEvidence) GetEvidenceId() string {
@@ -5342,7 +6896,7 @@ type DecimalValue struct {
 
 func (x *DecimalValue) Reset() {
 	*x = DecimalValue{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[31]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5354,7 +6908,7 @@ func (x *DecimalValue) String() string {
 func (*DecimalValue) ProtoMessage() {}
 
 func (x *DecimalValue) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[31]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5367,7 +6921,7 @@ func (x *DecimalValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DecimalValue.ProtoReflect.Descriptor instead.
 func (*DecimalValue) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{31}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *DecimalValue) GetValue() string {
@@ -5399,7 +6953,7 @@ type CapacityEvidence struct {
 
 func (x *CapacityEvidence) Reset() {
 	*x = CapacityEvidence{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[32]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5411,7 +6965,7 @@ func (x *CapacityEvidence) String() string {
 func (*CapacityEvidence) ProtoMessage() {}
 
 func (x *CapacityEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[32]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5424,7 +6978,7 @@ func (x *CapacityEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CapacityEvidence.ProtoReflect.Descriptor instead.
 func (*CapacityEvidence) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{32}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *CapacityEvidence) GetStatus() CapacityStatus {
@@ -5484,7 +7038,7 @@ type EntityUniverseState struct {
 
 func (x *EntityUniverseState) Reset() {
 	*x = EntityUniverseState{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[33]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5496,7 +7050,7 @@ func (x *EntityUniverseState) String() string {
 func (*EntityUniverseState) ProtoMessage() {}
 
 func (x *EntityUniverseState) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[33]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5509,7 +7063,7 @@ func (x *EntityUniverseState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EntityUniverseState.ProtoReflect.Descriptor instead.
 func (*EntityUniverseState) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{33}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *EntityUniverseState) GetEntityStateId() string {
@@ -5599,6 +7153,8 @@ func (x *EntityUniverseState) GetPhaseMotionEvidenceId() string {
 // UniverseStateEvidence identifies one serialized DEP-08 universe version and
 // its latest entity views. Snapshot, staleness, capital, and capacity policies
 // remain attributable rather than embedded in this schema.
+//
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type UniverseStateEvidence struct {
 	state                        protoimpl.MessageState `protogen:"open.v1"`
 	EvidenceId                   string                 `protobuf:"bytes,1,opt,name=evidence_id,json=evidenceId,proto3" json:"evidence_id,omitempty"`
@@ -5618,7 +7174,7 @@ type UniverseStateEvidence struct {
 
 func (x *UniverseStateEvidence) Reset() {
 	*x = UniverseStateEvidence{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[34]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5630,7 +7186,7 @@ func (x *UniverseStateEvidence) String() string {
 func (*UniverseStateEvidence) ProtoMessage() {}
 
 func (x *UniverseStateEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[34]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5643,7 +7199,7 @@ func (x *UniverseStateEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UniverseStateEvidence.ProtoReflect.Descriptor instead.
 func (*UniverseStateEvidence) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{34}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *UniverseStateEvidence) GetEvidenceId() string {
@@ -5739,7 +7295,7 @@ type CandidateRankingEntry struct {
 
 func (x *CandidateRankingEntry) Reset() {
 	*x = CandidateRankingEntry{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[35]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5751,7 +7307,7 @@ func (x *CandidateRankingEntry) String() string {
 func (*CandidateRankingEntry) ProtoMessage() {}
 
 func (x *CandidateRankingEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[35]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5764,7 +7320,7 @@ func (x *CandidateRankingEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CandidateRankingEntry.ProtoReflect.Descriptor instead.
 func (*CandidateRankingEntry) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{35}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *CandidateRankingEntry) GetEntityId() string {
@@ -5811,6 +7367,8 @@ func (x *CandidateRankingEntry) GetTied() bool {
 
 // CandidateRankingEvidence records the complete candidate set and ranking
 // result without defining the unresolved ranking formula or tie policy.
+//
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type CandidateRankingEvidence struct {
 	state                    protoimpl.MessageState   `protogen:"open.v1"`
 	EvidenceId               string                   `protobuf:"bytes,1,opt,name=evidence_id,json=evidenceId,proto3" json:"evidence_id,omitempty"`
@@ -5829,7 +7387,7 @@ type CandidateRankingEvidence struct {
 
 func (x *CandidateRankingEvidence) Reset() {
 	*x = CandidateRankingEvidence{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[36]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5841,7 +7399,7 @@ func (x *CandidateRankingEvidence) String() string {
 func (*CandidateRankingEvidence) ProtoMessage() {}
 
 func (x *CandidateRankingEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[36]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5854,7 +7412,7 @@ func (x *CandidateRankingEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CandidateRankingEvidence.ProtoReflect.Descriptor instead.
 func (*CandidateRankingEvidence) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{36}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *CandidateRankingEvidence) GetEvidenceId() string {
@@ -5929,6 +7487,8 @@ func (x *CandidateRankingEvidence) GetProducedUnixMs() int64 {
 
 // StrategyDecision is the distinct DEP-10 result. It is neither a region nor
 // an execution request/outcome, even when a decision label resembles a region.
+//
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type StrategyDecision struct {
 	state                      protoimpl.MessageState `protogen:"open.v1"`
 	DecisionId                 string                 `protobuf:"bytes,1,opt,name=decision_id,json=decisionId,proto3" json:"decision_id,omitempty"`
@@ -5951,7 +7511,7 @@ type StrategyDecision struct {
 
 func (x *StrategyDecision) Reset() {
 	*x = StrategyDecision{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[37]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5963,7 +7523,7 @@ func (x *StrategyDecision) String() string {
 func (*StrategyDecision) ProtoMessage() {}
 
 func (x *StrategyDecision) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[37]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5976,7 +7536,7 @@ func (x *StrategyDecision) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StrategyDecision.ProtoReflect.Descriptor instead.
 func (*StrategyDecision) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{37}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *StrategyDecision) GetDecisionId() string {
@@ -6080,6 +7640,8 @@ func (x *StrategyDecision) GetProducedUnixMs() int64 {
 // ExecutionIntent is the DEP-11 request sent to either approved paper executor.
 // It never states that execution occurred. Quantity is optional until an
 // approved sizing policy supplies it.
+//
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type ExecutionIntent struct {
 	state                    protoimpl.MessageState `protogen:"open.v1"`
 	IntentId                 string                 `protobuf:"bytes,1,opt,name=intent_id,json=intentId,proto3" json:"intent_id,omitempty"`
@@ -6103,7 +7665,7 @@ type ExecutionIntent struct {
 
 func (x *ExecutionIntent) Reset() {
 	*x = ExecutionIntent{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[38]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6115,7 +7677,7 @@ func (x *ExecutionIntent) String() string {
 func (*ExecutionIntent) ProtoMessage() {}
 
 func (x *ExecutionIntent) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[38]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6128,7 +7690,7 @@ func (x *ExecutionIntent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecutionIntent.ProtoReflect.Descriptor instead.
 func (*ExecutionIntent) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{38}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *ExecutionIntent) GetIntentId() string {
@@ -6250,7 +7812,7 @@ type ExecutorIdentity struct {
 
 func (x *ExecutorIdentity) Reset() {
 	*x = ExecutorIdentity{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[39]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6262,7 +7824,7 @@ func (x *ExecutorIdentity) String() string {
 func (*ExecutorIdentity) ProtoMessage() {}
 
 func (x *ExecutorIdentity) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[39]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6275,7 +7837,7 @@ func (x *ExecutorIdentity) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecutorIdentity.ProtoReflect.Descriptor instead.
 func (*ExecutorIdentity) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{39}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *ExecutorIdentity) GetExecutorId() string {
@@ -6309,28 +7871,30 @@ func (x *ExecutorIdentity) GetConfigurationId() string {
 // ExecutionEvent is the only contract that reports execution outcome. Decimal
 // quantities/prices preserve exact adapter values without defining sizing policy.
 type ExecutionEvent struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	EventId           string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
-	RuntimeId         string                 `protobuf:"bytes,2,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
-	ExecutionIntentId string                 `protobuf:"bytes,3,opt,name=execution_intent_id,json=executionIntentId,proto3" json:"execution_intent_id,omitempty"`
-	EntityId          string                 `protobuf:"bytes,4,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
-	Status            ExecutionEventStatus   `protobuf:"varint,5,opt,name=status,proto3,enum=dsejeh.v1.ExecutionEventStatus" json:"status,omitempty"`
-	ExecutorIdentity  *ExecutorIdentity      `protobuf:"bytes,6,opt,name=executor_identity,json=executorIdentity,proto3" json:"executor_identity,omitempty"`
-	ExternalOrderId   string                 `protobuf:"bytes,7,opt,name=external_order_id,json=externalOrderId,proto3" json:"external_order_id,omitempty"`
-	RequestedQuantity *DecimalValue          `protobuf:"bytes,8,opt,name=requested_quantity,json=requestedQuantity,proto3,oneof" json:"requested_quantity,omitempty"`
-	FilledQuantity    *DecimalValue          `protobuf:"bytes,9,opt,name=filled_quantity,json=filledQuantity,proto3,oneof" json:"filled_quantity,omitempty"`
-	FillPrice         *DecimalValue          `protobuf:"bytes,10,opt,name=fill_price,json=fillPrice,proto3,oneof" json:"fill_price,omitempty"`
-	Reason            string                 `protobuf:"bytes,11,opt,name=reason,proto3" json:"reason,omitempty"`
-	CorrelationId     string                 `protobuf:"bytes,12,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
-	ExecutionUnixMs   int64                  `protobuf:"varint,13,opt,name=execution_unix_ms,json=executionUnixMs,proto3" json:"execution_unix_ms,omitempty"`
-	ProducedUnixMs    int64                  `protobuf:"varint,14,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	EventId   string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
+	RuntimeId string                 `protobuf:"bytes,2,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
+	ExecutionIntentId              string               `protobuf:"bytes,3,opt,name=execution_intent_id,json=executionIntentId,proto3" json:"execution_intent_id,omitempty"`
+	EntityId                       string               `protobuf:"bytes,4,opt,name=entity_id,json=entityId,proto3" json:"entity_id,omitempty"`
+	Status                         ExecutionEventStatus `protobuf:"varint,5,opt,name=status,proto3,enum=dsejeh.v1.ExecutionEventStatus" json:"status,omitempty"`
+	ExecutorIdentity               *ExecutorIdentity    `protobuf:"bytes,6,opt,name=executor_identity,json=executorIdentity,proto3" json:"executor_identity,omitempty"`
+	ExternalOrderId                string               `protobuf:"bytes,7,opt,name=external_order_id,json=externalOrderId,proto3" json:"external_order_id,omitempty"`
+	RequestedQuantity              *DecimalValue        `protobuf:"bytes,8,opt,name=requested_quantity,json=requestedQuantity,proto3,oneof" json:"requested_quantity,omitempty"`
+	FilledQuantity                 *DecimalValue        `protobuf:"bytes,9,opt,name=filled_quantity,json=filledQuantity,proto3,oneof" json:"filled_quantity,omitempty"`
+	FillPrice                      *DecimalValue        `protobuf:"bytes,10,opt,name=fill_price,json=fillPrice,proto3,oneof" json:"fill_price,omitempty"`
+	Reason                         string               `protobuf:"bytes,11,opt,name=reason,proto3" json:"reason,omitempty"`
+	CorrelationId                  string               `protobuf:"bytes,12,opt,name=correlation_id,json=correlationId,proto3" json:"correlation_id,omitempty"`
+	ExecutionUnixMs                int64                `protobuf:"varint,13,opt,name=execution_unix_ms,json=executionUnixMs,proto3" json:"execution_unix_ms,omitempty"`
+	ProducedUnixMs                 int64                `protobuf:"varint,14,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
+	GovernedExecutionInstructionId string               `protobuf:"bytes,15,opt,name=governed_execution_instruction_id,json=governedExecutionInstructionId,proto3" json:"governed_execution_instruction_id,omitempty"`
+	unknownFields                  protoimpl.UnknownFields
+	sizeCache                      protoimpl.SizeCache
 }
 
 func (x *ExecutionEvent) Reset() {
 	*x = ExecutionEvent{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[40]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6342,7 +7906,7 @@ func (x *ExecutionEvent) String() string {
 func (*ExecutionEvent) ProtoMessage() {}
 
 func (x *ExecutionEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[40]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6355,7 +7919,7 @@ func (x *ExecutionEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecutionEvent.ProtoReflect.Descriptor instead.
 func (*ExecutionEvent) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{40}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *ExecutionEvent) GetEventId() string {
@@ -6372,6 +7936,7 @@ func (x *ExecutionEvent) GetRuntimeId() string {
 	return ""
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *ExecutionEvent) GetExecutionIntentId() string {
 	if x != nil {
 		return x.ExecutionIntentId
@@ -6456,24 +8021,33 @@ func (x *ExecutionEvent) GetProducedUnixMs() int64 {
 	return 0
 }
 
+func (x *ExecutionEvent) GetGovernedExecutionInstructionId() string {
+	if x != nil {
+		return x.GovernedExecutionInstructionId
+	}
+	return ""
+}
+
 // ExecutionReconciliationEvidence compares the latest executor event with the
 // originating intent. It carries state without defining retry/recovery policy.
 type ExecutionReconciliationEvidence struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	EvidenceId        string                 `protobuf:"bytes,1,opt,name=evidence_id,json=evidenceId,proto3" json:"evidence_id,omitempty"`
-	RuntimeId         string                 `protobuf:"bytes,2,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
-	ExecutionIntentId string                 `protobuf:"bytes,3,opt,name=execution_intent_id,json=executionIntentId,proto3" json:"execution_intent_id,omitempty"`
-	ExecutionEventId  string                 `protobuf:"bytes,4,opt,name=execution_event_id,json=executionEventId,proto3" json:"execution_event_id,omitempty"`
-	Status            ReconciliationStatus   `protobuf:"varint,5,opt,name=status,proto3,enum=dsejeh.v1.ReconciliationStatus" json:"status,omitempty"`
-	Reason            string                 `protobuf:"bytes,6,opt,name=reason,proto3" json:"reason,omitempty"`
-	ProducedUnixMs    int64                  `protobuf:"varint,7,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	EvidenceId string                 `protobuf:"bytes,1,opt,name=evidence_id,json=evidenceId,proto3" json:"evidence_id,omitempty"`
+	RuntimeId  string                 `protobuf:"bytes,2,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
+	ExecutionIntentId              string               `protobuf:"bytes,3,opt,name=execution_intent_id,json=executionIntentId,proto3" json:"execution_intent_id,omitempty"`
+	ExecutionEventId               string               `protobuf:"bytes,4,opt,name=execution_event_id,json=executionEventId,proto3" json:"execution_event_id,omitempty"`
+	Status                         ReconciliationStatus `protobuf:"varint,5,opt,name=status,proto3,enum=dsejeh.v1.ReconciliationStatus" json:"status,omitempty"`
+	Reason                         string               `protobuf:"bytes,6,opt,name=reason,proto3" json:"reason,omitempty"`
+	ProducedUnixMs                 int64                `protobuf:"varint,7,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
+	GovernedExecutionInstructionId string               `protobuf:"bytes,8,opt,name=governed_execution_instruction_id,json=governedExecutionInstructionId,proto3" json:"governed_execution_instruction_id,omitempty"`
+	unknownFields                  protoimpl.UnknownFields
+	sizeCache                      protoimpl.SizeCache
 }
 
 func (x *ExecutionReconciliationEvidence) Reset() {
 	*x = ExecutionReconciliationEvidence{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[41]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6485,7 +8059,7 @@ func (x *ExecutionReconciliationEvidence) String() string {
 func (*ExecutionReconciliationEvidence) ProtoMessage() {}
 
 func (x *ExecutionReconciliationEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[41]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6498,7 +8072,7 @@ func (x *ExecutionReconciliationEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecutionReconciliationEvidence.ProtoReflect.Descriptor instead.
 func (*ExecutionReconciliationEvidence) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{41}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *ExecutionReconciliationEvidence) GetEvidenceId() string {
@@ -6515,6 +8089,7 @@ func (x *ExecutionReconciliationEvidence) GetRuntimeId() string {
 	return ""
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *ExecutionReconciliationEvidence) GetExecutionIntentId() string {
 	if x != nil {
 		return x.ExecutionIntentId
@@ -6550,6 +8125,13 @@ func (x *ExecutionReconciliationEvidence) GetProducedUnixMs() int64 {
 	return 0
 }
 
+func (x *ExecutionReconciliationEvidence) GetGovernedExecutionInstructionId() string {
+	if x != nil {
+		return x.GovernedExecutionInstructionId
+	}
+	return ""
+}
+
 // RuntimeActivitySnapshot holds independent monotonic counters for one runtime
 // observation window. Counter values do not establish liveness or connectivity.
 type RuntimeActivitySnapshot struct {
@@ -6561,23 +8143,39 @@ type RuntimeActivitySnapshot struct {
 	BarsRejected     uint64                 `protobuf:"varint,5,opt,name=bars_rejected,json=barsRejected,proto3" json:"bars_rejected,omitempty"`
 	BarsInitializing uint64                 `protobuf:"varint,6,opt,name=bars_initializing,json=barsInitializing,proto3" json:"bars_initializing,omitempty"`
 	// Counts bars with PRODUCTION_ELIGIBILITY_OUTCOME_PRODUCTION_ELIGIBLE.
-	BarsPhaseEligible      uint64 `protobuf:"varint,7,opt,name=bars_phase_eligible,json=barsPhaseEligible,proto3" json:"bars_phase_eligible,omitempty"`
+	BarsPhaseEligible uint64 `protobuf:"varint,7,opt,name=bars_phase_eligible,json=barsPhaseEligible,proto3" json:"bars_phase_eligible,omitempty"`
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 	PhaseMotionEvaluations uint64 `protobuf:"varint,8,opt,name=phase_motion_evaluations,json=phaseMotionEvaluations,proto3" json:"phase_motion_evaluations,omitempty"`
-	BoundaryCrossovers     uint64 `protobuf:"varint,9,opt,name=boundary_crossovers,json=boundaryCrossovers,proto3" json:"boundary_crossovers,omitempty"`
-	HopOnEvents            uint64 `protobuf:"varint,10,opt,name=hop_on_events,json=hopOnEvents,proto3" json:"hop_on_events,omitempty"`
-	HopOffEvents           uint64 `protobuf:"varint,11,opt,name=hop_off_events,json=hopOffEvents,proto3" json:"hop_off_events,omitempty"`
-	StrategyDecisions      uint64 `protobuf:"varint,12,opt,name=strategy_decisions,json=strategyDecisions,proto3" json:"strategy_decisions,omitempty"`
-	ExecutionIntents       uint64 `protobuf:"varint,13,opt,name=execution_intents,json=executionIntents,proto3" json:"execution_intents,omitempty"`
-	ExecutionEvents        uint64 `protobuf:"varint,14,opt,name=execution_events,json=executionEvents,proto3" json:"execution_events,omitempty"`
-	WindowStartUnixMs      int64  `protobuf:"varint,15,opt,name=window_start_unix_ms,json=windowStartUnixMs,proto3" json:"window_start_unix_ms,omitempty"`
-	ProducedUnixMs         int64  `protobuf:"varint,16,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
+	BoundaryCrossovers uint64 `protobuf:"varint,9,opt,name=boundary_crossovers,json=boundaryCrossovers,proto3" json:"boundary_crossovers,omitempty"`
+	HopOnEvents        uint64 `protobuf:"varint,10,opt,name=hop_on_events,json=hopOnEvents,proto3" json:"hop_on_events,omitempty"`
+	HopOffEvents       uint64 `protobuf:"varint,11,opt,name=hop_off_events,json=hopOffEvents,proto3" json:"hop_off_events,omitempty"`
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
+	StrategyDecisions uint64 `protobuf:"varint,12,opt,name=strategy_decisions,json=strategyDecisions,proto3" json:"strategy_decisions,omitempty"`
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
+	ExecutionIntents              uint64 `protobuf:"varint,13,opt,name=execution_intents,json=executionIntents,proto3" json:"execution_intents,omitempty"`
+	ExecutionEvents               uint64 `protobuf:"varint,14,opt,name=execution_events,json=executionEvents,proto3" json:"execution_events,omitempty"`
+	WindowStartUnixMs             int64  `protobuf:"varint,15,opt,name=window_start_unix_ms,json=windowStartUnixMs,proto3" json:"window_start_unix_ms,omitempty"`
+	ProducedUnixMs                int64  `protobuf:"varint,16,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
+	PhaseTransitionCalculations   uint64 `protobuf:"varint,17,opt,name=phase_transition_calculations,json=phaseTransitionCalculations,proto3" json:"phase_transition_calculations,omitempty"`
+	BoundaryPolicyEvaluations     uint64 `protobuf:"varint,18,opt,name=boundary_policy_evaluations,json=boundaryPolicyEvaluations,proto3" json:"boundary_policy_evaluations,omitempty"`
+	DisregardStateEntries         uint64 `protobuf:"varint,19,opt,name=disregard_state_entries,json=disregardStateEntries,proto3" json:"disregard_state_entries,omitempty"`
+	AllocateStateEntries          uint64 `protobuf:"varint,20,opt,name=allocate_state_entries,json=allocateStateEntries,proto3" json:"allocate_state_entries,omitempty"`
+	HoldAndTrailStateEntries      uint64 `protobuf:"varint,21,opt,name=hold_and_trail_state_entries,json=holdAndTrailStateEntries,proto3" json:"hold_and_trail_state_entries,omitempty"`
+	LiquidateStateEntries         uint64 `protobuf:"varint,22,opt,name=liquidate_state_entries,json=liquidateStateEntries,proto3" json:"liquidate_state_entries,omitempty"`
+	DisregardStatePersistence     uint64 `protobuf:"varint,23,opt,name=disregard_state_persistence,json=disregardStatePersistence,proto3" json:"disregard_state_persistence,omitempty"`
+	AllocateStatePersistence      uint64 `protobuf:"varint,24,opt,name=allocate_state_persistence,json=allocateStatePersistence,proto3" json:"allocate_state_persistence,omitempty"`
+	HoldAndTrailStatePersistence  uint64 `protobuf:"varint,25,opt,name=hold_and_trail_state_persistence,json=holdAndTrailStatePersistence,proto3" json:"hold_and_trail_state_persistence,omitempty"`
+	LiquidateStatePersistence     uint64 `protobuf:"varint,26,opt,name=liquidate_state_persistence,json=liquidateStatePersistence,proto3" json:"liquidate_state_persistence,omitempty"`
+	StateActionOutcomes           uint64 `protobuf:"varint,27,opt,name=state_action_outcomes,json=stateActionOutcomes,proto3" json:"state_action_outcomes,omitempty"`
+	GovernedExecutionInstructions uint64 `protobuf:"varint,28,opt,name=governed_execution_instructions,json=governedExecutionInstructions,proto3" json:"governed_execution_instructions,omitempty"`
+	unknownFields                 protoimpl.UnknownFields
+	sizeCache                     protoimpl.SizeCache
 }
 
 func (x *RuntimeActivitySnapshot) Reset() {
 	*x = RuntimeActivitySnapshot{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[42]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6589,7 +8187,7 @@ func (x *RuntimeActivitySnapshot) String() string {
 func (*RuntimeActivitySnapshot) ProtoMessage() {}
 
 func (x *RuntimeActivitySnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[42]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6602,7 +8200,7 @@ func (x *RuntimeActivitySnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuntimeActivitySnapshot.ProtoReflect.Descriptor instead.
 func (*RuntimeActivitySnapshot) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{42}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *RuntimeActivitySnapshot) GetSnapshotId() string {
@@ -6654,6 +8252,7 @@ func (x *RuntimeActivitySnapshot) GetBarsPhaseEligible() uint64 {
 	return 0
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuntimeActivitySnapshot) GetPhaseMotionEvaluations() uint64 {
 	if x != nil {
 		return x.PhaseMotionEvaluations
@@ -6661,6 +8260,7 @@ func (x *RuntimeActivitySnapshot) GetPhaseMotionEvaluations() uint64 {
 	return 0
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuntimeActivitySnapshot) GetBoundaryCrossovers() uint64 {
 	if x != nil {
 		return x.BoundaryCrossovers
@@ -6682,6 +8282,7 @@ func (x *RuntimeActivitySnapshot) GetHopOffEvents() uint64 {
 	return 0
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuntimeActivitySnapshot) GetStrategyDecisions() uint64 {
 	if x != nil {
 		return x.StrategyDecisions
@@ -6689,6 +8290,7 @@ func (x *RuntimeActivitySnapshot) GetStrategyDecisions() uint64 {
 	return 0
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuntimeActivitySnapshot) GetExecutionIntents() uint64 {
 	if x != nil {
 		return x.ExecutionIntents
@@ -6717,6 +8319,90 @@ func (x *RuntimeActivitySnapshot) GetProducedUnixMs() int64 {
 	return 0
 }
 
+func (x *RuntimeActivitySnapshot) GetPhaseTransitionCalculations() uint64 {
+	if x != nil {
+		return x.PhaseTransitionCalculations
+	}
+	return 0
+}
+
+func (x *RuntimeActivitySnapshot) GetBoundaryPolicyEvaluations() uint64 {
+	if x != nil {
+		return x.BoundaryPolicyEvaluations
+	}
+	return 0
+}
+
+func (x *RuntimeActivitySnapshot) GetDisregardStateEntries() uint64 {
+	if x != nil {
+		return x.DisregardStateEntries
+	}
+	return 0
+}
+
+func (x *RuntimeActivitySnapshot) GetAllocateStateEntries() uint64 {
+	if x != nil {
+		return x.AllocateStateEntries
+	}
+	return 0
+}
+
+func (x *RuntimeActivitySnapshot) GetHoldAndTrailStateEntries() uint64 {
+	if x != nil {
+		return x.HoldAndTrailStateEntries
+	}
+	return 0
+}
+
+func (x *RuntimeActivitySnapshot) GetLiquidateStateEntries() uint64 {
+	if x != nil {
+		return x.LiquidateStateEntries
+	}
+	return 0
+}
+
+func (x *RuntimeActivitySnapshot) GetDisregardStatePersistence() uint64 {
+	if x != nil {
+		return x.DisregardStatePersistence
+	}
+	return 0
+}
+
+func (x *RuntimeActivitySnapshot) GetAllocateStatePersistence() uint64 {
+	if x != nil {
+		return x.AllocateStatePersistence
+	}
+	return 0
+}
+
+func (x *RuntimeActivitySnapshot) GetHoldAndTrailStatePersistence() uint64 {
+	if x != nil {
+		return x.HoldAndTrailStatePersistence
+	}
+	return 0
+}
+
+func (x *RuntimeActivitySnapshot) GetLiquidateStatePersistence() uint64 {
+	if x != nil {
+		return x.LiquidateStatePersistence
+	}
+	return 0
+}
+
+func (x *RuntimeActivitySnapshot) GetStateActionOutcomes() uint64 {
+	if x != nil {
+		return x.StateActionOutcomes
+	}
+	return 0
+}
+
+func (x *RuntimeActivitySnapshot) GetGovernedExecutionInstructions() uint64 {
+	if x != nil {
+		return x.GovernedExecutionInstructions
+	}
+	return 0
+}
+
 // DiagnosticEvidence is structured operational evidence, not a replacement for
 // logs and not a financially meaningful outcome.
 type DiagnosticEvidence struct {
@@ -6737,7 +8423,7 @@ type DiagnosticEvidence struct {
 
 func (x *DiagnosticEvidence) Reset() {
 	*x = DiagnosticEvidence{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[43]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6749,7 +8435,7 @@ func (x *DiagnosticEvidence) String() string {
 func (*DiagnosticEvidence) ProtoMessage() {}
 
 func (x *DiagnosticEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[43]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6762,7 +8448,7 @@ func (x *DiagnosticEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiagnosticEvidence.ProtoReflect.Descriptor instead.
 func (*DiagnosticEvidence) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{43}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *DiagnosticEvidence) GetEvidenceId() string {
@@ -6858,7 +8544,7 @@ type RuntimeStatusEvidence struct {
 
 func (x *RuntimeStatusEvidence) Reset() {
 	*x = RuntimeStatusEvidence{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[44]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6870,7 +8556,7 @@ func (x *RuntimeStatusEvidence) String() string {
 func (*RuntimeStatusEvidence) ProtoMessage() {}
 
 func (x *RuntimeStatusEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[44]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6883,7 +8569,7 @@ func (x *RuntimeStatusEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuntimeStatusEvidence.ProtoReflect.Descriptor instead.
 func (*RuntimeStatusEvidence) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{44}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *RuntimeStatusEvidence) GetEvidenceId() string {
@@ -7004,13 +8690,17 @@ type BarProcessingOutcomeEvidence struct {
 	Reason                          string                   `protobuf:"bytes,20,opt,name=reason,proto3" json:"reason,omitempty"`
 	ProducedUnixMs                  int64                    `protobuf:"varint,21,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
 	AnalyticalStateEvidenceId       string                   `protobuf:"bytes,22,opt,name=analytical_state_evidence_id,json=analyticalStateEvidenceId,proto3" json:"analytical_state_evidence_id,omitempty"`
+	PhaseTransitionStateId          string                   `protobuf:"bytes,23,opt,name=phase_transition_state_id,json=phaseTransitionStateId,proto3" json:"phase_transition_state_id,omitempty"`
+	DynamicExecutionResultId        string                   `protobuf:"bytes,24,opt,name=dynamic_execution_result_id,json=dynamicExecutionResultId,proto3" json:"dynamic_execution_result_id,omitempty"`
+	StateActionOutcomeId            string                   `protobuf:"bytes,25,opt,name=state_action_outcome_id,json=stateActionOutcomeId,proto3" json:"state_action_outcome_id,omitempty"`
+	GovernedExecutionInstructionId  string                   `protobuf:"bytes,26,opt,name=governed_execution_instruction_id,json=governedExecutionInstructionId,proto3" json:"governed_execution_instruction_id,omitempty"`
 	unknownFields                   protoimpl.UnknownFields
 	sizeCache                       protoimpl.SizeCache
 }
 
 func (x *BarProcessingOutcomeEvidence) Reset() {
 	*x = BarProcessingOutcomeEvidence{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[45]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7022,7 +8712,7 @@ func (x *BarProcessingOutcomeEvidence) String() string {
 func (*BarProcessingOutcomeEvidence) ProtoMessage() {}
 
 func (x *BarProcessingOutcomeEvidence) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[45]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7035,7 +8725,7 @@ func (x *BarProcessingOutcomeEvidence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BarProcessingOutcomeEvidence.ProtoReflect.Descriptor instead.
 func (*BarProcessingOutcomeEvidence) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{45}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *BarProcessingOutcomeEvidence) GetEvidenceId() string {
@@ -7192,6 +8882,34 @@ func (x *BarProcessingOutcomeEvidence) GetAnalyticalStateEvidenceId() string {
 	return ""
 }
 
+func (x *BarProcessingOutcomeEvidence) GetPhaseTransitionStateId() string {
+	if x != nil {
+		return x.PhaseTransitionStateId
+	}
+	return ""
+}
+
+func (x *BarProcessingOutcomeEvidence) GetDynamicExecutionResultId() string {
+	if x != nil {
+		return x.DynamicExecutionResultId
+	}
+	return ""
+}
+
+func (x *BarProcessingOutcomeEvidence) GetStateActionOutcomeId() string {
+	if x != nil {
+		return x.StateActionOutcomeId
+	}
+	return ""
+}
+
+func (x *BarProcessingOutcomeEvidence) GetGovernedExecutionInstructionId() string {
+	if x != nil {
+		return x.GovernedExecutionInstructionId
+	}
+	return ""
+}
+
 // RuntimeEvidenceEnvelope is the neutral outbound publication contract. It does
 // not depend on a viewer, HACCAM subscriber spelling, or transport implementation.
 type RuntimeEvidenceEnvelope struct {
@@ -7222,6 +8940,10 @@ type RuntimeEvidenceEnvelope struct {
 	//	*RuntimeEvidenceEnvelope_BarProcessingOutcome
 	//	*RuntimeEvidenceEnvelope_Diagnostic
 	//	*RuntimeEvidenceEnvelope_RuleSetDefinition
+	//	*RuntimeEvidenceEnvelope_PhaseTransitionState
+	//	*RuntimeEvidenceEnvelope_DynamicExecutionResult
+	//	*RuntimeEvidenceEnvelope_StateActionOutcome
+	//	*RuntimeEvidenceEnvelope_GovernedExecutionInstruction
 	Evidence       isRuntimeEvidenceEnvelope_Evidence `protobuf_oneof:"evidence"`
 	ProducedUnixMs int64                              `protobuf:"varint,25,opt,name=produced_unix_ms,json=producedUnixMs,proto3" json:"produced_unix_ms,omitempty"`
 	unknownFields  protoimpl.UnknownFields
@@ -7230,7 +8952,7 @@ type RuntimeEvidenceEnvelope struct {
 
 func (x *RuntimeEvidenceEnvelope) Reset() {
 	*x = RuntimeEvidenceEnvelope{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[46]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7242,7 +8964,7 @@ func (x *RuntimeEvidenceEnvelope) String() string {
 func (*RuntimeEvidenceEnvelope) ProtoMessage() {}
 
 func (x *RuntimeEvidenceEnvelope) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[46]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7255,7 +8977,7 @@ func (x *RuntimeEvidenceEnvelope) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuntimeEvidenceEnvelope.ProtoReflect.Descriptor instead.
 func (*RuntimeEvidenceEnvelope) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{46}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *RuntimeEvidenceEnvelope) GetPublicationId() string {
@@ -7358,6 +9080,7 @@ func (x *RuntimeEvidenceEnvelope) GetRuleEvaluation() *RuleEvaluationEvidence {
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuntimeEvidenceEnvelope) GetPhaseMotion() *PhaseMotionEvidence {
 	if x != nil {
 		if x, ok := x.Evidence.(*RuntimeEvidenceEnvelope_PhaseMotion); ok {
@@ -7367,6 +9090,7 @@ func (x *RuntimeEvidenceEnvelope) GetPhaseMotion() *PhaseMotionEvidence {
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuntimeEvidenceEnvelope) GetBoundaryCrossover() *BoundaryCrossoverEvidence {
 	if x != nil {
 		if x, ok := x.Evidence.(*RuntimeEvidenceEnvelope_BoundaryCrossover); ok {
@@ -7376,6 +9100,7 @@ func (x *RuntimeEvidenceEnvelope) GetBoundaryCrossover() *BoundaryCrossoverEvide
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuntimeEvidenceEnvelope) GetStrategyRegion() *StrategyRegionEvidence {
 	if x != nil {
 		if x, ok := x.Evidence.(*RuntimeEvidenceEnvelope_StrategyRegion); ok {
@@ -7385,6 +9110,7 @@ func (x *RuntimeEvidenceEnvelope) GetStrategyRegion() *StrategyRegionEvidence {
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuntimeEvidenceEnvelope) GetUniverseState() *UniverseStateEvidence {
 	if x != nil {
 		if x, ok := x.Evidence.(*RuntimeEvidenceEnvelope_UniverseState); ok {
@@ -7394,6 +9120,7 @@ func (x *RuntimeEvidenceEnvelope) GetUniverseState() *UniverseStateEvidence {
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuntimeEvidenceEnvelope) GetCandidateRanking() *CandidateRankingEvidence {
 	if x != nil {
 		if x, ok := x.Evidence.(*RuntimeEvidenceEnvelope_CandidateRanking); ok {
@@ -7403,6 +9130,7 @@ func (x *RuntimeEvidenceEnvelope) GetCandidateRanking() *CandidateRankingEvidenc
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuntimeEvidenceEnvelope) GetStrategyDecision() *StrategyDecision {
 	if x != nil {
 		if x, ok := x.Evidence.(*RuntimeEvidenceEnvelope_StrategyDecision); ok {
@@ -7412,6 +9140,7 @@ func (x *RuntimeEvidenceEnvelope) GetStrategyDecision() *StrategyDecision {
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 func (x *RuntimeEvidenceEnvelope) GetExecutionIntent() *ExecutionIntent {
 	if x != nil {
 		if x, ok := x.Evidence.(*RuntimeEvidenceEnvelope_ExecutionIntent); ok {
@@ -7475,6 +9204,42 @@ func (x *RuntimeEvidenceEnvelope) GetRuleSetDefinition() *RuleSetDefinition {
 	return nil
 }
 
+func (x *RuntimeEvidenceEnvelope) GetPhaseTransitionState() *PhaseTransitionState {
+	if x != nil {
+		if x, ok := x.Evidence.(*RuntimeEvidenceEnvelope_PhaseTransitionState); ok {
+			return x.PhaseTransitionState
+		}
+	}
+	return nil
+}
+
+func (x *RuntimeEvidenceEnvelope) GetDynamicExecutionResult() *DynamicExecutionResult {
+	if x != nil {
+		if x, ok := x.Evidence.(*RuntimeEvidenceEnvelope_DynamicExecutionResult); ok {
+			return x.DynamicExecutionResult
+		}
+	}
+	return nil
+}
+
+func (x *RuntimeEvidenceEnvelope) GetStateActionOutcome() *StateActionOutcome {
+	if x != nil {
+		if x, ok := x.Evidence.(*RuntimeEvidenceEnvelope_StateActionOutcome); ok {
+			return x.StateActionOutcome
+		}
+	}
+	return nil
+}
+
+func (x *RuntimeEvidenceEnvelope) GetGovernedExecutionInstruction() *GovernedExecutionInstruction {
+	if x != nil {
+		if x, ok := x.Evidence.(*RuntimeEvidenceEnvelope_GovernedExecutionInstruction); ok {
+			return x.GovernedExecutionInstruction
+		}
+	}
+	return nil
+}
+
 func (x *RuntimeEvidenceEnvelope) GetProducedUnixMs() int64 {
 	if x != nil {
 		return x.ProducedUnixMs
@@ -7519,30 +9284,37 @@ type RuntimeEvidenceEnvelope_RuleEvaluation struct {
 }
 
 type RuntimeEvidenceEnvelope_PhaseMotion struct {
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 	PhaseMotion *PhaseMotionEvidence `protobuf:"bytes,12,opt,name=phase_motion,json=phaseMotion,proto3,oneof"`
 }
 
 type RuntimeEvidenceEnvelope_BoundaryCrossover struct {
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 	BoundaryCrossover *BoundaryCrossoverEvidence `protobuf:"bytes,13,opt,name=boundary_crossover,json=boundaryCrossover,proto3,oneof"`
 }
 
 type RuntimeEvidenceEnvelope_StrategyRegion struct {
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 	StrategyRegion *StrategyRegionEvidence `protobuf:"bytes,14,opt,name=strategy_region,json=strategyRegion,proto3,oneof"`
 }
 
 type RuntimeEvidenceEnvelope_UniverseState struct {
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 	UniverseState *UniverseStateEvidence `protobuf:"bytes,15,opt,name=universe_state,json=universeState,proto3,oneof"`
 }
 
 type RuntimeEvidenceEnvelope_CandidateRanking struct {
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 	CandidateRanking *CandidateRankingEvidence `protobuf:"bytes,16,opt,name=candidate_ranking,json=candidateRanking,proto3,oneof"`
 }
 
 type RuntimeEvidenceEnvelope_StrategyDecision struct {
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 	StrategyDecision *StrategyDecision `protobuf:"bytes,17,opt,name=strategy_decision,json=strategyDecision,proto3,oneof"`
 }
 
 type RuntimeEvidenceEnvelope_ExecutionIntent struct {
+	// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 	ExecutionIntent *ExecutionIntent `protobuf:"bytes,18,opt,name=execution_intent,json=executionIntent,proto3,oneof"`
 }
 
@@ -7568,6 +9340,22 @@ type RuntimeEvidenceEnvelope_Diagnostic struct {
 
 type RuntimeEvidenceEnvelope_RuleSetDefinition struct {
 	RuleSetDefinition *RuleSetDefinition `protobuf:"bytes,24,opt,name=rule_set_definition,json=ruleSetDefinition,proto3,oneof"`
+}
+
+type RuntimeEvidenceEnvelope_PhaseTransitionState struct {
+	PhaseTransitionState *PhaseTransitionState `protobuf:"bytes,26,opt,name=phase_transition_state,json=phaseTransitionState,proto3,oneof"`
+}
+
+type RuntimeEvidenceEnvelope_DynamicExecutionResult struct {
+	DynamicExecutionResult *DynamicExecutionResult `protobuf:"bytes,27,opt,name=dynamic_execution_result,json=dynamicExecutionResult,proto3,oneof"`
+}
+
+type RuntimeEvidenceEnvelope_StateActionOutcome struct {
+	StateActionOutcome *StateActionOutcome `protobuf:"bytes,28,opt,name=state_action_outcome,json=stateActionOutcome,proto3,oneof"`
+}
+
+type RuntimeEvidenceEnvelope_GovernedExecutionInstruction struct {
+	GovernedExecutionInstruction *GovernedExecutionInstruction `protobuf:"bytes,29,opt,name=governed_execution_instruction,json=governedExecutionInstruction,proto3,oneof"`
 }
 
 func (*RuntimeEvidenceEnvelope_RuntimeStatus) isRuntimeEvidenceEnvelope_Evidence() {}
@@ -7612,6 +9400,14 @@ func (*RuntimeEvidenceEnvelope_Diagnostic) isRuntimeEvidenceEnvelope_Evidence() 
 
 func (*RuntimeEvidenceEnvelope_RuleSetDefinition) isRuntimeEvidenceEnvelope_Evidence() {}
 
+func (*RuntimeEvidenceEnvelope_PhaseTransitionState) isRuntimeEvidenceEnvelope_Evidence() {}
+
+func (*RuntimeEvidenceEnvelope_DynamicExecutionResult) isRuntimeEvidenceEnvelope_Evidence() {}
+
+func (*RuntimeEvidenceEnvelope_StateActionOutcome) isRuntimeEvidenceEnvelope_Evidence() {}
+
+func (*RuntimeEvidenceEnvelope_GovernedExecutionInstruction) isRuntimeEvidenceEnvelope_Evidence() {}
+
 // GetRuntimeStatusRequest addresses one runtime instance. An empty runtime_id
 // means the sole local instance only when the implementation explicitly permits it.
 type GetRuntimeStatusRequest struct {
@@ -7623,7 +9419,7 @@ type GetRuntimeStatusRequest struct {
 
 func (x *GetRuntimeStatusRequest) Reset() {
 	*x = GetRuntimeStatusRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[47]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7635,7 +9431,7 @@ func (x *GetRuntimeStatusRequest) String() string {
 func (*GetRuntimeStatusRequest) ProtoMessage() {}
 
 func (x *GetRuntimeStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[47]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7648,7 +9444,7 @@ func (x *GetRuntimeStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRuntimeStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetRuntimeStatusRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{47}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *GetRuntimeStatusRequest) GetRuntimeId() string {
@@ -7669,7 +9465,7 @@ type GetRuntimeStatusResponse struct {
 
 func (x *GetRuntimeStatusResponse) Reset() {
 	*x = GetRuntimeStatusResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[48]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7681,7 +9477,7 @@ func (x *GetRuntimeStatusResponse) String() string {
 func (*GetRuntimeStatusResponse) ProtoMessage() {}
 
 func (x *GetRuntimeStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[48]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7694,7 +9490,7 @@ func (x *GetRuntimeStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRuntimeStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetRuntimeStatusResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{48}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *GetRuntimeStatusResponse) GetRuntimeStatus() *RuntimeStatusEvidence {
@@ -7716,7 +9512,7 @@ type SubscribeRuntimeEvidenceRequest struct {
 
 func (x *SubscribeRuntimeEvidenceRequest) Reset() {
 	*x = SubscribeRuntimeEvidenceRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[49]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7728,7 +9524,7 @@ func (x *SubscribeRuntimeEvidenceRequest) String() string {
 func (*SubscribeRuntimeEvidenceRequest) ProtoMessage() {}
 
 func (x *SubscribeRuntimeEvidenceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[49]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7741,7 +9537,7 @@ func (x *SubscribeRuntimeEvidenceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubscribeRuntimeEvidenceRequest.ProtoReflect.Descriptor instead.
 func (*SubscribeRuntimeEvidenceRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{49}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *SubscribeRuntimeEvidenceRequest) GetRuntimeId() string {
@@ -7769,7 +9565,7 @@ type SubscribeRuntimeEvidenceResponse struct {
 
 func (x *SubscribeRuntimeEvidenceResponse) Reset() {
 	*x = SubscribeRuntimeEvidenceResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[50]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7781,7 +9577,7 @@ func (x *SubscribeRuntimeEvidenceResponse) String() string {
 func (*SubscribeRuntimeEvidenceResponse) ProtoMessage() {}
 
 func (x *SubscribeRuntimeEvidenceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[50]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7794,7 +9590,7 @@ func (x *SubscribeRuntimeEvidenceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubscribeRuntimeEvidenceResponse.ProtoReflect.Descriptor instead.
 func (*SubscribeRuntimeEvidenceResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{50}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *SubscribeRuntimeEvidenceResponse) GetEvidence() *RuntimeEvidenceEnvelope {
@@ -7815,7 +9611,7 @@ type SubmitExecutionIntentRequest struct {
 
 func (x *SubmitExecutionIntentRequest) Reset() {
 	*x = SubmitExecutionIntentRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[51]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7827,7 +9623,7 @@ func (x *SubmitExecutionIntentRequest) String() string {
 func (*SubmitExecutionIntentRequest) ProtoMessage() {}
 
 func (x *SubmitExecutionIntentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[51]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7840,7 +9636,7 @@ func (x *SubmitExecutionIntentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitExecutionIntentRequest.ProtoReflect.Descriptor instead.
 func (*SubmitExecutionIntentRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{51}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *SubmitExecutionIntentRequest) GetExecutionIntent() *ExecutionIntent {
@@ -7865,7 +9661,7 @@ type SubmitExecutionIntentResponse struct {
 
 func (x *SubmitExecutionIntentResponse) Reset() {
 	*x = SubmitExecutionIntentResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[52]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7877,7 +9673,7 @@ func (x *SubmitExecutionIntentResponse) String() string {
 func (*SubmitExecutionIntentResponse) ProtoMessage() {}
 
 func (x *SubmitExecutionIntentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[52]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7890,7 +9686,7 @@ func (x *SubmitExecutionIntentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitExecutionIntentResponse.ProtoReflect.Descriptor instead.
 func (*SubmitExecutionIntentResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{52}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *SubmitExecutionIntentResponse) GetExecutionIntentId() string {
@@ -7940,7 +9736,7 @@ type StreamExecutionEventsRequest struct {
 
 func (x *StreamExecutionEventsRequest) Reset() {
 	*x = StreamExecutionEventsRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[53]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7952,7 +9748,7 @@ func (x *StreamExecutionEventsRequest) String() string {
 func (*StreamExecutionEventsRequest) ProtoMessage() {}
 
 func (x *StreamExecutionEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[53]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7965,7 +9761,7 @@ func (x *StreamExecutionEventsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamExecutionEventsRequest.ProtoReflect.Descriptor instead.
 func (*StreamExecutionEventsRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{53}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *StreamExecutionEventsRequest) GetRuntimeId() string {
@@ -7992,7 +9788,7 @@ type StreamExecutionEventsResponse struct {
 
 func (x *StreamExecutionEventsResponse) Reset() {
 	*x = StreamExecutionEventsResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[54]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8004,7 +9800,7 @@ func (x *StreamExecutionEventsResponse) String() string {
 func (*StreamExecutionEventsResponse) ProtoMessage() {}
 
 func (x *StreamExecutionEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[54]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8017,7 +9813,7 @@ func (x *StreamExecutionEventsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamExecutionEventsResponse.ProtoReflect.Descriptor instead.
 func (*StreamExecutionEventsResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{54}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *StreamExecutionEventsResponse) GetExecutionEvent() *ExecutionEvent {
@@ -8025,6 +9821,128 @@ func (x *StreamExecutionEventsResponse) GetExecutionEvent() *ExecutionEvent {
 		return x.ExecutionEvent
 	}
 	return nil
+}
+
+type SubmitGovernedExecutionInstructionRequest struct {
+	state                protoimpl.MessageState        `protogen:"open.v1"`
+	ExecutionInstruction *GovernedExecutionInstruction `protobuf:"bytes,1,opt,name=execution_instruction,json=executionInstruction,proto3" json:"execution_instruction,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *SubmitGovernedExecutionInstructionRequest) Reset() {
+	*x = SubmitGovernedExecutionInstructionRequest{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[64]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitGovernedExecutionInstructionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitGovernedExecutionInstructionRequest) ProtoMessage() {}
+
+func (x *SubmitGovernedExecutionInstructionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[64]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitGovernedExecutionInstructionRequest.ProtoReflect.Descriptor instead.
+func (*SubmitGovernedExecutionInstructionRequest) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{64}
+}
+
+func (x *SubmitGovernedExecutionInstructionRequest) GetExecutionInstruction() *GovernedExecutionInstruction {
+	if x != nil {
+		return x.ExecutionInstruction
+	}
+	return nil
+}
+
+// Receipt acknowledges transport admission only. ExecutionEvent remains the
+// sole contract that reports execution acceptance, rejection, or fill outcome.
+type SubmitGovernedExecutionInstructionResponse struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	InstructionId  string                 `protobuf:"bytes,1,opt,name=instruction_id,json=instructionId,proto3" json:"instruction_id,omitempty"`
+	ExecutorId     string                 `protobuf:"bytes,2,opt,name=executor_id,json=executorId,proto3" json:"executor_id,omitempty"`
+	Received       bool                   `protobuf:"varint,3,opt,name=received,proto3" json:"received,omitempty"`
+	Reason         string                 `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
+	ReceivedUnixMs int64                  `protobuf:"varint,5,opt,name=received_unix_ms,json=receivedUnixMs,proto3" json:"received_unix_ms,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *SubmitGovernedExecutionInstructionResponse) Reset() {
+	*x = SubmitGovernedExecutionInstructionResponse{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[65]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubmitGovernedExecutionInstructionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubmitGovernedExecutionInstructionResponse) ProtoMessage() {}
+
+func (x *SubmitGovernedExecutionInstructionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[65]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubmitGovernedExecutionInstructionResponse.ProtoReflect.Descriptor instead.
+func (*SubmitGovernedExecutionInstructionResponse) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{65}
+}
+
+func (x *SubmitGovernedExecutionInstructionResponse) GetInstructionId() string {
+	if x != nil {
+		return x.InstructionId
+	}
+	return ""
+}
+
+func (x *SubmitGovernedExecutionInstructionResponse) GetExecutorId() string {
+	if x != nil {
+		return x.ExecutorId
+	}
+	return ""
+}
+
+func (x *SubmitGovernedExecutionInstructionResponse) GetReceived() bool {
+	if x != nil {
+		return x.Received
+	}
+	return false
+}
+
+func (x *SubmitGovernedExecutionInstructionResponse) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *SubmitGovernedExecutionInstructionResponse) GetReceivedUnixMs() int64 {
+	if x != nil {
+		return x.ReceivedUnixMs
+	}
+	return 0
 }
 
 // ReceiveBarRequest enters one source-independent candidate at the authoritative
@@ -8039,7 +9957,7 @@ type ReceiveBarRequest struct {
 
 func (x *ReceiveBarRequest) Reset() {
 	*x = ReceiveBarRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[55]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8051,7 +9969,7 @@ func (x *ReceiveBarRequest) String() string {
 func (*ReceiveBarRequest) ProtoMessage() {}
 
 func (x *ReceiveBarRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[55]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8064,7 +9982,7 @@ func (x *ReceiveBarRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReceiveBarRequest.ProtoReflect.Descriptor instead.
 func (*ReceiveBarRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{55}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *ReceiveBarRequest) GetRuntimeId() string {
@@ -8090,7 +10008,7 @@ type ReceiveBarResponse struct {
 
 func (x *ReceiveBarResponse) Reset() {
 	*x = ReceiveBarResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[56]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8102,7 +10020,7 @@ func (x *ReceiveBarResponse) String() string {
 func (*ReceiveBarResponse) ProtoMessage() {}
 
 func (x *ReceiveBarResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[56]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8115,7 +10033,7 @@ func (x *ReceiveBarResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReceiveBarResponse.ProtoReflect.Descriptor instead.
 func (*ReceiveBarResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{56}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *ReceiveBarResponse) GetReceptionEvidence() *BarReceptionEvidence {
@@ -8138,7 +10056,7 @@ type AdmitBarRequest struct {
 
 func (x *AdmitBarRequest) Reset() {
 	*x = AdmitBarRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[57]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8150,7 +10068,7 @@ func (x *AdmitBarRequest) String() string {
 func (*AdmitBarRequest) ProtoMessage() {}
 
 func (x *AdmitBarRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[57]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8163,7 +10081,7 @@ func (x *AdmitBarRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdmitBarRequest.ProtoReflect.Descriptor instead.
 func (*AdmitBarRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{57}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *AdmitBarRequest) GetRuntimeId() string {
@@ -8196,7 +10114,7 @@ type AdmitBarResponse struct {
 
 func (x *AdmitBarResponse) Reset() {
 	*x = AdmitBarResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[58]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8208,7 +10126,7 @@ func (x *AdmitBarResponse) String() string {
 func (*AdmitBarResponse) ProtoMessage() {}
 
 func (x *AdmitBarResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[58]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8221,7 +10139,7 @@ func (x *AdmitBarResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdmitBarResponse.ProtoReflect.Descriptor instead.
 func (*AdmitBarResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{58}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *AdmitBarResponse) GetAdmissionEvidence() *BarAdmissionEvidence {
@@ -8245,7 +10163,7 @@ type UpdateAnalyticalStateRequest struct {
 
 func (x *UpdateAnalyticalStateRequest) Reset() {
 	*x = UpdateAnalyticalStateRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[59]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8257,7 +10175,7 @@ func (x *UpdateAnalyticalStateRequest) String() string {
 func (*UpdateAnalyticalStateRequest) ProtoMessage() {}
 
 func (x *UpdateAnalyticalStateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[59]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8270,7 +10188,7 @@ func (x *UpdateAnalyticalStateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAnalyticalStateRequest.ProtoReflect.Descriptor instead.
 func (*UpdateAnalyticalStateRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{59}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{70}
 }
 
 func (x *UpdateAnalyticalStateRequest) GetRuntimeId() string {
@@ -8310,7 +10228,7 @@ type UpdateAnalyticalStateResponse struct {
 
 func (x *UpdateAnalyticalStateResponse) Reset() {
 	*x = UpdateAnalyticalStateResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[60]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8322,7 +10240,7 @@ func (x *UpdateAnalyticalStateResponse) String() string {
 func (*UpdateAnalyticalStateResponse) ProtoMessage() {}
 
 func (x *UpdateAnalyticalStateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[60]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8335,7 +10253,7 @@ func (x *UpdateAnalyticalStateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAnalyticalStateResponse.ProtoReflect.Descriptor instead.
 func (*UpdateAnalyticalStateResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{60}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *UpdateAnalyticalStateResponse) GetAnalyticalStateEvidence() *AnalyticalStateEvidence {
@@ -8361,7 +10279,7 @@ type UpdateJehPhaseRequest struct {
 
 func (x *UpdateJehPhaseRequest) Reset() {
 	*x = UpdateJehPhaseRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[61]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8373,7 +10291,7 @@ func (x *UpdateJehPhaseRequest) String() string {
 func (*UpdateJehPhaseRequest) ProtoMessage() {}
 
 func (x *UpdateJehPhaseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[61]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8386,7 +10304,7 @@ func (x *UpdateJehPhaseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateJehPhaseRequest.ProtoReflect.Descriptor instead.
 func (*UpdateJehPhaseRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{61}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *UpdateJehPhaseRequest) GetRuntimeId() string {
@@ -8433,7 +10351,7 @@ type UpdateJehPhaseResponse struct {
 
 func (x *UpdateJehPhaseResponse) Reset() {
 	*x = UpdateJehPhaseResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[62]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8445,7 +10363,7 @@ func (x *UpdateJehPhaseResponse) String() string {
 func (*UpdateJehPhaseResponse) ProtoMessage() {}
 
 func (x *UpdateJehPhaseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[62]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8458,7 +10376,7 @@ func (x *UpdateJehPhaseResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateJehPhaseResponse.ProtoReflect.Descriptor instead.
 func (*UpdateJehPhaseResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{62}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *UpdateJehPhaseResponse) GetPhaseEvidence() *PhaseEvidence {
@@ -8481,7 +10399,7 @@ type EvaluateProductionEligibilityRequest struct {
 
 func (x *EvaluateProductionEligibilityRequest) Reset() {
 	*x = EvaluateProductionEligibilityRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[63]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8493,7 +10411,7 @@ func (x *EvaluateProductionEligibilityRequest) String() string {
 func (*EvaluateProductionEligibilityRequest) ProtoMessage() {}
 
 func (x *EvaluateProductionEligibilityRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[63]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8506,7 +10424,7 @@ func (x *EvaluateProductionEligibilityRequest) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use EvaluateProductionEligibilityRequest.ProtoReflect.Descriptor instead.
 func (*EvaluateProductionEligibilityRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{63}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *EvaluateProductionEligibilityRequest) GetRuntimeId() string {
@@ -8554,7 +10472,7 @@ type EvaluateProductionEligibilityResponse struct {
 
 func (x *EvaluateProductionEligibilityResponse) Reset() {
 	*x = EvaluateProductionEligibilityResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[64]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8566,7 +10484,7 @@ func (x *EvaluateProductionEligibilityResponse) String() string {
 func (*EvaluateProductionEligibilityResponse) ProtoMessage() {}
 
 func (x *EvaluateProductionEligibilityResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[64]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8579,7 +10497,7 @@ func (x *EvaluateProductionEligibilityResponse) ProtoReflect() protoreflect.Mess
 
 // Deprecated: Use EvaluateProductionEligibilityResponse.ProtoReflect.Descriptor instead.
 func (*EvaluateProductionEligibilityResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{64}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{75}
 }
 
 func (x *EvaluateProductionEligibilityResponse) GetProductionEligibilityEvidence() *ProductionEligibilityEvidence {
@@ -8596,9 +10514,290 @@ func (x *EvaluateProductionEligibilityResponse) GetRuleEvaluationEvidence() *Rul
 	return nil
 }
 
+// CalculatePhaseTransition performs deterministic current-transition
+// mathematics for eligible Bar[n]. Retained phi[n-1] is analytical context and
+// does not require predecessor production eligibility.
+type CalculatePhaseTransitionRequest struct {
+	state                         protoimpl.MessageState         `protogen:"open.v1"`
+	RuntimeId                     string                         `protobuf:"bytes,1,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
+	PriorPhaseEvidence            *PhaseEvidence                 `protobuf:"bytes,2,opt,name=prior_phase_evidence,json=priorPhaseEvidence,proto3" json:"prior_phase_evidence,omitempty"`
+	CurrentPhaseEvidence          *PhaseEvidence                 `protobuf:"bytes,3,opt,name=current_phase_evidence,json=currentPhaseEvidence,proto3" json:"current_phase_evidence,omitempty"`
+	ProductionEligibilityEvidence *ProductionEligibilityEvidence `protobuf:"bytes,4,opt,name=production_eligibility_evidence,json=productionEligibilityEvidence,proto3" json:"production_eligibility_evidence,omitempty"`
+	AlgorithmIdentity             *AlgorithmIdentity             `protobuf:"bytes,5,opt,name=algorithm_identity,json=algorithmIdentity,proto3" json:"algorithm_identity,omitempty"`
+	unknownFields                 protoimpl.UnknownFields
+	sizeCache                     protoimpl.SizeCache
+}
+
+func (x *CalculatePhaseTransitionRequest) Reset() {
+	*x = CalculatePhaseTransitionRequest{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[76]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CalculatePhaseTransitionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CalculatePhaseTransitionRequest) ProtoMessage() {}
+
+func (x *CalculatePhaseTransitionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[76]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CalculatePhaseTransitionRequest.ProtoReflect.Descriptor instead.
+func (*CalculatePhaseTransitionRequest) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{76}
+}
+
+func (x *CalculatePhaseTransitionRequest) GetRuntimeId() string {
+	if x != nil {
+		return x.RuntimeId
+	}
+	return ""
+}
+
+func (x *CalculatePhaseTransitionRequest) GetPriorPhaseEvidence() *PhaseEvidence {
+	if x != nil {
+		return x.PriorPhaseEvidence
+	}
+	return nil
+}
+
+func (x *CalculatePhaseTransitionRequest) GetCurrentPhaseEvidence() *PhaseEvidence {
+	if x != nil {
+		return x.CurrentPhaseEvidence
+	}
+	return nil
+}
+
+func (x *CalculatePhaseTransitionRequest) GetProductionEligibilityEvidence() *ProductionEligibilityEvidence {
+	if x != nil {
+		return x.ProductionEligibilityEvidence
+	}
+	return nil
+}
+
+func (x *CalculatePhaseTransitionRequest) GetAlgorithmIdentity() *AlgorithmIdentity {
+	if x != nil {
+		return x.AlgorithmIdentity
+	}
+	return nil
+}
+
+type CalculatePhaseTransitionResponse struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	PhaseTransitionState *PhaseTransitionState  `protobuf:"bytes,1,opt,name=phase_transition_state,json=phaseTransitionState,proto3" json:"phase_transition_state,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *CalculatePhaseTransitionResponse) Reset() {
+	*x = CalculatePhaseTransitionResponse{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[77]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CalculatePhaseTransitionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CalculatePhaseTransitionResponse) ProtoMessage() {}
+
+func (x *CalculatePhaseTransitionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[77]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CalculatePhaseTransitionResponse.ProtoReflect.Descriptor instead.
+func (*CalculatePhaseTransitionResponse) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{77}
+}
+
+func (x *CalculatePhaseTransitionResponse) GetPhaseTransitionState() *PhaseTransitionState {
+	if x != nil {
+		return x.PhaseTransitionState
+	}
+	return nil
+}
+
+// EvaluateDynamicExecution applies component-scoped boundary policy to
+// deterministic facts, establishes or maintains one of the four states, and
+// represents its associated action. prior_state is the only strategy-state
+// history input; prior transition values are intentionally absent.
+type EvaluateDynamicExecutionRequest struct {
+	state                      protoimpl.MessageState   `protogen:"open.v1"`
+	RuntimeId                  string                   `protobuf:"bytes,1,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
+	CurrentPhaseEvidence       *PhaseEvidence           `protobuf:"bytes,2,opt,name=current_phase_evidence,json=currentPhaseEvidence,proto3" json:"current_phase_evidence,omitempty"`
+	PhaseTransitionState       *PhaseTransitionState    `protobuf:"bytes,3,opt,name=phase_transition_state,json=phaseTransitionState,proto3" json:"phase_transition_state,omitempty"`
+	PriorState                 DynamicExecutionState    `protobuf:"varint,4,opt,name=prior_state,json=priorState,proto3,enum=dsejeh.v1.DynamicExecutionState" json:"prior_state,omitempty"`
+	BoundaryFacts              []*BoundaryFact          `protobuf:"bytes,5,rep,name=boundary_facts,json=boundaryFacts,proto3" json:"boundary_facts,omitempty"`
+	Context                    *DynamicExecutionContext `protobuf:"bytes,6,opt,name=context,proto3" json:"context,omitempty"`
+	BoundaryPolicyRuleIdentity *RuleIdentity            `protobuf:"bytes,7,opt,name=boundary_policy_rule_identity,json=boundaryPolicyRuleIdentity,proto3" json:"boundary_policy_rule_identity,omitempty"`
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
+}
+
+func (x *EvaluateDynamicExecutionRequest) Reset() {
+	*x = EvaluateDynamicExecutionRequest{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[78]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EvaluateDynamicExecutionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EvaluateDynamicExecutionRequest) ProtoMessage() {}
+
+func (x *EvaluateDynamicExecutionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[78]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EvaluateDynamicExecutionRequest.ProtoReflect.Descriptor instead.
+func (*EvaluateDynamicExecutionRequest) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{78}
+}
+
+func (x *EvaluateDynamicExecutionRequest) GetRuntimeId() string {
+	if x != nil {
+		return x.RuntimeId
+	}
+	return ""
+}
+
+func (x *EvaluateDynamicExecutionRequest) GetCurrentPhaseEvidence() *PhaseEvidence {
+	if x != nil {
+		return x.CurrentPhaseEvidence
+	}
+	return nil
+}
+
+func (x *EvaluateDynamicExecutionRequest) GetPhaseTransitionState() *PhaseTransitionState {
+	if x != nil {
+		return x.PhaseTransitionState
+	}
+	return nil
+}
+
+func (x *EvaluateDynamicExecutionRequest) GetPriorState() DynamicExecutionState {
+	if x != nil {
+		return x.PriorState
+	}
+	return DynamicExecutionState_DYNAMIC_EXECUTION_STATE_UNSPECIFIED
+}
+
+func (x *EvaluateDynamicExecutionRequest) GetBoundaryFacts() []*BoundaryFact {
+	if x != nil {
+		return x.BoundaryFacts
+	}
+	return nil
+}
+
+func (x *EvaluateDynamicExecutionRequest) GetContext() *DynamicExecutionContext {
+	if x != nil {
+		return x.Context
+	}
+	return nil
+}
+
+func (x *EvaluateDynamicExecutionRequest) GetBoundaryPolicyRuleIdentity() *RuleIdentity {
+	if x != nil {
+		return x.BoundaryPolicyRuleIdentity
+	}
+	return nil
+}
+
+type EvaluateDynamicExecutionResponse struct {
+	state                                 protoimpl.MessageState    `protogen:"open.v1"`
+	DynamicExecutionResult                *DynamicExecutionResult   `protobuf:"bytes,1,opt,name=dynamic_execution_result,json=dynamicExecutionResult,proto3" json:"dynamic_execution_result,omitempty"`
+	BoundaryPolicyRuleEvaluationEvidence  *RuleEvaluationEvidence   `protobuf:"bytes,2,opt,name=boundary_policy_rule_evaluation_evidence,json=boundaryPolicyRuleEvaluationEvidence,proto3" json:"boundary_policy_rule_evaluation_evidence,omitempty"`
+	BoundaryPolicyRuleEvaluationEvidences []*RuleEvaluationEvidence `protobuf:"bytes,3,rep,name=boundary_policy_rule_evaluation_evidences,json=boundaryPolicyRuleEvaluationEvidences,proto3" json:"boundary_policy_rule_evaluation_evidences,omitempty"`
+	unknownFields                         protoimpl.UnknownFields
+	sizeCache                             protoimpl.SizeCache
+}
+
+func (x *EvaluateDynamicExecutionResponse) Reset() {
+	*x = EvaluateDynamicExecutionResponse{}
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[79]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EvaluateDynamicExecutionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EvaluateDynamicExecutionResponse) ProtoMessage() {}
+
+func (x *EvaluateDynamicExecutionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[79]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EvaluateDynamicExecutionResponse.ProtoReflect.Descriptor instead.
+func (*EvaluateDynamicExecutionResponse) Descriptor() ([]byte, []int) {
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{79}
+}
+
+func (x *EvaluateDynamicExecutionResponse) GetDynamicExecutionResult() *DynamicExecutionResult {
+	if x != nil {
+		return x.DynamicExecutionResult
+	}
+	return nil
+}
+
+func (x *EvaluateDynamicExecutionResponse) GetBoundaryPolicyRuleEvaluationEvidence() *RuleEvaluationEvidence {
+	if x != nil {
+		return x.BoundaryPolicyRuleEvaluationEvidence
+	}
+	return nil
+}
+
+func (x *EvaluateDynamicExecutionResponse) GetBoundaryPolicyRuleEvaluationEvidences() []*RuleEvaluationEvidence {
+	if x != nil {
+		return x.BoundaryPolicyRuleEvaluationEvidences
+	}
+	return nil
+}
+
 // EvaluatePhaseMotionRequest carries both phase observations explicitly. The
 // contract preserves the unresolved decision whether bar 64 or bar 65 can first
 // produce valid motion/crossover; no eligibility answer is inferred here.
+//
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type EvaluatePhaseMotionRequest struct {
 	state                         protoimpl.MessageState         `protogen:"open.v1"`
 	RuntimeId                     string                         `protobuf:"bytes,1,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
@@ -8615,7 +10814,7 @@ type EvaluatePhaseMotionRequest struct {
 
 func (x *EvaluatePhaseMotionRequest) Reset() {
 	*x = EvaluatePhaseMotionRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[65]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8627,7 +10826,7 @@ func (x *EvaluatePhaseMotionRequest) String() string {
 func (*EvaluatePhaseMotionRequest) ProtoMessage() {}
 
 func (x *EvaluatePhaseMotionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[65]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8640,7 +10839,7 @@ func (x *EvaluatePhaseMotionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EvaluatePhaseMotionRequest.ProtoReflect.Descriptor instead.
 func (*EvaluatePhaseMotionRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{65}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{80}
 }
 
 func (x *EvaluatePhaseMotionRequest) GetRuntimeId() string {
@@ -8695,7 +10894,7 @@ type EvaluatePhaseMotionResponse struct {
 
 func (x *EvaluatePhaseMotionResponse) Reset() {
 	*x = EvaluatePhaseMotionResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[66]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8707,7 +10906,7 @@ func (x *EvaluatePhaseMotionResponse) String() string {
 func (*EvaluatePhaseMotionResponse) ProtoMessage() {}
 
 func (x *EvaluatePhaseMotionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[66]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8720,7 +10919,7 @@ func (x *EvaluatePhaseMotionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EvaluatePhaseMotionResponse.ProtoReflect.Descriptor instead.
 func (*EvaluatePhaseMotionResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{66}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{81}
 }
 
 func (x *EvaluatePhaseMotionResponse) GetPhaseMotionEvidence() *PhaseMotionEvidence {
@@ -8737,6 +10936,7 @@ func (x *EvaluatePhaseMotionResponse) GetRuleEvaluationEvidence() *RuleEvaluatio
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type DetectBoundaryCrossoverRequest struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
 	RuntimeId            string                 `protobuf:"bytes,1,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
@@ -8750,7 +10950,7 @@ type DetectBoundaryCrossoverRequest struct {
 
 func (x *DetectBoundaryCrossoverRequest) Reset() {
 	*x = DetectBoundaryCrossoverRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[67]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8762,7 +10962,7 @@ func (x *DetectBoundaryCrossoverRequest) String() string {
 func (*DetectBoundaryCrossoverRequest) ProtoMessage() {}
 
 func (x *DetectBoundaryCrossoverRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[67]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8775,7 +10975,7 @@ func (x *DetectBoundaryCrossoverRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DetectBoundaryCrossoverRequest.ProtoReflect.Descriptor instead.
 func (*DetectBoundaryCrossoverRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{67}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{82}
 }
 
 func (x *DetectBoundaryCrossoverRequest) GetRuntimeId() string {
@@ -8823,7 +11023,7 @@ type DetectBoundaryCrossoverResponse struct {
 
 func (x *DetectBoundaryCrossoverResponse) Reset() {
 	*x = DetectBoundaryCrossoverResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[68]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8835,7 +11035,7 @@ func (x *DetectBoundaryCrossoverResponse) String() string {
 func (*DetectBoundaryCrossoverResponse) ProtoMessage() {}
 
 func (x *DetectBoundaryCrossoverResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[68]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8848,7 +11048,7 @@ func (x *DetectBoundaryCrossoverResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DetectBoundaryCrossoverResponse.ProtoReflect.Descriptor instead.
 func (*DetectBoundaryCrossoverResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{68}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{83}
 }
 
 func (x *DetectBoundaryCrossoverResponse) GetBoundaryCrossoverEvidence() *BoundaryCrossoverEvidence {
@@ -8865,6 +11065,7 @@ func (x *DetectBoundaryCrossoverResponse) GetRuleEvaluationEvidence() *RuleEvalu
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type EvaluateStrategyRegionRequest struct {
 	state                       protoimpl.MessageState     `protogen:"open.v1"`
 	RuntimeId                   string                     `protobuf:"bytes,1,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
@@ -8878,7 +11079,7 @@ type EvaluateStrategyRegionRequest struct {
 
 func (x *EvaluateStrategyRegionRequest) Reset() {
 	*x = EvaluateStrategyRegionRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[69]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8890,7 +11091,7 @@ func (x *EvaluateStrategyRegionRequest) String() string {
 func (*EvaluateStrategyRegionRequest) ProtoMessage() {}
 
 func (x *EvaluateStrategyRegionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[69]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8903,7 +11104,7 @@ func (x *EvaluateStrategyRegionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EvaluateStrategyRegionRequest.ProtoReflect.Descriptor instead.
 func (*EvaluateStrategyRegionRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{69}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{84}
 }
 
 func (x *EvaluateStrategyRegionRequest) GetRuntimeId() string {
@@ -8951,7 +11152,7 @@ type EvaluateStrategyRegionResponse struct {
 
 func (x *EvaluateStrategyRegionResponse) Reset() {
 	*x = EvaluateStrategyRegionResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[70]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8963,7 +11164,7 @@ func (x *EvaluateStrategyRegionResponse) String() string {
 func (*EvaluateStrategyRegionResponse) ProtoMessage() {}
 
 func (x *EvaluateStrategyRegionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[70]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8976,7 +11177,7 @@ func (x *EvaluateStrategyRegionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EvaluateStrategyRegionResponse.ProtoReflect.Descriptor instead.
 func (*EvaluateStrategyRegionResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{70}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{85}
 }
 
 func (x *EvaluateStrategyRegionResponse) GetStrategyRegionEvidence() *StrategyRegionEvidence {
@@ -8993,6 +11194,7 @@ func (x *EvaluateStrategyRegionResponse) GetRuleEvaluationEvidence() *RuleEvalua
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type UpdateUniverseStateRequest struct {
 	state                      protoimpl.MessageState  `protogen:"open.v1"`
 	RuntimeId                  string                  `protobuf:"bytes,1,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
@@ -9006,7 +11208,7 @@ type UpdateUniverseStateRequest struct {
 
 func (x *UpdateUniverseStateRequest) Reset() {
 	*x = UpdateUniverseStateRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[71]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9018,7 +11220,7 @@ func (x *UpdateUniverseStateRequest) String() string {
 func (*UpdateUniverseStateRequest) ProtoMessage() {}
 
 func (x *UpdateUniverseStateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[71]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9031,7 +11233,7 @@ func (x *UpdateUniverseStateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateUniverseStateRequest.ProtoReflect.Descriptor instead.
 func (*UpdateUniverseStateRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{71}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{86}
 }
 
 func (x *UpdateUniverseStateRequest) GetRuntimeId() string {
@@ -9079,7 +11281,7 @@ type UpdateUniverseStateResponse struct {
 
 func (x *UpdateUniverseStateResponse) Reset() {
 	*x = UpdateUniverseStateResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[72]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9091,7 +11293,7 @@ func (x *UpdateUniverseStateResponse) String() string {
 func (*UpdateUniverseStateResponse) ProtoMessage() {}
 
 func (x *UpdateUniverseStateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[72]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9104,7 +11306,7 @@ func (x *UpdateUniverseStateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateUniverseStateResponse.ProtoReflect.Descriptor instead.
 func (*UpdateUniverseStateResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{72}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{87}
 }
 
 func (x *UpdateUniverseStateResponse) GetUniverseStateEvidence() *UniverseStateEvidence {
@@ -9121,6 +11323,7 @@ func (x *UpdateUniverseStateResponse) GetRuleEvaluationEvidence() *RuleEvaluatio
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type RankCandidatesRequest struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
 	RuntimeId             string                 `protobuf:"bytes,1,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
@@ -9135,7 +11338,7 @@ type RankCandidatesRequest struct {
 
 func (x *RankCandidatesRequest) Reset() {
 	*x = RankCandidatesRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[73]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9147,7 +11350,7 @@ func (x *RankCandidatesRequest) String() string {
 func (*RankCandidatesRequest) ProtoMessage() {}
 
 func (x *RankCandidatesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[73]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9160,7 +11363,7 @@ func (x *RankCandidatesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RankCandidatesRequest.ProtoReflect.Descriptor instead.
 func (*RankCandidatesRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{73}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{88}
 }
 
 func (x *RankCandidatesRequest) GetRuntimeId() string {
@@ -9201,7 +11404,7 @@ type RankCandidatesResponse struct {
 
 func (x *RankCandidatesResponse) Reset() {
 	*x = RankCandidatesResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[74]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9213,7 +11416,7 @@ func (x *RankCandidatesResponse) String() string {
 func (*RankCandidatesResponse) ProtoMessage() {}
 
 func (x *RankCandidatesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[74]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9226,7 +11429,7 @@ func (x *RankCandidatesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RankCandidatesResponse.ProtoReflect.Descriptor instead.
 func (*RankCandidatesResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{74}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{89}
 }
 
 func (x *RankCandidatesResponse) GetCandidateRankingEvidence() *CandidateRankingEvidence {
@@ -9243,6 +11446,7 @@ func (x *RankCandidatesResponse) GetRuleEvaluationEvidence() *RuleEvaluationEvid
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type GenerateStrategyDecisionRequest struct {
 	state                     protoimpl.MessageState     `protogen:"open.v1"`
 	RuntimeId                 string                     `protobuf:"bytes,1,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
@@ -9257,7 +11461,7 @@ type GenerateStrategyDecisionRequest struct {
 
 func (x *GenerateStrategyDecisionRequest) Reset() {
 	*x = GenerateStrategyDecisionRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[75]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9269,7 +11473,7 @@ func (x *GenerateStrategyDecisionRequest) String() string {
 func (*GenerateStrategyDecisionRequest) ProtoMessage() {}
 
 func (x *GenerateStrategyDecisionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[75]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9282,7 +11486,7 @@ func (x *GenerateStrategyDecisionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateStrategyDecisionRequest.ProtoReflect.Descriptor instead.
 func (*GenerateStrategyDecisionRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{75}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{90}
 }
 
 func (x *GenerateStrategyDecisionRequest) GetRuntimeId() string {
@@ -9337,7 +11541,7 @@ type GenerateStrategyDecisionResponse struct {
 
 func (x *GenerateStrategyDecisionResponse) Reset() {
 	*x = GenerateStrategyDecisionResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[76]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9349,7 +11553,7 @@ func (x *GenerateStrategyDecisionResponse) String() string {
 func (*GenerateStrategyDecisionResponse) ProtoMessage() {}
 
 func (x *GenerateStrategyDecisionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[76]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9362,7 +11566,7 @@ func (x *GenerateStrategyDecisionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateStrategyDecisionResponse.ProtoReflect.Descriptor instead.
 func (*GenerateStrategyDecisionResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{76}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{91}
 }
 
 func (x *GenerateStrategyDecisionResponse) GetStrategyDecision() *StrategyDecision {
@@ -9379,6 +11583,7 @@ func (x *GenerateStrategyDecisionResponse) GetRuleEvaluationEvidence() *RuleEval
 	return nil
 }
 
+// Deprecated: Marked as deprecated in dse_jeh/v1/DSE_JEH_TransSat_1.proto.
 type GenerateExecutionIntentRequest struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
 	RuntimeId             string                 `protobuf:"bytes,1,opt,name=runtime_id,json=runtimeId,proto3" json:"runtime_id,omitempty"`
@@ -9391,7 +11596,7 @@ type GenerateExecutionIntentRequest struct {
 
 func (x *GenerateExecutionIntentRequest) Reset() {
 	*x = GenerateExecutionIntentRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[77]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[92]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9403,7 +11608,7 @@ func (x *GenerateExecutionIntentRequest) String() string {
 func (*GenerateExecutionIntentRequest) ProtoMessage() {}
 
 func (x *GenerateExecutionIntentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[77]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[92]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9416,7 +11621,7 @@ func (x *GenerateExecutionIntentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateExecutionIntentRequest.ProtoReflect.Descriptor instead.
 func (*GenerateExecutionIntentRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{77}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{92}
 }
 
 func (x *GenerateExecutionIntentRequest) GetRuntimeId() string {
@@ -9457,7 +11662,7 @@ type GenerateExecutionIntentResponse struct {
 
 func (x *GenerateExecutionIntentResponse) Reset() {
 	*x = GenerateExecutionIntentResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[78]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[93]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9469,7 +11674,7 @@ func (x *GenerateExecutionIntentResponse) String() string {
 func (*GenerateExecutionIntentResponse) ProtoMessage() {}
 
 func (x *GenerateExecutionIntentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[78]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[93]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9482,7 +11687,7 @@ func (x *GenerateExecutionIntentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateExecutionIntentResponse.ProtoReflect.Descriptor instead.
 func (*GenerateExecutionIntentResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{78}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{93}
 }
 
 func (x *GenerateExecutionIntentResponse) GetExecutionIntent() *ExecutionIntent {
@@ -9510,7 +11715,7 @@ type ValidateRuleSetRequest struct {
 
 func (x *ValidateRuleSetRequest) Reset() {
 	*x = ValidateRuleSetRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[79]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9522,7 +11727,7 @@ func (x *ValidateRuleSetRequest) String() string {
 func (*ValidateRuleSetRequest) ProtoMessage() {}
 
 func (x *ValidateRuleSetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[79]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9535,7 +11740,7 @@ func (x *ValidateRuleSetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateRuleSetRequest.ProtoReflect.Descriptor instead.
 func (*ValidateRuleSetRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{79}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{94}
 }
 
 func (x *ValidateRuleSetRequest) GetRuntimeId() string {
@@ -9563,7 +11768,7 @@ type ValidateRuleSetResponse struct {
 
 func (x *ValidateRuleSetResponse) Reset() {
 	*x = ValidateRuleSetResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[80]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9575,7 +11780,7 @@ func (x *ValidateRuleSetResponse) String() string {
 func (*ValidateRuleSetResponse) ProtoMessage() {}
 
 func (x *ValidateRuleSetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[80]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9588,7 +11793,7 @@ func (x *ValidateRuleSetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateRuleSetResponse.ProtoReflect.Descriptor instead.
 func (*ValidateRuleSetResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{80}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{95}
 }
 
 func (x *ValidateRuleSetResponse) GetValid() bool {
@@ -9623,7 +11828,7 @@ type GetActiveRuleSetRequest struct {
 
 func (x *GetActiveRuleSetRequest) Reset() {
 	*x = GetActiveRuleSetRequest{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[81]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[96]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9635,7 +11840,7 @@ func (x *GetActiveRuleSetRequest) String() string {
 func (*GetActiveRuleSetRequest) ProtoMessage() {}
 
 func (x *GetActiveRuleSetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[81]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[96]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9648,7 +11853,7 @@ func (x *GetActiveRuleSetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetActiveRuleSetRequest.ProtoReflect.Descriptor instead.
 func (*GetActiveRuleSetRequest) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{81}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{96}
 }
 
 func (x *GetActiveRuleSetRequest) GetRuntimeId() string {
@@ -9667,7 +11872,7 @@ type GetActiveRuleSetResponse struct {
 
 func (x *GetActiveRuleSetResponse) Reset() {
 	*x = GetActiveRuleSetResponse{}
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[82]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[97]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9679,7 +11884,7 @@ func (x *GetActiveRuleSetResponse) String() string {
 func (*GetActiveRuleSetResponse) ProtoMessage() {}
 
 func (x *GetActiveRuleSetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[82]
+	mi := &file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[97]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9692,7 +11897,7 @@ func (x *GetActiveRuleSetResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetActiveRuleSetResponse.ProtoReflect.Descriptor instead.
 func (*GetActiveRuleSetResponse) Descriptor() ([]byte, []int) {
-	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{82}
+	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP(), []int{97}
 }
 
 func (x *GetActiveRuleSetResponse) GetRuleSetDefinition() *RuleSetDefinition {
@@ -9898,7 +12103,11 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x06status\x18\x01 \x01(\x0e2!.dsejeh.v1.StrategyDecisionStatusR\x06status\x12D\n" +
 	"\rdecision_type\x18\x02 \x01(\x0e2\x1f.dsejeh.v1.StrategyDecisionTypeR\fdecisionType\"V\n" +
 	"\x1aExecutionIntentRuleOutcome\x128\n" +
-	"\x06status\x18\x01 \x01(\x0e2 .dsejeh.v1.ExecutionIntentStatusR\x06status\"\x84\n" +
+	"\x06status\x18\x01 \x01(\x0e2 .dsejeh.v1.ExecutionIntentStatusR\x06status\"\xee\x01\n" +
+	"\x19BoundaryPolicyRuleOutcome\x12:\n" +
+	"\aoutcome\x18\x01 \x01(\x0e2 .dsejeh.v1.BoundaryPolicyOutcomeR\aoutcome\x12I\n" +
+	"\x0fresulting_state\x18\x02 \x01(\x0e2 .dsejeh.v1.DynamicExecutionStateR\x0eresultingState\x12J\n" +
+	"\x10transition_input\x18\x03 \x01(\v2\x1f.dsejeh.v1.PhaseTransitionStateR\x0ftransitionInput\"\xe8\n" +
 	"\n" +
 	"\x12RuleOutcomeMapping\x12\x1d\n" +
 	"\n" +
@@ -9914,8 +12123,9 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x1cuniverse_eligibility_outcome\x18\n" +
 	" \x01(\v2).dsejeh.v1.UniverseEligibilityRuleOutcomeH\x01R\x1auniverseEligibilityOutcome\x12d\n" +
 	"\x19candidate_ranking_outcome\x18\v \x01(\v2&.dsejeh.v1.CandidateRankingRuleOutcomeH\x01R\x17candidateRankingOutcome\x12d\n" +
-	"\x19strategy_decision_outcome\x18\f \x01(\v2&.dsejeh.v1.StrategyDecisionRuleOutcomeH\x01R\x17strategyDecisionOutcome\x12a\n" +
-	"\x18execution_intent_outcome\x18\r \x01(\v2%.dsejeh.v1.ExecutionIntentRuleOutcomeH\x01R\x16executionIntentOutcome\x12)\n" +
+	"\x19strategy_decision_outcome\x18\f \x01(\v2&.dsejeh.v1.StrategyDecisionRuleOutcomeH\x01R\x17strategyDecisionOutcome\x12e\n" +
+	"\x18execution_intent_outcome\x18\r \x01(\v2%.dsejeh.v1.ExecutionIntentRuleOutcomeB\x02\x18\x01H\x01R\x16executionIntentOutcome\x12^\n" +
+	"\x17boundary_policy_outcome\x18\x11 \x01(\v2$.dsejeh.v1.BoundaryPolicyRuleOutcomeH\x01R\x15boundaryPolicyOutcome\x12)\n" +
 	"\x10routing_behavior\x18\x0e \x01(\tR\x0froutingBehavior\x128\n" +
 	"\x18permitted_state_mutation\x18\x0f \x01(\tR\x16permittedStateMutation\x12+\n" +
 	"\x11evidence_required\x18\x10 \x01(\bR\x10evidenceRequiredB\x15\n" +
@@ -9929,7 +12139,7 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x10outcome_mappings\x18\x05 \x03(\v2\x1d.dsejeh.v1.RuleOutcomeMappingR\x0foutcomeMappings\"\x8c\x01\n" +
 	"\x11RuleSetDefinition\x12F\n" +
 	"\x11rule_set_identity\x18\x01 \x01(\v2\x1a.dsejeh.v1.RuleSetIdentityR\x0fruleSetIdentity\x12/\n" +
-	"\x05rules\x18\x02 \x03(\v2\x19.dsejeh.v1.RuleDefinitionR\x05rules\"\xe1\v\n" +
+	"\x05rules\x18\x02 \x03(\v2\x19.dsejeh.v1.RuleDefinitionR\x05rules\"\xc5\f\n" +
 	"\x16RuleEvaluationEvidence\x12\x1f\n" +
 	"\vevidence_id\x18\x01 \x01(\tR\n" +
 	"evidenceId\x12\x1d\n" +
@@ -9951,8 +12161,9 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x17strategy_region_outcome\x18\x0f \x01(\v2$.dsejeh.v1.StrategyRegionRuleOutcomeH\x01R\x15strategyRegionOutcome\x12m\n" +
 	"\x1cuniverse_eligibility_outcome\x18\x10 \x01(\v2).dsejeh.v1.UniverseEligibilityRuleOutcomeH\x01R\x1auniverseEligibilityOutcome\x12d\n" +
 	"\x19candidate_ranking_outcome\x18\x11 \x01(\v2&.dsejeh.v1.CandidateRankingRuleOutcomeH\x01R\x17candidateRankingOutcome\x12d\n" +
-	"\x19strategy_decision_outcome\x18\x12 \x01(\v2&.dsejeh.v1.StrategyDecisionRuleOutcomeH\x01R\x17strategyDecisionOutcome\x12a\n" +
-	"\x18execution_intent_outcome\x18\x13 \x01(\v2%.dsejeh.v1.ExecutionIntentRuleOutcomeH\x01R\x16executionIntentOutcome\x12\x16\n" +
+	"\x19strategy_decision_outcome\x18\x12 \x01(\v2&.dsejeh.v1.StrategyDecisionRuleOutcomeH\x01R\x17strategyDecisionOutcome\x12e\n" +
+	"\x18execution_intent_outcome\x18\x13 \x01(\v2%.dsejeh.v1.ExecutionIntentRuleOutcomeB\x02\x18\x01H\x01R\x16executionIntentOutcome\x12^\n" +
+	"\x17boundary_policy_outcome\x18\x16 \x01(\v2$.dsejeh.v1.BoundaryPolicyRuleOutcomeH\x01R\x15boundaryPolicyOutcome\x12\x16\n" +
 	"\x06reason\x18\x14 \x01(\tR\x06reason\x12(\n" +
 	"\x10produced_unix_ms\x18\x15 \x01(\x03R\x0eproducedUnixMsB\f\n" +
 	"\n" +
@@ -9962,7 +12173,7 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\falgorithm_id\x18\x01 \x01(\tR\valgorithmId\x12+\n" +
 	"\x11algorithm_version\x18\x02 \x01(\tR\x10algorithmVersion\x12)\n" +
 	"\x10configuration_id\x18\x03 \x01(\tR\x0fconfigurationId\x12+\n" +
-	"\x11implementation_id\x18\x04 \x01(\tR\x10implementationId\"\xb1\a\n" +
+	"\x11implementation_id\x18\x04 \x01(\tR\x10implementationId\"\xb5\a\n" +
 	"\x13PhaseMotionEvidence\x12\x1f\n" +
 	"\vevidence_id\x18\x01 \x01(\tR\n" +
 	"evidenceId\x12\x1d\n" +
@@ -9982,9 +12193,105 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x1brule_evaluation_evidence_id\x18\r \x01(\tR\x18ruleEvaluationEvidenceId\x12\x16\n" +
 	"\x06reason\x18\x0e \x01(\tR\x06reason\x12(\n" +
 	"\x10produced_unix_ms\x18\x0f \x01(\x03R\x0eproducedUnixMs\x12V\n" +
-	"(prior_production_eligibility_evidence_id\x18\x10 \x01(\tR$priorProductionEligibilityEvidenceIdB\x17\n" +
+	"(prior_production_eligibility_evidence_id\x18\x10 \x01(\tR$priorProductionEligibilityEvidenceId:\x02\x18\x01B\x17\n" +
 	"\x15_signed_delta_degreesB!\n" +
-	"\x1f_phase_velocity_degrees_per_bar\"\xe4\x05\n" +
+	"\x1f_phase_velocity_degrees_per_bar\"\xa9\a\n" +
+	"\x14PhaseTransitionState\x12.\n" +
+	"\x13transition_state_id\x18\x01 \x01(\tR\x11transitionStateId\x12\x1d\n" +
+	"\n" +
+	"runtime_id\x18\x02 \x01(\tR\truntimeId\x12\x1b\n" +
+	"\tentity_id\x18\x03 \x01(\tR\bentityId\x12'\n" +
+	"\x0fentity_sequence\x18\x04 \x01(\x04R\x0eentitySequence\x125\n" +
+	"\x17prior_phase_evidence_id\x18\x05 \x01(\tR\x14priorPhaseEvidenceId\x129\n" +
+	"\x19current_phase_evidence_id\x18\x06 \x01(\tR\x16currentPhaseEvidenceId\x12K\n" +
+	"\"production_eligibility_evidence_id\x18\a \x01(\tR\x1fproductionEligibilityEvidenceId\x128\n" +
+	"\x06status\x18\b \x01(\x0e2 .dsejeh.v1.PhaseTransitionStatusR\x06status\x12A\n" +
+	"\tdirection\x18\t \x01(\x0e2#.dsejeh.v1.PhaseTransitionDirectionR\tdirection\x12T\n" +
+	"$signed_circular_displacement_degrees\x18\n" +
+	" \x01(\x01H\x00R!signedCircularDisplacementDegrees\x88\x01\x01\x120\n" +
+	"\x11magnitude_degrees\x18\v \x01(\x01H\x01R\x10magnitudeDegrees\x88\x01\x01\x12G\n" +
+	"\x1ephase_velocity_degrees_per_bar\x18\f \x01(\x01H\x02R\x1aphaseVelocityDegreesPerBar\x88\x01\x01\x12K\n" +
+	"\x12algorithm_identity\x18\r \x01(\v2\x1c.dsejeh.v1.AlgorithmIdentityR\x11algorithmIdentity\x12\x16\n" +
+	"\x06reason\x18\x0e \x01(\tR\x06reason\x12(\n" +
+	"\x10produced_unix_ms\x18\x0f \x01(\x03R\x0eproducedUnixMsB'\n" +
+	"%_signed_circular_displacement_degreesB\x14\n" +
+	"\x12_magnitude_degreesB!\n" +
+	"\x1f_phase_velocity_degrees_per_bar\"\xbf\x01\n" +
+	"\fBoundaryFact\x12)\n" +
+	"\x10boundary_degrees\x18\x01 \x01(\x01R\x0fboundaryDegrees\x12\x18\n" +
+	"\acrossed\x18\x02 \x01(\bR\acrossed\x12A\n" +
+	"\tdirection\x18\x03 \x01(\x0e2#.dsejeh.v1.PhaseTransitionDirectionR\tdirection\x12'\n" +
+	"\x0fencounter_order\x18\x04 \x01(\rR\x0eencounterOrder\"\xa8\x03\n" +
+	"\x13AllocationCandidate\x12\x1b\n" +
+	"\tentity_id\x18\x01 \x01(\tR\bentityId\x129\n" +
+	"\x19phase_transition_state_id\x18\x02 \x01(\tR\x16phaseTransitionStateId\x12G\n" +
+	"\x1ephase_velocity_degrees_per_bar\x18\x03 \x01(\x01H\x00R\x1aphaseVelocityDegreesPerBar\x88\x01\x01\x12E\n" +
+	"\x10candidate_status\x18\x04 \x01(\x0e2\x1a.dsejeh.v1.CandidateStatusR\x0fcandidateStatus\x12?\n" +
+	"\x0eholding_status\x18\x05 \x01(\x0e2\x18.dsejeh.v1.HoldingStatusR\rholdingStatus\x12E\n" +
+	"\x10freshness_status\x18\x06 \x01(\x0e2\x1a.dsejeh.v1.FreshnessStatusR\x0ffreshnessStatusB!\n" +
+	"\x1f_phase_velocity_degrees_per_bar\"\x9a\x02\n" +
+	"\x17DynamicExecutionContext\x12\x1d\n" +
+	"\n" +
+	"context_id\x18\x01 \x01(\tR\tcontextId\x12S\n" +
+	"\x15allocation_candidates\x18\x02 \x03(\v2\x1e.dsejeh.v1.AllocationCandidateR\x14allocationCandidates\x127\n" +
+	"\bcapacity\x18\x03 \x01(\v2\x1b.dsejeh.v1.CapacityEvidenceR\bcapacity\x12)\n" +
+	"\x10universe_version\x18\x04 \x01(\tR\x0funiverseVersion\x12'\n" +
+	"\x0fpolicy_identity\x18\x05 \x01(\tR\x0epolicyIdentity\"\xcc\x01\n" +
+	"\x19PhaseVelocityRankingEntry\x12\x1b\n" +
+	"\tentity_id\x18\x01 \x01(\tR\bentityId\x12\x12\n" +
+	"\x04rank\x18\x02 \x01(\rR\x04rank\x12G\n" +
+	"\x1ephase_velocity_degrees_per_bar\x18\x03 \x01(\x01H\x00R\x1aphaseVelocityDegreesPerBar\x88\x01\x01\x12\x12\n" +
+	"\x04tied\x18\x04 \x01(\bR\x04tiedB!\n" +
+	"\x1f_phase_velocity_degrees_per_bar\"\xdd\x03\n" +
+	"\x12StateActionOutcome\x12*\n" +
+	"\x11action_outcome_id\x18\x01 \x01(\tR\x0factionOutcomeId\x126\n" +
+	"\x05state\x18\x02 \x01(\x0e2 .dsejeh.v1.DynamicExecutionStateR\x05state\x12;\n" +
+	"\vaction_type\x18\x03 \x01(\x0e2\x1a.dsejeh.v1.StateActionTypeR\n" +
+	"actionType\x124\n" +
+	"\x06status\x18\x04 \x01(\x0e2\x1c.dsejeh.v1.StateActionStatusR\x06status\x12Z\n" +
+	"\x16phase_velocity_ranking\x18\x05 \x03(\v2$.dsejeh.v1.PhaseVelocityRankingEntryR\x14phaseVelocityRanking\x12R\n" +
+	"\x16action_policy_identity\x18\x06 \x01(\v2\x1c.dsejeh.v1.AlgorithmIdentityR\x14actionPolicyIdentity\x12\x16\n" +
+	"\x06reason\x18\a \x01(\tR\x06reason\x12(\n" +
+	"\x10produced_unix_ms\x18\b \x01(\x03R\x0eproducedUnixMs\"\xca\x06\n" +
+	"\x1cGovernedExecutionInstruction\x12%\n" +
+	"\x0einstruction_id\x18\x01 \x01(\tR\rinstructionId\x12\x1d\n" +
+	"\n" +
+	"runtime_id\x18\x02 \x01(\tR\truntimeId\x12\x1b\n" +
+	"\tentity_id\x18\x03 \x01(\tR\bentityId\x12M\n" +
+	"\x10requested_action\x18\x04 \x01(\x0e2\".dsejeh.v1.GovernedExecutionActionR\x0frequestedAction\x12E\n" +
+	"\x06status\x18\x05 \x01(\x0e2-.dsejeh.v1.GovernedExecutionInstructionStatusR\x06status\x12=\n" +
+	"\x1bdynamic_execution_result_id\x18\x06 \x01(\tR\x18dynamicExecutionResultId\x125\n" +
+	"\x17state_action_outcome_id\x18\a \x01(\tR\x14stateActionOutcomeId\x12K\n" +
+	"\x12requested_quantity\x18\b \x01(\v2\x17.dsejeh.v1.DecimalValueH\x00R\x11requestedQuantity\x88\x01\x01\x12)\n" +
+	"\x10configuration_id\x18\t \x01(\tR\x0fconfigurationId\x12'\n" +
+	"\x0fpolicy_identity\x18\n" +
+	" \x01(\tR\x0epolicyIdentity\x12'\n" +
+	"\x0fidempotency_key\x18\v \x01(\tR\x0eidempotencyKey\x12%\n" +
+	"\x0ecorrelation_id\x18\f \x01(\tR\rcorrelationId\x122\n" +
+	"\x13valid_until_unix_ms\x18\r \x01(\x03H\x01R\x10validUntilUnixMs\x88\x01\x01\x12=\n" +
+	"\x1brule_evaluation_evidence_id\x18\x0e \x01(\tR\x18ruleEvaluationEvidenceId\x12(\n" +
+	"\x10produced_unix_ms\x18\x0f \x01(\x03R\x0eproducedUnixMsB\x15\n" +
+	"\x13_requested_quantityB\x16\n" +
+	"\x14_valid_until_unix_ms\"\x98\a\n" +
+	"\x16DynamicExecutionResult\x12\x1b\n" +
+	"\tresult_id\x18\x01 \x01(\tR\bresultId\x12\x1d\n" +
+	"\n" +
+	"runtime_id\x18\x02 \x01(\tR\truntimeId\x12\x1b\n" +
+	"\tentity_id\x18\x03 \x01(\tR\bentityId\x12'\n" +
+	"\x0fentity_sequence\x18\x04 \x01(\x04R\x0eentitySequence\x12>\n" +
+	"\x06status\x18\x05 \x01(\x0e2&.dsejeh.v1.DynamicExecutionStateStatusR\x06status\x12G\n" +
+	"\x0eprevious_state\x18\x06 \x01(\x0e2 .dsejeh.v1.DynamicExecutionStateR\rpreviousState\x12E\n" +
+	"\rcurrent_state\x18\a \x01(\x0e2 .dsejeh.v1.DynamicExecutionStateR\fcurrentState\x12X\n" +
+	"\x17boundary_policy_outcome\x18\b \x01(\x0e2 .dsejeh.v1.BoundaryPolicyOutcomeR\x15boundaryPolicyOutcome\x129\n" +
+	"\x19phase_transition_state_id\x18\t \x01(\tR\x16phaseTransitionStateId\x12O\n" +
+	"\x14state_action_outcome\x18\n" +
+	" \x01(\v2\x1d.dsejeh.v1.StateActionOutcomeR\x12stateActionOutcome\x12\\\n" +
+	"\x15execution_instruction\x18\v \x01(\v2'.dsejeh.v1.GovernedExecutionInstructionR\x14executionInstruction\x12=\n" +
+	"\x1brule_evaluation_evidence_id\x18\f \x01(\tR\x18ruleEvaluationEvidenceId\x12'\n" +
+	"\x0fpolicy_identity\x18\r \x01(\tR\x0epolicyIdentity\x12\x16\n" +
+	"\x06reason\x18\x0e \x01(\tR\x06reason\x12(\n" +
+	"\x10produced_unix_ms\x18\x0f \x01(\x03R\x0eproducedUnixMs\x12>\n" +
+	"\x0eboundary_facts\x18\x10 \x03(\v2\x17.dsejeh.v1.BoundaryFactR\rboundaryFacts\"\xe8\x05\n" +
 	"\x19BoundaryCrossoverEvidence\x12\x1f\n" +
 	"\vevidence_id\x18\x01 \x01(\tR\n" +
 	"evidenceId\x12\x1d\n" +
@@ -10002,8 +12309,8 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x06reason\x18\v \x01(\tR\x06reason\x12(\n" +
 	"\x10produced_unix_ms\x18\f \x01(\x03R\x0eproducedUnixMs\x125\n" +
 	"\x17prior_phase_evidence_id\x18\r \x01(\tR\x14priorPhaseEvidenceId\x129\n" +
-	"\x19current_phase_evidence_id\x18\x0e \x01(\tR\x16currentPhaseEvidenceIdB\x13\n" +
-	"\x11_boundary_degrees\"\x99\x05\n" +
+	"\x19current_phase_evidence_id\x18\x0e \x01(\tR\x16currentPhaseEvidenceId:\x02\x18\x01B\x13\n" +
+	"\x11_boundary_degrees\"\x9d\x05\n" +
 	"\x16StrategyRegionEvidence\x12\x1f\n" +
 	"\vevidence_id\x18\x01 \x01(\tR\n" +
 	"evidenceId\x12\x1d\n" +
@@ -10020,7 +12327,7 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	" \x01(\tR\x18ruleEvaluationEvidenceId\x12'\n" +
 	"\x0fpolicy_identity\x18\v \x01(\tR\x0epolicyIdentity\x12(\n" +
 	"\x10produced_unix_ms\x18\f \x01(\x03R\x0eproducedUnixMs\x12H\n" +
-	"!prior_strategy_region_evidence_id\x18\r \x01(\tR\x1dpriorStrategyRegionEvidenceId\"8\n" +
+	"!prior_strategy_region_evidence_id\x18\r \x01(\tR\x1dpriorStrategyRegionEvidenceId:\x02\x18\x01\"8\n" +
 	"\fDecimalValue\x12\x14\n" +
 	"\x05value\x18\x01 \x01(\tR\x05value\x12\x12\n" +
 	"\x04unit\x18\x02 \x01(\tR\x04unit\"\xca\x02\n" +
@@ -10046,7 +12353,7 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x1bpending_execution_intent_id\x18\n" +
 	" \x01(\tR\x18pendingExecutionIntentId\x12&\n" +
 	"\x0fupdated_unix_ms\x18\v \x01(\x03R\rupdatedUnixMs\x127\n" +
-	"\x18phase_motion_evidence_id\x18\f \x01(\tR\x15phaseMotionEvidenceId\"\xb3\x04\n" +
+	"\x18phase_motion_evidence_id\x18\f \x01(\tR\x15phaseMotionEvidenceId\"\xb7\x04\n" +
 	"\x15UniverseStateEvidence\x12\x1f\n" +
 	"\vevidence_id\x18\x01 \x01(\tR\n" +
 	"evidenceId\x12\x1d\n" +
@@ -10061,7 +12368,7 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x1brule_evaluation_evidence_id\x18\t \x01(\tR\x18ruleEvaluationEvidenceId\x12F\n" +
 	" prior_universe_state_evidence_id\x18\n" +
 	" \x01(\tR\x1cpriorUniverseStateEvidenceId\x12,\n" +
-	"\x12execution_event_id\x18\v \x01(\tR\x10executionEventId\"\xd9\x01\n" +
+	"\x12execution_event_id\x18\v \x01(\tR\x10executionEventId:\x02\x18\x01\"\xd9\x01\n" +
 	"\x15CandidateRankingEntry\x12\x1b\n" +
 	"\tentity_id\x18\x01 \x01(\tR\bentityId\x12\x12\n" +
 	"\x04rank\x18\x02 \x01(\rR\x04rank\x12\x19\n" +
@@ -10070,7 +12377,7 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"score_unit\x18\x04 \x01(\tR\tscoreUnit\x127\n" +
 	"\x18phase_motion_evidence_id\x18\x05 \x01(\tR\x15phaseMotionEvidenceId\x12\x12\n" +
 	"\x04tied\x18\x06 \x01(\bR\x04tiedB\b\n" +
-	"\x06_score\"\x8f\x04\n" +
+	"\x06_score\"\x93\x04\n" +
 	"\x18CandidateRankingEvidence\x12\x1f\n" +
 	"\vevidence_id\x18\x01 \x01(\tR\n" +
 	"evidenceId\x12\x1d\n" +
@@ -10084,7 +12391,7 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x1brule_evaluation_evidence_id\x18\b \x01(\tR\x18ruleEvaluationEvidenceId\x12\x16\n" +
 	"\x06reason\x18\t \x01(\tR\x06reason\x12(\n" +
 	"\x10produced_unix_ms\x18\n" +
-	" \x01(\x03R\x0eproducedUnixMs\"\xb6\x05\n" +
+	" \x01(\x03R\x0eproducedUnixMs:\x02\x18\x01\"\xba\x05\n" +
 	"\x10StrategyDecision\x12\x1f\n" +
 	"\vdecision_id\x18\x01 \x01(\tR\n" +
 	"decisionId\x12\x1d\n" +
@@ -10102,7 +12409,7 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x1brule_evaluation_evidence_id\x18\v \x01(\tR\x18ruleEvaluationEvidenceId\x12'\n" +
 	"\x0fpolicy_identity\x18\f \x01(\tR\x0epolicyIdentity\x12\x16\n" +
 	"\x06reason\x18\r \x01(\tR\x06reason\x12(\n" +
-	"\x10produced_unix_ms\x18\x0e \x01(\x03R\x0eproducedUnixMs\"\x9d\x06\n" +
+	"\x10produced_unix_ms\x18\x0e \x01(\x03R\x0eproducedUnixMs:\x02\x18\x01\"\xa1\x06\n" +
 	"\x0fExecutionIntent\x12\x1b\n" +
 	"\tintent_id\x18\x01 \x01(\tR\bintentId\x12\x1d\n" +
 	"\n" +
@@ -10120,7 +12427,7 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x13valid_until_unix_ms\x18\f \x01(\x03H\x01R\x10validUntilUnixMs\x88\x01\x01\x12=\n" +
 	"\x1brule_evaluation_evidence_id\x18\r \x01(\tR\x18ruleEvaluationEvidenceId\x12(\n" +
 	"\x10produced_unix_ms\x18\x0e \x01(\x03R\x0eproducedUnixMs\x12;\n" +
-	"\x1auniverse_state_evidence_id\x18\x0f \x01(\tR\x17universeStateEvidenceIdB\x15\n" +
+	"\x1auniverse_state_evidence_id\x18\x0f \x01(\tR\x17universeStateEvidenceId:\x02\x18\x01B\x15\n" +
 	"\x13_requested_quantityB\x16\n" +
 	"\x14_valid_until_unix_ms\"\xca\x01\n" +
 	"\x10ExecutorIdentity\x12\x1f\n" +
@@ -10128,12 +12435,12 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"executorId\x12)\n" +
 	"\x10executor_version\x18\x02 \x01(\tR\x0fexecutorVersion\x12?\n" +
 	"\x0eexecution_mode\x18\x03 \x01(\x0e2\x18.dsejeh.v1.ExecutionModeR\rexecutionMode\x12)\n" +
-	"\x10configuration_id\x18\x04 \x01(\tR\x0fconfigurationId\"\xe6\x05\n" +
+	"\x10configuration_id\x18\x04 \x01(\tR\x0fconfigurationId\"\xb5\x06\n" +
 	"\x0eExecutionEvent\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x1d\n" +
 	"\n" +
-	"runtime_id\x18\x02 \x01(\tR\truntimeId\x12.\n" +
-	"\x13execution_intent_id\x18\x03 \x01(\tR\x11executionIntentId\x12\x1b\n" +
+	"runtime_id\x18\x02 \x01(\tR\truntimeId\x122\n" +
+	"\x13execution_intent_id\x18\x03 \x01(\tB\x02\x18\x01R\x11executionIntentId\x12\x1b\n" +
 	"\tentity_id\x18\x04 \x01(\tR\bentityId\x127\n" +
 	"\x06status\x18\x05 \x01(\x0e2\x1f.dsejeh.v1.ExecutionEventStatusR\x06status\x12H\n" +
 	"\x11executor_identity\x18\x06 \x01(\v2\x1b.dsejeh.v1.ExecutorIdentityR\x10executorIdentity\x12*\n" +
@@ -10146,20 +12453,22 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x06reason\x18\v \x01(\tR\x06reason\x12%\n" +
 	"\x0ecorrelation_id\x18\f \x01(\tR\rcorrelationId\x12*\n" +
 	"\x11execution_unix_ms\x18\r \x01(\x03R\x0fexecutionUnixMs\x12(\n" +
-	"\x10produced_unix_ms\x18\x0e \x01(\x03R\x0eproducedUnixMsB\x15\n" +
+	"\x10produced_unix_ms\x18\x0e \x01(\x03R\x0eproducedUnixMs\x12I\n" +
+	"!governed_execution_instruction_id\x18\x0f \x01(\tR\x1egovernedExecutionInstructionIdB\x15\n" +
 	"\x13_requested_quantityB\x12\n" +
 	"\x10_filled_quantityB\r\n" +
-	"\v_fill_price\"\xba\x02\n" +
+	"\v_fill_price\"\x89\x03\n" +
 	"\x1fExecutionReconciliationEvidence\x12\x1f\n" +
 	"\vevidence_id\x18\x01 \x01(\tR\n" +
 	"evidenceId\x12\x1d\n" +
 	"\n" +
-	"runtime_id\x18\x02 \x01(\tR\truntimeId\x12.\n" +
-	"\x13execution_intent_id\x18\x03 \x01(\tR\x11executionIntentId\x12,\n" +
+	"runtime_id\x18\x02 \x01(\tR\truntimeId\x122\n" +
+	"\x13execution_intent_id\x18\x03 \x01(\tB\x02\x18\x01R\x11executionIntentId\x12,\n" +
 	"\x12execution_event_id\x18\x04 \x01(\tR\x10executionEventId\x127\n" +
 	"\x06status\x18\x05 \x01(\x0e2\x1f.dsejeh.v1.ReconciliationStatusR\x06status\x12\x16\n" +
 	"\x06reason\x18\x06 \x01(\tR\x06reason\x12(\n" +
-	"\x10produced_unix_ms\x18\a \x01(\x03R\x0eproducedUnixMs\"\xbc\x05\n" +
+	"\x10produced_unix_ms\x18\a \x01(\x03R\x0eproducedUnixMs\x12I\n" +
+	"!governed_execution_instruction_id\x18\b \x01(\tR\x1egovernedExecutionInstructionId\"\xb8\v\n" +
 	"\x17RuntimeActivitySnapshot\x12\x1f\n" +
 	"\vsnapshot_id\x18\x01 \x01(\tR\n" +
 	"snapshotId\x12\x1d\n" +
@@ -10169,17 +12478,29 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\rbars_admitted\x18\x04 \x01(\x04R\fbarsAdmitted\x12#\n" +
 	"\rbars_rejected\x18\x05 \x01(\x04R\fbarsRejected\x12+\n" +
 	"\x11bars_initializing\x18\x06 \x01(\x04R\x10barsInitializing\x12.\n" +
-	"\x13bars_phase_eligible\x18\a \x01(\x04R\x11barsPhaseEligible\x128\n" +
-	"\x18phase_motion_evaluations\x18\b \x01(\x04R\x16phaseMotionEvaluations\x12/\n" +
-	"\x13boundary_crossovers\x18\t \x01(\x04R\x12boundaryCrossovers\x12\"\n" +
+	"\x13bars_phase_eligible\x18\a \x01(\x04R\x11barsPhaseEligible\x12<\n" +
+	"\x18phase_motion_evaluations\x18\b \x01(\x04B\x02\x18\x01R\x16phaseMotionEvaluations\x123\n" +
+	"\x13boundary_crossovers\x18\t \x01(\x04B\x02\x18\x01R\x12boundaryCrossovers\x12\"\n" +
 	"\rhop_on_events\x18\n" +
 	" \x01(\x04R\vhopOnEvents\x12$\n" +
-	"\x0ehop_off_events\x18\v \x01(\x04R\fhopOffEvents\x12-\n" +
-	"\x12strategy_decisions\x18\f \x01(\x04R\x11strategyDecisions\x12+\n" +
-	"\x11execution_intents\x18\r \x01(\x04R\x10executionIntents\x12)\n" +
+	"\x0ehop_off_events\x18\v \x01(\x04R\fhopOffEvents\x121\n" +
+	"\x12strategy_decisions\x18\f \x01(\x04B\x02\x18\x01R\x11strategyDecisions\x12/\n" +
+	"\x11execution_intents\x18\r \x01(\x04B\x02\x18\x01R\x10executionIntents\x12)\n" +
 	"\x10execution_events\x18\x0e \x01(\x04R\x0fexecutionEvents\x12/\n" +
 	"\x14window_start_unix_ms\x18\x0f \x01(\x03R\x11windowStartUnixMs\x12(\n" +
-	"\x10produced_unix_ms\x18\x10 \x01(\x03R\x0eproducedUnixMs\"\xc9\x03\n" +
+	"\x10produced_unix_ms\x18\x10 \x01(\x03R\x0eproducedUnixMs\x12B\n" +
+	"\x1dphase_transition_calculations\x18\x11 \x01(\x04R\x1bphaseTransitionCalculations\x12>\n" +
+	"\x1bboundary_policy_evaluations\x18\x12 \x01(\x04R\x19boundaryPolicyEvaluations\x126\n" +
+	"\x17disregard_state_entries\x18\x13 \x01(\x04R\x15disregardStateEntries\x124\n" +
+	"\x16allocate_state_entries\x18\x14 \x01(\x04R\x14allocateStateEntries\x12>\n" +
+	"\x1chold_and_trail_state_entries\x18\x15 \x01(\x04R\x18holdAndTrailStateEntries\x126\n" +
+	"\x17liquidate_state_entries\x18\x16 \x01(\x04R\x15liquidateStateEntries\x12>\n" +
+	"\x1bdisregard_state_persistence\x18\x17 \x01(\x04R\x19disregardStatePersistence\x12<\n" +
+	"\x1aallocate_state_persistence\x18\x18 \x01(\x04R\x18allocateStatePersistence\x12F\n" +
+	" hold_and_trail_state_persistence\x18\x19 \x01(\x04R\x1choldAndTrailStatePersistence\x12>\n" +
+	"\x1bliquidate_state_persistence\x18\x1a \x01(\x04R\x19liquidateStatePersistence\x122\n" +
+	"\x15state_action_outcomes\x18\x1b \x01(\x04R\x13stateActionOutcomes\x12F\n" +
+	"\x1fgoverned_execution_instructions\x18\x1c \x01(\x04R\x1dgovernedExecutionInstructions\"\xc9\x03\n" +
 	"\x12DiagnosticEvidence\x12\x1f\n" +
 	"\vevidence_id\x18\x01 \x01(\tR\n" +
 	"evidenceId\x12\x1d\n" +
@@ -10209,7 +12530,8 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	" \x01(\v2\x19.dsejeh.v1.SolverIdentityR\x0esolverIdentity\x12>\n" +
 	"\bactivity\x18\v \x01(\v2\".dsejeh.v1.RuntimeActivitySnapshotR\bactivity\x12\x16\n" +
 	"\x06reason\x18\f \x01(\tR\x06reason\x12(\n" +
-	"\x10produced_unix_ms\x18\r \x01(\x03R\x0eproducedUnixMs\"\xd3\b\n" +
+	"\x10produced_unix_ms\x18\r \x01(\x03R\x0eproducedUnixMs\"\xcf\n" +
+	"\n" +
 	"\x1cBarProcessingOutcomeEvidence\x12\x1f\n" +
 	"\vevidence_id\x18\x01 \x01(\tR\n" +
 	"evidenceId\x12\x1d\n" +
@@ -10236,7 +12558,11 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x16diagnostic_evidence_id\x18\x13 \x01(\tR\x14diagnosticEvidenceId\x12\x16\n" +
 	"\x06reason\x18\x14 \x01(\tR\x06reason\x12(\n" +
 	"\x10produced_unix_ms\x18\x15 \x01(\x03R\x0eproducedUnixMs\x12?\n" +
-	"\x1canalytical_state_evidence_id\x18\x16 \x01(\tR\x19analyticalStateEvidenceId\"\xc1\x0e\n" +
+	"\x1canalytical_state_evidence_id\x18\x16 \x01(\tR\x19analyticalStateEvidenceId\x129\n" +
+	"\x19phase_transition_state_id\x18\x17 \x01(\tR\x16phaseTransitionStateId\x12=\n" +
+	"\x1bdynamic_execution_result_id\x18\x18 \x01(\tR\x18dynamicExecutionResultId\x125\n" +
+	"\x17state_action_outcome_id\x18\x19 \x01(\tR\x14stateActionOutcomeId\x12I\n" +
+	"!governed_execution_instruction_id\x18\x1a \x01(\tR\x1egovernedExecutionInstructionId\"\xd9\x11\n" +
 	"\x17RuntimeEvidenceEnvelope\x12%\n" +
 	"\x0epublication_id\x18\x01 \x01(\tR\rpublicationId\x12\x1d\n" +
 	"\n" +
@@ -10250,14 +12576,14 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x05phase\x18\t \x01(\v2\x18.dsejeh.v1.PhaseEvidenceH\x00R\x05phase\x12a\n" +
 	"\x16production_eligibility\x18\n" +
 	" \x01(\v2(.dsejeh.v1.ProductionEligibilityEvidenceH\x00R\x15productionEligibility\x12L\n" +
-	"\x0frule_evaluation\x18\v \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceH\x00R\x0eruleEvaluation\x12C\n" +
-	"\fphase_motion\x18\f \x01(\v2\x1e.dsejeh.v1.PhaseMotionEvidenceH\x00R\vphaseMotion\x12U\n" +
-	"\x12boundary_crossover\x18\r \x01(\v2$.dsejeh.v1.BoundaryCrossoverEvidenceH\x00R\x11boundaryCrossover\x12L\n" +
-	"\x0fstrategy_region\x18\x0e \x01(\v2!.dsejeh.v1.StrategyRegionEvidenceH\x00R\x0estrategyRegion\x12I\n" +
-	"\x0euniverse_state\x18\x0f \x01(\v2 .dsejeh.v1.UniverseStateEvidenceH\x00R\runiverseState\x12R\n" +
-	"\x11candidate_ranking\x18\x10 \x01(\v2#.dsejeh.v1.CandidateRankingEvidenceH\x00R\x10candidateRanking\x12J\n" +
-	"\x11strategy_decision\x18\x11 \x01(\v2\x1b.dsejeh.v1.StrategyDecisionH\x00R\x10strategyDecision\x12G\n" +
-	"\x10execution_intent\x18\x12 \x01(\v2\x1a.dsejeh.v1.ExecutionIntentH\x00R\x0fexecutionIntent\x12D\n" +
+	"\x0frule_evaluation\x18\v \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceH\x00R\x0eruleEvaluation\x12G\n" +
+	"\fphase_motion\x18\f \x01(\v2\x1e.dsejeh.v1.PhaseMotionEvidenceB\x02\x18\x01H\x00R\vphaseMotion\x12Y\n" +
+	"\x12boundary_crossover\x18\r \x01(\v2$.dsejeh.v1.BoundaryCrossoverEvidenceB\x02\x18\x01H\x00R\x11boundaryCrossover\x12P\n" +
+	"\x0fstrategy_region\x18\x0e \x01(\v2!.dsejeh.v1.StrategyRegionEvidenceB\x02\x18\x01H\x00R\x0estrategyRegion\x12M\n" +
+	"\x0euniverse_state\x18\x0f \x01(\v2 .dsejeh.v1.UniverseStateEvidenceB\x02\x18\x01H\x00R\runiverseState\x12V\n" +
+	"\x11candidate_ranking\x18\x10 \x01(\v2#.dsejeh.v1.CandidateRankingEvidenceB\x02\x18\x01H\x00R\x10candidateRanking\x12N\n" +
+	"\x11strategy_decision\x18\x11 \x01(\v2\x1b.dsejeh.v1.StrategyDecisionB\x02\x18\x01H\x00R\x10strategyDecision\x12K\n" +
+	"\x10execution_intent\x18\x12 \x01(\v2\x1a.dsejeh.v1.ExecutionIntentB\x02\x18\x01H\x00R\x0fexecutionIntent\x12D\n" +
 	"\x0fexecution_event\x18\x13 \x01(\v2\x19.dsejeh.v1.ExecutionEventH\x00R\x0eexecutionEvent\x12g\n" +
 	"\x18execution_reconciliation\x18\x14 \x01(\v2*.dsejeh.v1.ExecutionReconciliationEvidenceH\x00R\x17executionReconciliation\x12O\n" +
 	"\x10runtime_activity\x18\x15 \x01(\v2\".dsejeh.v1.RuntimeActivitySnapshotH\x00R\x0fruntimeActivity\x12_\n" +
@@ -10265,7 +12591,11 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\n" +
 	"diagnostic\x18\x17 \x01(\v2\x1d.dsejeh.v1.DiagnosticEvidenceH\x00R\n" +
 	"diagnostic\x12N\n" +
-	"\x13rule_set_definition\x18\x18 \x01(\v2\x1c.dsejeh.v1.RuleSetDefinitionH\x00R\x11ruleSetDefinition\x12(\n" +
+	"\x13rule_set_definition\x18\x18 \x01(\v2\x1c.dsejeh.v1.RuleSetDefinitionH\x00R\x11ruleSetDefinition\x12W\n" +
+	"\x16phase_transition_state\x18\x1a \x01(\v2\x1f.dsejeh.v1.PhaseTransitionStateH\x00R\x14phaseTransitionState\x12]\n" +
+	"\x18dynamic_execution_result\x18\x1b \x01(\v2!.dsejeh.v1.DynamicExecutionResultH\x00R\x16dynamicExecutionResult\x12Q\n" +
+	"\x14state_action_outcome\x18\x1c \x01(\v2\x1d.dsejeh.v1.StateActionOutcomeH\x00R\x12stateActionOutcome\x12o\n" +
+	"\x1egoverned_execution_instruction\x18\x1d \x01(\v2'.dsejeh.v1.GovernedExecutionInstructionH\x00R\x1cgovernedExecutionInstruction\x12(\n" +
 	"\x10produced_unix_ms\x18\x19 \x01(\x03R\x0eproducedUnixMsB\n" +
 	"\n" +
 	"\bevidence\"8\n" +
@@ -10296,7 +12626,16 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x18after_execution_event_id\x18\x02 \x01(\tH\x00R\x15afterExecutionEventId\x88\x01\x01B\x1b\n" +
 	"\x19_after_execution_event_id\"c\n" +
 	"\x1dStreamExecutionEventsResponse\x12B\n" +
-	"\x0fexecution_event\x18\x01 \x01(\v2\x19.dsejeh.v1.ExecutionEventR\x0eexecutionEvent\"d\n" +
+	"\x0fexecution_event\x18\x01 \x01(\v2\x19.dsejeh.v1.ExecutionEventR\x0eexecutionEvent\"\x89\x01\n" +
+	")SubmitGovernedExecutionInstructionRequest\x12\\\n" +
+	"\x15execution_instruction\x18\x01 \x01(\v2'.dsejeh.v1.GovernedExecutionInstructionR\x14executionInstruction\"\xd2\x01\n" +
+	"*SubmitGovernedExecutionInstructionResponse\x12%\n" +
+	"\x0einstruction_id\x18\x01 \x01(\tR\rinstructionId\x12\x1f\n" +
+	"\vexecutor_id\x18\x02 \x01(\tR\n" +
+	"executorId\x12\x1a\n" +
+	"\breceived\x18\x03 \x01(\bR\breceived\x12\x16\n" +
+	"\x06reason\x18\x04 \x01(\tR\x06reason\x12(\n" +
+	"\x10received_unix_ms\x18\x05 \x01(\x03R\x0ereceivedUnixMs\"d\n" +
 	"\x11ReceiveBarRequest\x12\x1d\n" +
 	"\n" +
 	"runtime_id\x18\x01 \x01(\tR\truntimeId\x120\n" +
@@ -10336,7 +12675,30 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\rrule_identity\x18\x05 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity\"\xf6\x01\n" +
 	"%EvaluateProductionEligibilityResponse\x12p\n" +
 	"\x1fproduction_eligibility_evidence\x18\x01 \x01(\v2(.dsejeh.v1.ProductionEligibilityEvidenceR\x1dproductionEligibilityEvidence\x12[\n" +
-	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\x84\x04\n" +
+	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\x9b\x03\n" +
+	"\x1fCalculatePhaseTransitionRequest\x12\x1d\n" +
+	"\n" +
+	"runtime_id\x18\x01 \x01(\tR\truntimeId\x12J\n" +
+	"\x14prior_phase_evidence\x18\x02 \x01(\v2\x18.dsejeh.v1.PhaseEvidenceR\x12priorPhaseEvidence\x12N\n" +
+	"\x16current_phase_evidence\x18\x03 \x01(\v2\x18.dsejeh.v1.PhaseEvidenceR\x14currentPhaseEvidence\x12p\n" +
+	"\x1fproduction_eligibility_evidence\x18\x04 \x01(\v2(.dsejeh.v1.ProductionEligibilityEvidenceR\x1dproductionEligibilityEvidence\x12K\n" +
+	"\x12algorithm_identity\x18\x05 \x01(\v2\x1c.dsejeh.v1.AlgorithmIdentityR\x11algorithmIdentity\"y\n" +
+	" CalculatePhaseTransitionResponse\x12U\n" +
+	"\x16phase_transition_state\x18\x01 \x01(\v2\x1f.dsejeh.v1.PhaseTransitionStateR\x14phaseTransitionState\"\x84\x04\n" +
+	"\x1fEvaluateDynamicExecutionRequest\x12\x1d\n" +
+	"\n" +
+	"runtime_id\x18\x01 \x01(\tR\truntimeId\x12N\n" +
+	"\x16current_phase_evidence\x18\x02 \x01(\v2\x18.dsejeh.v1.PhaseEvidenceR\x14currentPhaseEvidence\x12U\n" +
+	"\x16phase_transition_state\x18\x03 \x01(\v2\x1f.dsejeh.v1.PhaseTransitionStateR\x14phaseTransitionState\x12A\n" +
+	"\vprior_state\x18\x04 \x01(\x0e2 .dsejeh.v1.DynamicExecutionStateR\n" +
+	"priorState\x12>\n" +
+	"\x0eboundary_facts\x18\x05 \x03(\v2\x17.dsejeh.v1.BoundaryFactR\rboundaryFacts\x12<\n" +
+	"\acontext\x18\x06 \x01(\v2\".dsejeh.v1.DynamicExecutionContextR\acontext\x12Z\n" +
+	"\x1dboundary_policy_rule_identity\x18\a \x01(\v2\x17.dsejeh.v1.RuleIdentityR\x1aboundaryPolicyRuleIdentity\"\xf7\x02\n" +
+	" EvaluateDynamicExecutionResponse\x12[\n" +
+	"\x18dynamic_execution_result\x18\x01 \x01(\v2!.dsejeh.v1.DynamicExecutionResultR\x16dynamicExecutionResult\x12y\n" +
+	"(boundary_policy_rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR$boundaryPolicyRuleEvaluationEvidence\x12{\n" +
+	")boundary_policy_rule_evaluation_evidences\x18\x03 \x03(\v2!.dsejeh.v1.RuleEvaluationEvidenceR%boundaryPolicyRuleEvaluationEvidences\"\x88\x04\n" +
 	"\x1aEvaluatePhaseMotionRequest\x12\x1d\n" +
 	"\n" +
 	"runtime_id\x18\x01 \x01(\tR\truntimeId\x12J\n" +
@@ -10344,49 +12706,49 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x16current_phase_evidence\x18\x03 \x01(\v2\x18.dsejeh.v1.PhaseEvidenceR\x14currentPhaseEvidence\x12p\n" +
 	"\x1fproduction_eligibility_evidence\x18\x04 \x01(\v2(.dsejeh.v1.ProductionEligibilityEvidenceR\x1dproductionEligibilityEvidence\x12<\n" +
 	"\rrule_identity\x18\x05 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity\x12{\n" +
-	"%prior_production_eligibility_evidence\x18\x06 \x01(\v2(.dsejeh.v1.ProductionEligibilityEvidenceR\"priorProductionEligibilityEvidence\"\xce\x01\n" +
+	"%prior_production_eligibility_evidence\x18\x06 \x01(\v2(.dsejeh.v1.ProductionEligibilityEvidenceR\"priorProductionEligibilityEvidence:\x02\x18\x01\"\xce\x01\n" +
 	"\x1bEvaluatePhaseMotionResponse\x12R\n" +
 	"\x15phase_motion_evidence\x18\x01 \x01(\v2\x1e.dsejeh.v1.PhaseMotionEvidenceR\x13phaseMotionEvidence\x12[\n" +
-	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\xed\x02\n" +
+	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\xf1\x02\n" +
 	"\x1eDetectBoundaryCrossoverRequest\x12\x1d\n" +
 	"\n" +
 	"runtime_id\x18\x01 \x01(\tR\truntimeId\x12J\n" +
 	"\x14prior_phase_evidence\x18\x02 \x01(\v2\x18.dsejeh.v1.PhaseEvidenceR\x12priorPhaseEvidence\x12N\n" +
 	"\x16current_phase_evidence\x18\x03 \x01(\v2\x18.dsejeh.v1.PhaseEvidenceR\x14currentPhaseEvidence\x12R\n" +
 	"\x15phase_motion_evidence\x18\x04 \x01(\v2\x1e.dsejeh.v1.PhaseMotionEvidenceR\x13phaseMotionEvidence\x12<\n" +
-	"\rrule_identity\x18\x05 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity\"\xe4\x01\n" +
+	"\rrule_identity\x18\x05 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity:\x02\x18\x01\"\xe4\x01\n" +
 	"\x1fDetectBoundaryCrossoverResponse\x12d\n" +
 	"\x1bboundary_crossover_evidence\x18\x01 \x01(\v2$.dsejeh.v1.BoundaryCrossoverEvidenceR\x19boundaryCrossoverEvidence\x12[\n" +
-	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\x8b\x03\n" +
+	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\x8f\x03\n" +
 	"\x1dEvaluateStrategyRegionRequest\x12\x1d\n" +
 	"\n" +
 	"runtime_id\x18\x01 \x01(\tR\truntimeId\x12?\n" +
 	"\x0ephase_evidence\x18\x02 \x01(\v2\x18.dsejeh.v1.PhaseEvidenceR\rphaseEvidence\x12d\n" +
 	"\x1bboundary_crossover_evidence\x18\x03 \x01(\v2$.dsejeh.v1.BoundaryCrossoverEvidenceR\x19boundaryCrossoverEvidence\x12f\n" +
 	"\x1eprior_strategy_region_evidence\x18\x04 \x01(\v2!.dsejeh.v1.StrategyRegionEvidenceR\x1bpriorStrategyRegionEvidence\x12<\n" +
-	"\rrule_identity\x18\x05 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity\"\xda\x01\n" +
+	"\rrule_identity\x18\x05 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity:\x02\x18\x01\"\xda\x01\n" +
 	"\x1eEvaluateStrategyRegionResponse\x12[\n" +
 	"\x18strategy_region_evidence\x18\x01 \x01(\v2!.dsejeh.v1.StrategyRegionEvidenceR\x16strategyRegionEvidence\x12[\n" +
-	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\x8c\x03\n" +
+	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\x90\x03\n" +
 	"\x1aUpdateUniverseStateRequest\x12\x1d\n" +
 	"\n" +
 	"runtime_id\x18\x01 \x01(\tR\truntimeId\x12[\n" +
 	"\x18strategy_region_evidence\x18\x02 \x01(\v2!.dsejeh.v1.StrategyRegionEvidenceR\x16strategyRegionEvidence\x12c\n" +
 	"\x1dprior_universe_state_evidence\x18\x03 \x01(\v2 .dsejeh.v1.UniverseStateEvidenceR\x1apriorUniverseStateEvidence\x12O\n" +
 	"\x16latest_execution_event\x18\x04 \x01(\v2\x19.dsejeh.v1.ExecutionEventR\x14latestExecutionEvent\x12<\n" +
-	"\rrule_identity\x18\x05 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity\"\xd4\x01\n" +
+	"\rrule_identity\x18\x05 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity:\x02\x18\x01\"\xd4\x01\n" +
 	"\x1bUpdateUniverseStateResponse\x12X\n" +
 	"\x17universe_state_evidence\x18\x01 \x01(\v2 .dsejeh.v1.UniverseStateEvidenceR\x15universeStateEvidence\x12[\n" +
-	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\xa2\x02\n" +
+	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\xa6\x02\n" +
 	"\x15RankCandidatesRequest\x12\x1d\n" +
 	"\n" +
 	"runtime_id\x18\x01 \x01(\tR\truntimeId\x12X\n" +
 	"\x17universe_state_evidence\x18\x02 \x01(\v2 .dsejeh.v1.UniverseStateEvidenceR\x15universeStateEvidence\x12<\n" +
 	"\rrule_identity\x18\x03 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity\x12R\n" +
-	"\x15phase_motion_evidence\x18\x04 \x03(\v2\x1e.dsejeh.v1.PhaseMotionEvidenceR\x13phaseMotionEvidence\"\xd8\x01\n" +
+	"\x15phase_motion_evidence\x18\x04 \x03(\v2\x1e.dsejeh.v1.PhaseMotionEvidenceR\x13phaseMotionEvidence:\x02\x18\x01\"\xd8\x01\n" +
 	"\x16RankCandidatesResponse\x12a\n" +
 	"\x1acandidate_ranking_evidence\x18\x01 \x01(\v2#.dsejeh.v1.CandidateRankingEvidenceR\x18candidateRankingEvidence\x12[\n" +
-	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\xfe\x03\n" +
+	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\x82\x04\n" +
 	"\x1fGenerateStrategyDecisionRequest\x12\x1d\n" +
 	"\n" +
 	"runtime_id\x18\x01 \x01(\tR\truntimeId\x12[\n" +
@@ -10394,16 +12756,16 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x17universe_state_evidence\x18\x03 \x01(\v2 .dsejeh.v1.UniverseStateEvidenceR\x15universeStateEvidence\x12a\n" +
 	"\x1acandidate_ranking_evidence\x18\x04 \x01(\v2#.dsejeh.v1.CandidateRankingEvidenceR\x18candidateRankingEvidence\x12d\n" +
 	"\x1bboundary_crossover_evidence\x18\x05 \x01(\v2$.dsejeh.v1.BoundaryCrossoverEvidenceR\x19boundaryCrossoverEvidence\x12<\n" +
-	"\rrule_identity\x18\x06 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity\"\xc9\x01\n" +
+	"\rrule_identity\x18\x06 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity:\x02\x18\x01\"\xc9\x01\n" +
 	" GenerateStrategyDecisionResponse\x12H\n" +
 	"\x11strategy_decision\x18\x01 \x01(\v2\x1b.dsejeh.v1.StrategyDecisionR\x10strategyDecision\x12[\n" +
-	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\xa1\x02\n" +
+	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\xa5\x02\n" +
 	"\x1eGenerateExecutionIntentRequest\x12\x1d\n" +
 	"\n" +
 	"runtime_id\x18\x01 \x01(\tR\truntimeId\x12H\n" +
 	"\x11strategy_decision\x18\x02 \x01(\v2\x1b.dsejeh.v1.StrategyDecisionR\x10strategyDecision\x12X\n" +
 	"\x17universe_state_evidence\x18\x03 \x01(\v2 .dsejeh.v1.UniverseStateEvidenceR\x15universeStateEvidence\x12<\n" +
-	"\rrule_identity\x18\x04 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity\"\xc5\x01\n" +
+	"\rrule_identity\x18\x04 \x01(\v2\x17.dsejeh.v1.RuleIdentityR\fruleIdentity:\x02\x18\x01\"\xc5\x01\n" +
 	"\x1fGenerateExecutionIntentResponse\x12E\n" +
 	"\x10execution_intent\x18\x01 \x01(\v2\x1a.dsejeh.v1.ExecutionIntentR\x0fexecutionIntent\x12[\n" +
 	"\x18rule_evaluation_evidence\x18\x02 \x01(\v2!.dsejeh.v1.RuleEvaluationEvidenceR\x16ruleEvaluationEvidence\"\x85\x01\n" +
@@ -10486,7 +12848,7 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"2PRODUCTION_ELIGIBILITY_OUTCOME_PRODUCTION_ELIGIBLE\x10\x02\x125\n" +
 	"1PRODUCTION_ELIGIBILITY_OUTCOME_BLOCKED_CONTINUITY\x10\x03\x128\n" +
 	"4PRODUCTION_ELIGIBILITY_OUTCOME_BLOCKED_INVALID_PHASE\x10\x04\x12(\n" +
-	"$PRODUCTION_ELIGIBILITY_OUTCOME_ERROR\x10\x05*\x99\x03\n" +
+	"$PRODUCTION_ELIGIBILITY_OUTCOME_ERROR\x10\x05*\xca\x04\n" +
 	"\x13RuleOwningComponent\x12%\n" +
 	"!RULE_OWNING_COMPONENT_UNSPECIFIED\x10\x00\x120\n" +
 	",RULE_OWNING_COMPONENT_PRODUCTION_ELIGIBILITY\x10\x01\x12&\n" +
@@ -10496,7 +12858,12 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x1eRULE_OWNING_COMPONENT_UNIVERSE\x10\x05\x12+\n" +
 	"'RULE_OWNING_COMPONENT_CANDIDATE_RANKING\x10\x06\x12+\n" +
 	"'RULE_OWNING_COMPONENT_STRATEGY_DECISION\x10\a\x12*\n" +
-	"&RULE_OWNING_COMPONENT_EXECUTION_INTENT\x10\b*\xf8\x01\n" +
+	"&RULE_OWNING_COMPONENT_EXECUTION_INTENT\x10\b\x12)\n" +
+	"%RULE_OWNING_COMPONENT_BOUNDARY_POLICY\x10\t\x12+\n" +
+	"'RULE_OWNING_COMPONENT_DYNAMIC_EXECUTION\x10\n" +
+	"\x12&\n" +
+	"\"RULE_OWNING_COMPONENT_STATE_ACTION\x10\v\x12/\n" +
+	"+RULE_OWNING_COMPONENT_EXECUTION_INSTRUCTION\x10\f*\xf8\x01\n" +
 	"\x14RuleEvaluationStatus\x12&\n" +
 	"\"RULE_EVALUATION_STATUS_UNSPECIFIED\x10\x00\x12!\n" +
 	"\x1dRULE_EVALUATION_STATUS_PASSED\x10\x01\x12\"\n" +
@@ -10521,7 +12888,67 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x1ePHASE_MOTION_DIRECTION_FORWARD\x10\x01\x12\"\n" +
 	"\x1ePHASE_MOTION_DIRECTION_REVERSE\x10\x02\x12%\n" +
 	"!PHASE_MOTION_DIRECTION_STATIONARY\x10\x03\x12(\n" +
-	"$PHASE_MOTION_DIRECTION_INDETERMINATE\x10\x04*\x8c\x02\n" +
+	"$PHASE_MOTION_DIRECTION_INDETERMINATE\x10\x04*\xab\x01\n" +
+	"\x15PhaseTransitionStatus\x12'\n" +
+	"#PHASE_TRANSITION_STATUS_UNSPECIFIED\x10\x00\x12!\n" +
+	"\x1dPHASE_TRANSITION_STATUS_VALID\x10\x01\x12#\n" +
+	"\x1fPHASE_TRANSITION_STATUS_INVALID\x10\x02\x12!\n" +
+	"\x1dPHASE_TRANSITION_STATUS_ERROR\x10\x03*\xef\x01\n" +
+	"\x18PhaseTransitionDirection\x12*\n" +
+	"&PHASE_TRANSITION_DIRECTION_UNSPECIFIED\x10\x00\x12&\n" +
+	"\"PHASE_TRANSITION_DIRECTION_FORWARD\x10\x01\x12&\n" +
+	"\"PHASE_TRANSITION_DIRECTION_REVERSE\x10\x02\x12)\n" +
+	"%PHASE_TRANSITION_DIRECTION_STATIONARY\x10\x03\x12,\n" +
+	"(PHASE_TRANSITION_DIRECTION_INDETERMINATE\x10\x04*\xe0\x01\n" +
+	"\x15DynamicExecutionState\x12'\n" +
+	"#DYNAMIC_EXECUTION_STATE_UNSPECIFIED\x10\x00\x12%\n" +
+	"!DYNAMIC_EXECUTION_STATE_DISREGARD\x10\x01\x12$\n" +
+	" DYNAMIC_EXECUTION_STATE_ALLOCATE\x10\x02\x12*\n" +
+	"&DYNAMIC_EXECUTION_STATE_HOLD_AND_TRAIL\x10\x03\x12%\n" +
+	"!DYNAMIC_EXECUTION_STATE_LIQUIDATE\x10\x04*\xee\x02\n" +
+	"\x15BoundaryPolicyOutcome\x12'\n" +
+	"#BOUNDARY_POLICY_OUTCOME_UNSPECIFIED\x10\x00\x12)\n" +
+	"%BOUNDARY_POLICY_OUTCOME_NO_TRANSITION\x10\x01\x12+\n" +
+	"'BOUNDARY_POLICY_OUTCOME_HOP_ON_ALLOCATE\x10\x02\x120\n" +
+	",BOUNDARY_POLICY_OUTCOME_ENTER_HOLD_AND_TRAIL\x10\x03\x12-\n" +
+	")BOUNDARY_POLICY_OUTCOME_HOP_OFF_LIQUIDATE\x10\x04\x12+\n" +
+	"'BOUNDARY_POLICY_OUTCOME_ENTER_DISREGARD\x10\x05\x12#\n" +
+	"\x1fBOUNDARY_POLICY_OUTCOME_INVALID\x10\x06\x12!\n" +
+	"\x1dBOUNDARY_POLICY_OUTCOME_ERROR\x10\a*\xb2\x02\n" +
+	"\x1bDynamicExecutionStateStatus\x12.\n" +
+	"*DYNAMIC_EXECUTION_STATE_STATUS_UNSPECIFIED\x10\x00\x12.\n" +
+	"*DYNAMIC_EXECUTION_STATE_STATUS_INITIALIZED\x10\x01\x12,\n" +
+	"(DYNAMIC_EXECUTION_STATE_STATUS_PERSISTED\x10\x02\x12/\n" +
+	"+DYNAMIC_EXECUTION_STATE_STATUS_TRANSITIONED\x10\x03\x12*\n" +
+	"&DYNAMIC_EXECUTION_STATE_STATUS_INVALID\x10\x04\x12(\n" +
+	"$DYNAMIC_EXECUTION_STATE_STATUS_ERROR\x10\x05*\xed\x01\n" +
+	"\x0fStateActionType\x12!\n" +
+	"\x1dSTATE_ACTION_TYPE_UNSPECIFIED\x10\x00\x12*\n" +
+	"&STATE_ACTION_TYPE_NO_ALLOCATION_ACTION\x10\x01\x12,\n" +
+	"(STATE_ACTION_TYPE_RANK_BY_PHASE_VELOCITY\x10\x02\x12-\n" +
+	")STATE_ACTION_TYPE_TRAIL_STOPS_DYNAMICALLY\x10\x03\x12.\n" +
+	"*STATE_ACTION_TYPE_REALLOCATE_FREED_CAPITAL\x10\x04*\xbd\x01\n" +
+	"\x11StateActionStatus\x12#\n" +
+	"\x1fSTATE_ACTION_STATUS_UNSPECIFIED\x10\x00\x12!\n" +
+	"\x1dSTATE_ACTION_STATUS_NO_ACTION\x10\x01\x12 \n" +
+	"\x1cSTATE_ACTION_STATUS_SELECTED\x10\x02\x12\x1f\n" +
+	"\x1bSTATE_ACTION_STATUS_BLOCKED\x10\x03\x12\x1d\n" +
+	"\x19STATE_ACTION_STATUS_ERROR\x10\x04*\xef\x01\n" +
+	"\x17GovernedExecutionAction\x12)\n" +
+	"%GOVERNED_EXECUTION_ACTION_UNSPECIFIED\x10\x00\x12&\n" +
+	"\"GOVERNED_EXECUTION_ACTION_ALLOCATE\x10\x01\x122\n" +
+	".GOVERNED_EXECUTION_ACTION_UPDATE_TRAILING_STOP\x10\x02\x12'\n" +
+	"#GOVERNED_EXECUTION_ACTION_LIQUIDATE\x10\x03\x12$\n" +
+	" GOVERNED_EXECUTION_ACTION_CANCEL\x10\x04*\xbd\x03\n" +
+	"\"GovernedExecutionInstructionStatus\x125\n" +
+	"1GOVERNED_EXECUTION_INSTRUCTION_STATUS_UNSPECIFIED\x10\x00\x121\n" +
+	"-GOVERNED_EXECUTION_INSTRUCTION_STATUS_CREATED\x10\x01\x122\n" +
+	".GOVERNED_EXECUTION_INSTRUCTION_STATUS_ELIGIBLE\x10\x02\x121\n" +
+	"-GOVERNED_EXECUTION_INSTRUCTION_STATUS_BLOCKED\x10\x03\x12.\n" +
+	"*GOVERNED_EXECUTION_INSTRUCTION_STATUS_SENT\x10\x04\x121\n" +
+	"-GOVERNED_EXECUTION_INSTRUCTION_STATUS_EXPIRED\x10\x05\x122\n" +
+	".GOVERNED_EXECUTION_INSTRUCTION_STATUS_CANCELED\x10\x06\x12/\n" +
+	"+GOVERNED_EXECUTION_INSTRUCTION_STATUS_ERROR\x10\a*\x8c\x02\n" +
 	"\x17BoundaryCrossoverStatus\x12)\n" +
 	"%BOUNDARY_CROSSOVER_STATUS_UNSPECIFIED\x10\x00\x12)\n" +
 	"%BOUNDARY_CROSSOVER_STATUS_UNAVAILABLE\x10\x01\x12*\n" +
@@ -10631,21 +13058,25 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x1dRECONCILIATION_STATUS_MATCHED\x10\x02\x12\"\n" +
 	"\x1eRECONCILIATION_STATUS_MISMATCH\x10\x03\x12$\n" +
 	" RECONCILIATION_STATUS_UNRESOLVED\x10\x04\x12\x1f\n" +
-	"\x1bRECONCILIATION_STATUS_ERROR\x10\x05*\xfd\x04\n" +
+	"\x1bRECONCILIATION_STATUS_ERROR\x10\x05*\xf4\x06\n" +
 	"\x18BarProcessingOutcomeType\x12+\n" +
 	"'BAR_PROCESSING_OUTCOME_TYPE_UNSPECIFIED\x10\x00\x122\n" +
 	".BAR_PROCESSING_OUTCOME_TYPE_ADMISSION_REJECTED\x10\x01\x12,\n" +
 	"(BAR_PROCESSING_OUTCOME_TYPE_INITIALIZING\x10\x02\x12>\n" +
-	":BAR_PROCESSING_OUTCOME_TYPE_PRODUCTION_ELIGIBILITY_BLOCKED\x10\x03\x128\n" +
-	"4BAR_PROCESSING_OUTCOME_TYPE_PHASE_MOTION_UNAVAILABLE\x10\x04\x12,\n" +
-	"(BAR_PROCESSING_OUTCOME_TYPE_NO_CROSSOVER\x10\x05\x127\n" +
-	"3BAR_PROCESSING_OUTCOME_TYPE_SAME_REGION_PERSISTENCE\x10\x06\x12)\n" +
-	"%BAR_PROCESSING_OUTCOME_TYPE_NO_ACTION\x10\a\x121\n" +
-	"-BAR_PROCESSING_OUTCOME_TYPE_STRATEGY_DECISION\x10\b\x120\n" +
-	",BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_INTENT\x10\t\x12/\n" +
+	":BAR_PROCESSING_OUTCOME_TYPE_PRODUCTION_ELIGIBILITY_BLOCKED\x10\x03\x12<\n" +
+	"4BAR_PROCESSING_OUTCOME_TYPE_PHASE_MOTION_UNAVAILABLE\x10\x04\x1a\x02\b\x01\x120\n" +
+	"(BAR_PROCESSING_OUTCOME_TYPE_NO_CROSSOVER\x10\x05\x1a\x02\b\x01\x12;\n" +
+	"3BAR_PROCESSING_OUTCOME_TYPE_SAME_REGION_PERSISTENCE\x10\x06\x1a\x02\b\x01\x12)\n" +
+	"%BAR_PROCESSING_OUTCOME_TYPE_NO_ACTION\x10\a\x125\n" +
+	"-BAR_PROCESSING_OUTCOME_TYPE_STRATEGY_DECISION\x10\b\x1a\x02\b\x01\x124\n" +
+	",BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_INTENT\x10\t\x1a\x02\b\x01\x12/\n" +
 	"+BAR_PROCESSING_OUTCOME_TYPE_EXECUTION_EVENT\x10\n" +
 	"\x120\n" +
-	",BAR_PROCESSING_OUTCOME_TYPE_PROCESSING_ERROR\x10\v*\xb6\x01\n" +
+	",BAR_PROCESSING_OUTCOME_TYPE_PROCESSING_ERROR\x10\v\x128\n" +
+	"4BAR_PROCESSING_OUTCOME_TYPE_PHASE_TRANSITION_INVALID\x10\f\x121\n" +
+	"-BAR_PROCESSING_OUTCOME_TYPE_FOUR_STATE_RESULT\x10\r\x124\n" +
+	"0BAR_PROCESSING_OUTCOME_TYPE_STATE_ACTION_OUTCOME\x10\x0e\x12>\n" +
+	":BAR_PROCESSING_OUTCOME_TYPE_GOVERNED_EXECUTION_INSTRUCTION\x10\x0f*\xb6\x01\n" +
 	"\x12DiagnosticSeverity\x12#\n" +
 	"\x1fDIAGNOSTIC_SEVERITY_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18DIAGNOSTIC_SEVERITY_INFO\x10\x01\x12\x1f\n" +
@@ -10680,26 +13111,30 @@ const file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc = "" +
 	"\x0fJehPhaseService\x12U\n" +
 	"\x0eUpdateJehPhase\x12 .dsejeh.v1.UpdateJehPhaseRequest\x1a!.dsejeh.v1.UpdateJehPhaseResponse2\xa3\x01\n" +
 	"\x1cProductionEligibilityService\x12\x82\x01\n" +
-	"\x1dEvaluateProductionEligibility\x12/.dsejeh.v1.EvaluateProductionEligibilityRequest\x1a0.dsejeh.v1.EvaluateProductionEligibilityResponse2z\n" +
+	"\x1dEvaluateProductionEligibility\x12/.dsejeh.v1.EvaluateProductionEligibilityRequest\x1a0.dsejeh.v1.EvaluateProductionEligibilityResponse2\x83\x02\n" +
+	"\x17DynamicExecutionService\x12s\n" +
+	"\x18CalculatePhaseTransition\x12*.dsejeh.v1.CalculatePhaseTransitionRequest\x1a+.dsejeh.v1.CalculatePhaseTransitionResponse\x12s\n" +
+	"\x18EvaluateDynamicExecution\x12*.dsejeh.v1.EvaluateDynamicExecutionRequest\x1a+.dsejeh.v1.EvaluateDynamicExecutionResponse2\x7f\n" +
 	"\x12PhaseMotionService\x12d\n" +
-	"\x13EvaluatePhaseMotion\x12%.dsejeh.v1.EvaluatePhaseMotionRequest\x1a&.dsejeh.v1.EvaluatePhaseMotionResponse2\x8c\x01\n" +
+	"\x13EvaluatePhaseMotion\x12%.dsejeh.v1.EvaluatePhaseMotionRequest\x1a&.dsejeh.v1.EvaluatePhaseMotionResponse\x1a\x03\x88\x02\x012\x91\x01\n" +
 	"\x18BoundaryCrossoverService\x12p\n" +
-	"\x17DetectBoundaryCrossover\x12).dsejeh.v1.DetectBoundaryCrossoverRequest\x1a*.dsejeh.v1.DetectBoundaryCrossoverResponse2\x86\x01\n" +
+	"\x17DetectBoundaryCrossover\x12).dsejeh.v1.DetectBoundaryCrossoverRequest\x1a*.dsejeh.v1.DetectBoundaryCrossoverResponse\x1a\x03\x88\x02\x012\x8b\x01\n" +
 	"\x15StrategyRegionService\x12m\n" +
-	"\x16EvaluateStrategyRegion\x12(.dsejeh.v1.EvaluateStrategyRegionRequest\x1a).dsejeh.v1.EvaluateStrategyRegionResponse2|\n" +
+	"\x16EvaluateStrategyRegion\x12(.dsejeh.v1.EvaluateStrategyRegionRequest\x1a).dsejeh.v1.EvaluateStrategyRegionResponse\x1a\x03\x88\x02\x012\x81\x01\n" +
 	"\x14UniverseStateService\x12d\n" +
-	"\x13UpdateUniverseState\x12%.dsejeh.v1.UpdateUniverseStateRequest\x1a&.dsejeh.v1.UpdateUniverseStateResponse2p\n" +
+	"\x13UpdateUniverseState\x12%.dsejeh.v1.UpdateUniverseStateRequest\x1a&.dsejeh.v1.UpdateUniverseStateResponse\x1a\x03\x88\x02\x012u\n" +
 	"\x17CandidateRankingService\x12U\n" +
-	"\x0eRankCandidates\x12 .dsejeh.v1.RankCandidatesRequest\x1a!.dsejeh.v1.RankCandidatesResponse2\x8e\x01\n" +
+	"\x0eRankCandidates\x12 .dsejeh.v1.RankCandidatesRequest\x1a!.dsejeh.v1.RankCandidatesResponse\x1a\x03\x88\x02\x012\x93\x01\n" +
 	"\x17StrategyDecisionService\x12s\n" +
-	"\x18GenerateStrategyDecision\x12*.dsejeh.v1.GenerateStrategyDecisionRequest\x1a+.dsejeh.v1.GenerateStrategyDecisionResponse2\x8a\x01\n" +
+	"\x18GenerateStrategyDecision\x12*.dsejeh.v1.GenerateStrategyDecisionRequest\x1a+.dsejeh.v1.GenerateStrategyDecisionResponse\x1a\x03\x88\x02\x012\x8f\x01\n" +
 	"\x16ExecutionIntentService\x12p\n" +
-	"\x17GenerateExecutionIntent\x12).dsejeh.v1.GenerateExecutionIntentRequest\x1a*.dsejeh.v1.GenerateExecutionIntentResponse2\xcc\x01\n" +
+	"\x17GenerateExecutionIntent\x12).dsejeh.v1.GenerateExecutionIntentRequest\x1a*.dsejeh.v1.GenerateExecutionIntentResponse\x1a\x03\x88\x02\x012\xcc\x01\n" +
 	"\x13RuleRegistryService\x12X\n" +
 	"\x0fValidateRuleSet\x12!.dsejeh.v1.ValidateRuleSetRequest\x1a\".dsejeh.v1.ValidateRuleSetResponse\x12[\n" +
-	"\x10GetActiveRuleSet\x12\".dsejeh.v1.GetActiveRuleSetRequest\x1a#.dsejeh.v1.GetActiveRuleSetResponse2\xeb\x01\n" +
-	"\x0fExecutorService\x12j\n" +
-	"\x15SubmitExecutionIntent\x12'.dsejeh.v1.SubmitExecutionIntentRequest\x1a(.dsejeh.v1.SubmitExecutionIntentResponse\x12l\n" +
+	"\x10GetActiveRuleSet\x12\".dsejeh.v1.GetActiveRuleSetRequest\x1a#.dsejeh.v1.GetActiveRuleSetResponse2\x84\x03\n" +
+	"\x0fExecutorService\x12o\n" +
+	"\x15SubmitExecutionIntent\x12'.dsejeh.v1.SubmitExecutionIntentRequest\x1a(.dsejeh.v1.SubmitExecutionIntentResponse\"\x03\x88\x02\x01\x12\x91\x01\n" +
+	"\"SubmitGovernedExecutionInstruction\x124.dsejeh.v1.SubmitGovernedExecutionInstructionRequest\x1a5.dsejeh.v1.SubmitGovernedExecutionInstructionResponse\x12l\n" +
 	"\x15StreamExecutionEvents\x12'.dsejeh.v1.StreamExecutionEventsRequest\x1a(.dsejeh.v1.StreamExecutionEventsResponse0\x01B6Z4tramuthus/dse-jeh-transsat-1/gen/dse_jeh/v1;dsejehv1b\x06proto3"
 
 var (
@@ -10714,140 +13149,164 @@ func file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescGZIP() []byte {
 	return file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDescData
 }
 
-var file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes = make([]protoimpl.EnumInfo, 33)
-var file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes = make([]protoimpl.MessageInfo, 83)
+var file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_enumTypes = make([]protoimpl.EnumInfo, 42)
+var file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes = make([]protoimpl.MessageInfo, 98)
 var file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_goTypes = []any{
-	(RuntimeMode)(0),                              // 0: dsejeh.v1.RuntimeMode
-	(PhaseStatus)(0),                              // 1: dsejeh.v1.PhaseStatus
-	(BarAdmissionStatus)(0),                       // 2: dsejeh.v1.BarAdmissionStatus
-	(RuntimeLifecycleStatus)(0),                   // 3: dsejeh.v1.RuntimeLifecycleStatus
-	(RuntimeHealthStatus)(0),                      // 4: dsejeh.v1.RuntimeHealthStatus
-	(SourceConnectionStatus)(0),                   // 5: dsejeh.v1.SourceConnectionStatus
-	(BarAdmissionFinding)(0),                      // 6: dsejeh.v1.BarAdmissionFinding
-	(SequenceIntegrityStatus)(0),                  // 7: dsejeh.v1.SequenceIntegrityStatus
-	(ProductionEligibilityOutcome)(0),             // 8: dsejeh.v1.ProductionEligibilityOutcome
-	(RuleOwningComponent)(0),                      // 9: dsejeh.v1.RuleOwningComponent
-	(RuleEvaluationStatus)(0),                     // 10: dsejeh.v1.RuleEvaluationStatus
-	(RuleRawResultType)(0),                        // 11: dsejeh.v1.RuleRawResultType
-	(PhaseMotionStatus)(0),                        // 12: dsejeh.v1.PhaseMotionStatus
-	(PhaseMotionDirection)(0),                     // 13: dsejeh.v1.PhaseMotionDirection
-	(BoundaryCrossoverStatus)(0),                  // 14: dsejeh.v1.BoundaryCrossoverStatus
-	(BoundaryCrossoverType)(0),                    // 15: dsejeh.v1.BoundaryCrossoverType
-	(StrategyRegion)(0),                           // 16: dsejeh.v1.StrategyRegion
-	(StrategyRegionStatus)(0),                     // 17: dsejeh.v1.StrategyRegionStatus
-	(CandidateStatus)(0),                          // 18: dsejeh.v1.CandidateStatus
-	(HoldingStatus)(0),                            // 19: dsejeh.v1.HoldingStatus
-	(CapacityStatus)(0),                           // 20: dsejeh.v1.CapacityStatus
-	(FreshnessStatus)(0),                          // 21: dsejeh.v1.FreshnessStatus
-	(CandidateRankingStatus)(0),                   // 22: dsejeh.v1.CandidateRankingStatus
-	(StrategyDecisionType)(0),                     // 23: dsejeh.v1.StrategyDecisionType
-	(StrategyDecisionStatus)(0),                   // 24: dsejeh.v1.StrategyDecisionStatus
-	(ExecutionMode)(0),                            // 25: dsejeh.v1.ExecutionMode
-	(ExecutionIntentAction)(0),                    // 26: dsejeh.v1.ExecutionIntentAction
-	(ExecutionIntentStatus)(0),                    // 27: dsejeh.v1.ExecutionIntentStatus
-	(ExecutionEventStatus)(0),                     // 28: dsejeh.v1.ExecutionEventStatus
-	(ReconciliationStatus)(0),                     // 29: dsejeh.v1.ReconciliationStatus
-	(BarProcessingOutcomeType)(0),                 // 30: dsejeh.v1.BarProcessingOutcomeType
-	(DiagnosticSeverity)(0),                       // 31: dsejeh.v1.DiagnosticSeverity
-	(ErrorClassification)(0),                      // 32: dsejeh.v1.ErrorClassification
-	(*SourceProvenance)(nil),                      // 33: dsejeh.v1.SourceProvenance
-	(*BarEvent)(nil),                              // 34: dsejeh.v1.BarEvent
-	(*BarAdmissionEvidence)(nil),                  // 35: dsejeh.v1.BarAdmissionEvidence
-	(*SolverIdentity)(nil),                        // 36: dsejeh.v1.SolverIdentity
-	(*PhaseEvidence)(nil),                         // 37: dsejeh.v1.PhaseEvidence
-	(*RuntimeIdentity)(nil),                       // 38: dsejeh.v1.RuntimeIdentity
-	(*ConfigurationIdentity)(nil),                 // 39: dsejeh.v1.ConfigurationIdentity
-	(*RuleIdentity)(nil),                          // 40: dsejeh.v1.RuleIdentity
-	(*RuleSetIdentity)(nil),                       // 41: dsejeh.v1.RuleSetIdentity
-	(*AuthorizedDynamicVariable)(nil),             // 42: dsejeh.v1.AuthorizedDynamicVariable
-	(*SourceSubscriptionEvidence)(nil),            // 43: dsejeh.v1.SourceSubscriptionEvidence
-	(*BarReceptionEvidence)(nil),                  // 44: dsejeh.v1.BarReceptionEvidence
-	(*AnalyticalStateEvidence)(nil),               // 45: dsejeh.v1.AnalyticalStateEvidence
-	(*ProductionEligibilityContext)(nil),          // 46: dsejeh.v1.ProductionEligibilityContext
-	(*ProductionEligibilityEvidence)(nil),         // 47: dsejeh.v1.ProductionEligibilityEvidence
-	(*ProductionEligibilityRuleOutcome)(nil),      // 48: dsejeh.v1.ProductionEligibilityRuleOutcome
-	(*PhaseMotionRuleOutcome)(nil),                // 49: dsejeh.v1.PhaseMotionRuleOutcome
-	(*BoundaryCrossoverRuleOutcome)(nil),          // 50: dsejeh.v1.BoundaryCrossoverRuleOutcome
-	(*StrategyRegionRuleOutcome)(nil),             // 51: dsejeh.v1.StrategyRegionRuleOutcome
-	(*UniverseEligibilityRuleOutcome)(nil),        // 52: dsejeh.v1.UniverseEligibilityRuleOutcome
-	(*CandidateRankingRuleOutcome)(nil),           // 53: dsejeh.v1.CandidateRankingRuleOutcome
-	(*StrategyDecisionRuleOutcome)(nil),           // 54: dsejeh.v1.StrategyDecisionRuleOutcome
-	(*ExecutionIntentRuleOutcome)(nil),            // 55: dsejeh.v1.ExecutionIntentRuleOutcome
-	(*RuleOutcomeMapping)(nil),                    // 56: dsejeh.v1.RuleOutcomeMapping
-	(*RuleDefinition)(nil),                        // 57: dsejeh.v1.RuleDefinition
-	(*RuleSetDefinition)(nil),                     // 58: dsejeh.v1.RuleSetDefinition
-	(*RuleEvaluationEvidence)(nil),                // 59: dsejeh.v1.RuleEvaluationEvidence
-	(*AlgorithmIdentity)(nil),                     // 60: dsejeh.v1.AlgorithmIdentity
-	(*PhaseMotionEvidence)(nil),                   // 61: dsejeh.v1.PhaseMotionEvidence
-	(*BoundaryCrossoverEvidence)(nil),             // 62: dsejeh.v1.BoundaryCrossoverEvidence
-	(*StrategyRegionEvidence)(nil),                // 63: dsejeh.v1.StrategyRegionEvidence
-	(*DecimalValue)(nil),                          // 64: dsejeh.v1.DecimalValue
-	(*CapacityEvidence)(nil),                      // 65: dsejeh.v1.CapacityEvidence
-	(*EntityUniverseState)(nil),                   // 66: dsejeh.v1.EntityUniverseState
-	(*UniverseStateEvidence)(nil),                 // 67: dsejeh.v1.UniverseStateEvidence
-	(*CandidateRankingEntry)(nil),                 // 68: dsejeh.v1.CandidateRankingEntry
-	(*CandidateRankingEvidence)(nil),              // 69: dsejeh.v1.CandidateRankingEvidence
-	(*StrategyDecision)(nil),                      // 70: dsejeh.v1.StrategyDecision
-	(*ExecutionIntent)(nil),                       // 71: dsejeh.v1.ExecutionIntent
-	(*ExecutorIdentity)(nil),                      // 72: dsejeh.v1.ExecutorIdentity
-	(*ExecutionEvent)(nil),                        // 73: dsejeh.v1.ExecutionEvent
-	(*ExecutionReconciliationEvidence)(nil),       // 74: dsejeh.v1.ExecutionReconciliationEvidence
-	(*RuntimeActivitySnapshot)(nil),               // 75: dsejeh.v1.RuntimeActivitySnapshot
-	(*DiagnosticEvidence)(nil),                    // 76: dsejeh.v1.DiagnosticEvidence
-	(*RuntimeStatusEvidence)(nil),                 // 77: dsejeh.v1.RuntimeStatusEvidence
-	(*BarProcessingOutcomeEvidence)(nil),          // 78: dsejeh.v1.BarProcessingOutcomeEvidence
-	(*RuntimeEvidenceEnvelope)(nil),               // 79: dsejeh.v1.RuntimeEvidenceEnvelope
-	(*GetRuntimeStatusRequest)(nil),               // 80: dsejeh.v1.GetRuntimeStatusRequest
-	(*GetRuntimeStatusResponse)(nil),              // 81: dsejeh.v1.GetRuntimeStatusResponse
-	(*SubscribeRuntimeEvidenceRequest)(nil),       // 82: dsejeh.v1.SubscribeRuntimeEvidenceRequest
-	(*SubscribeRuntimeEvidenceResponse)(nil),      // 83: dsejeh.v1.SubscribeRuntimeEvidenceResponse
-	(*SubmitExecutionIntentRequest)(nil),          // 84: dsejeh.v1.SubmitExecutionIntentRequest
-	(*SubmitExecutionIntentResponse)(nil),         // 85: dsejeh.v1.SubmitExecutionIntentResponse
-	(*StreamExecutionEventsRequest)(nil),          // 86: dsejeh.v1.StreamExecutionEventsRequest
-	(*StreamExecutionEventsResponse)(nil),         // 87: dsejeh.v1.StreamExecutionEventsResponse
-	(*ReceiveBarRequest)(nil),                     // 88: dsejeh.v1.ReceiveBarRequest
-	(*ReceiveBarResponse)(nil),                    // 89: dsejeh.v1.ReceiveBarResponse
-	(*AdmitBarRequest)(nil),                       // 90: dsejeh.v1.AdmitBarRequest
-	(*AdmitBarResponse)(nil),                      // 91: dsejeh.v1.AdmitBarResponse
-	(*UpdateAnalyticalStateRequest)(nil),          // 92: dsejeh.v1.UpdateAnalyticalStateRequest
-	(*UpdateAnalyticalStateResponse)(nil),         // 93: dsejeh.v1.UpdateAnalyticalStateResponse
-	(*UpdateJehPhaseRequest)(nil),                 // 94: dsejeh.v1.UpdateJehPhaseRequest
-	(*UpdateJehPhaseResponse)(nil),                // 95: dsejeh.v1.UpdateJehPhaseResponse
-	(*EvaluateProductionEligibilityRequest)(nil),  // 96: dsejeh.v1.EvaluateProductionEligibilityRequest
-	(*EvaluateProductionEligibilityResponse)(nil), // 97: dsejeh.v1.EvaluateProductionEligibilityResponse
-	(*EvaluatePhaseMotionRequest)(nil),            // 98: dsejeh.v1.EvaluatePhaseMotionRequest
-	(*EvaluatePhaseMotionResponse)(nil),           // 99: dsejeh.v1.EvaluatePhaseMotionResponse
-	(*DetectBoundaryCrossoverRequest)(nil),        // 100: dsejeh.v1.DetectBoundaryCrossoverRequest
-	(*DetectBoundaryCrossoverResponse)(nil),       // 101: dsejeh.v1.DetectBoundaryCrossoverResponse
-	(*EvaluateStrategyRegionRequest)(nil),         // 102: dsejeh.v1.EvaluateStrategyRegionRequest
-	(*EvaluateStrategyRegionResponse)(nil),        // 103: dsejeh.v1.EvaluateStrategyRegionResponse
-	(*UpdateUniverseStateRequest)(nil),            // 104: dsejeh.v1.UpdateUniverseStateRequest
-	(*UpdateUniverseStateResponse)(nil),           // 105: dsejeh.v1.UpdateUniverseStateResponse
-	(*RankCandidatesRequest)(nil),                 // 106: dsejeh.v1.RankCandidatesRequest
-	(*RankCandidatesResponse)(nil),                // 107: dsejeh.v1.RankCandidatesResponse
-	(*GenerateStrategyDecisionRequest)(nil),       // 108: dsejeh.v1.GenerateStrategyDecisionRequest
-	(*GenerateStrategyDecisionResponse)(nil),      // 109: dsejeh.v1.GenerateStrategyDecisionResponse
-	(*GenerateExecutionIntentRequest)(nil),        // 110: dsejeh.v1.GenerateExecutionIntentRequest
-	(*GenerateExecutionIntentResponse)(nil),       // 111: dsejeh.v1.GenerateExecutionIntentResponse
-	(*ValidateRuleSetRequest)(nil),                // 112: dsejeh.v1.ValidateRuleSetRequest
-	(*ValidateRuleSetResponse)(nil),               // 113: dsejeh.v1.ValidateRuleSetResponse
-	(*GetActiveRuleSetRequest)(nil),               // 114: dsejeh.v1.GetActiveRuleSetRequest
-	(*GetActiveRuleSetResponse)(nil),              // 115: dsejeh.v1.GetActiveRuleSetResponse
+	(RuntimeMode)(0),                                   // 0: dsejeh.v1.RuntimeMode
+	(PhaseStatus)(0),                                   // 1: dsejeh.v1.PhaseStatus
+	(BarAdmissionStatus)(0),                            // 2: dsejeh.v1.BarAdmissionStatus
+	(RuntimeLifecycleStatus)(0),                        // 3: dsejeh.v1.RuntimeLifecycleStatus
+	(RuntimeHealthStatus)(0),                           // 4: dsejeh.v1.RuntimeHealthStatus
+	(SourceConnectionStatus)(0),                        // 5: dsejeh.v1.SourceConnectionStatus
+	(BarAdmissionFinding)(0),                           // 6: dsejeh.v1.BarAdmissionFinding
+	(SequenceIntegrityStatus)(0),                       // 7: dsejeh.v1.SequenceIntegrityStatus
+	(ProductionEligibilityOutcome)(0),                  // 8: dsejeh.v1.ProductionEligibilityOutcome
+	(RuleOwningComponent)(0),                           // 9: dsejeh.v1.RuleOwningComponent
+	(RuleEvaluationStatus)(0),                          // 10: dsejeh.v1.RuleEvaluationStatus
+	(RuleRawResultType)(0),                             // 11: dsejeh.v1.RuleRawResultType
+	(PhaseMotionStatus)(0),                             // 12: dsejeh.v1.PhaseMotionStatus
+	(PhaseMotionDirection)(0),                          // 13: dsejeh.v1.PhaseMotionDirection
+	(PhaseTransitionStatus)(0),                         // 14: dsejeh.v1.PhaseTransitionStatus
+	(PhaseTransitionDirection)(0),                      // 15: dsejeh.v1.PhaseTransitionDirection
+	(DynamicExecutionState)(0),                         // 16: dsejeh.v1.DynamicExecutionState
+	(BoundaryPolicyOutcome)(0),                         // 17: dsejeh.v1.BoundaryPolicyOutcome
+	(DynamicExecutionStateStatus)(0),                   // 18: dsejeh.v1.DynamicExecutionStateStatus
+	(StateActionType)(0),                               // 19: dsejeh.v1.StateActionType
+	(StateActionStatus)(0),                             // 20: dsejeh.v1.StateActionStatus
+	(GovernedExecutionAction)(0),                       // 21: dsejeh.v1.GovernedExecutionAction
+	(GovernedExecutionInstructionStatus)(0),            // 22: dsejeh.v1.GovernedExecutionInstructionStatus
+	(BoundaryCrossoverStatus)(0),                       // 23: dsejeh.v1.BoundaryCrossoverStatus
+	(BoundaryCrossoverType)(0),                         // 24: dsejeh.v1.BoundaryCrossoverType
+	(StrategyRegion)(0),                                // 25: dsejeh.v1.StrategyRegion
+	(StrategyRegionStatus)(0),                          // 26: dsejeh.v1.StrategyRegionStatus
+	(CandidateStatus)(0),                               // 27: dsejeh.v1.CandidateStatus
+	(HoldingStatus)(0),                                 // 28: dsejeh.v1.HoldingStatus
+	(CapacityStatus)(0),                                // 29: dsejeh.v1.CapacityStatus
+	(FreshnessStatus)(0),                               // 30: dsejeh.v1.FreshnessStatus
+	(CandidateRankingStatus)(0),                        // 31: dsejeh.v1.CandidateRankingStatus
+	(StrategyDecisionType)(0),                          // 32: dsejeh.v1.StrategyDecisionType
+	(StrategyDecisionStatus)(0),                        // 33: dsejeh.v1.StrategyDecisionStatus
+	(ExecutionMode)(0),                                 // 34: dsejeh.v1.ExecutionMode
+	(ExecutionIntentAction)(0),                         // 35: dsejeh.v1.ExecutionIntentAction
+	(ExecutionIntentStatus)(0),                         // 36: dsejeh.v1.ExecutionIntentStatus
+	(ExecutionEventStatus)(0),                          // 37: dsejeh.v1.ExecutionEventStatus
+	(ReconciliationStatus)(0),                          // 38: dsejeh.v1.ReconciliationStatus
+	(BarProcessingOutcomeType)(0),                      // 39: dsejeh.v1.BarProcessingOutcomeType
+	(DiagnosticSeverity)(0),                            // 40: dsejeh.v1.DiagnosticSeverity
+	(ErrorClassification)(0),                           // 41: dsejeh.v1.ErrorClassification
+	(*SourceProvenance)(nil),                           // 42: dsejeh.v1.SourceProvenance
+	(*BarEvent)(nil),                                   // 43: dsejeh.v1.BarEvent
+	(*BarAdmissionEvidence)(nil),                       // 44: dsejeh.v1.BarAdmissionEvidence
+	(*SolverIdentity)(nil),                             // 45: dsejeh.v1.SolverIdentity
+	(*PhaseEvidence)(nil),                              // 46: dsejeh.v1.PhaseEvidence
+	(*RuntimeIdentity)(nil),                            // 47: dsejeh.v1.RuntimeIdentity
+	(*ConfigurationIdentity)(nil),                      // 48: dsejeh.v1.ConfigurationIdentity
+	(*RuleIdentity)(nil),                               // 49: dsejeh.v1.RuleIdentity
+	(*RuleSetIdentity)(nil),                            // 50: dsejeh.v1.RuleSetIdentity
+	(*AuthorizedDynamicVariable)(nil),                  // 51: dsejeh.v1.AuthorizedDynamicVariable
+	(*SourceSubscriptionEvidence)(nil),                 // 52: dsejeh.v1.SourceSubscriptionEvidence
+	(*BarReceptionEvidence)(nil),                       // 53: dsejeh.v1.BarReceptionEvidence
+	(*AnalyticalStateEvidence)(nil),                    // 54: dsejeh.v1.AnalyticalStateEvidence
+	(*ProductionEligibilityContext)(nil),               // 55: dsejeh.v1.ProductionEligibilityContext
+	(*ProductionEligibilityEvidence)(nil),              // 56: dsejeh.v1.ProductionEligibilityEvidence
+	(*ProductionEligibilityRuleOutcome)(nil),           // 57: dsejeh.v1.ProductionEligibilityRuleOutcome
+	(*PhaseMotionRuleOutcome)(nil),                     // 58: dsejeh.v1.PhaseMotionRuleOutcome
+	(*BoundaryCrossoverRuleOutcome)(nil),               // 59: dsejeh.v1.BoundaryCrossoverRuleOutcome
+	(*StrategyRegionRuleOutcome)(nil),                  // 60: dsejeh.v1.StrategyRegionRuleOutcome
+	(*UniverseEligibilityRuleOutcome)(nil),             // 61: dsejeh.v1.UniverseEligibilityRuleOutcome
+	(*CandidateRankingRuleOutcome)(nil),                // 62: dsejeh.v1.CandidateRankingRuleOutcome
+	(*StrategyDecisionRuleOutcome)(nil),                // 63: dsejeh.v1.StrategyDecisionRuleOutcome
+	(*ExecutionIntentRuleOutcome)(nil),                 // 64: dsejeh.v1.ExecutionIntentRuleOutcome
+	(*BoundaryPolicyRuleOutcome)(nil),                  // 65: dsejeh.v1.BoundaryPolicyRuleOutcome
+	(*RuleOutcomeMapping)(nil),                         // 66: dsejeh.v1.RuleOutcomeMapping
+	(*RuleDefinition)(nil),                             // 67: dsejeh.v1.RuleDefinition
+	(*RuleSetDefinition)(nil),                          // 68: dsejeh.v1.RuleSetDefinition
+	(*RuleEvaluationEvidence)(nil),                     // 69: dsejeh.v1.RuleEvaluationEvidence
+	(*AlgorithmIdentity)(nil),                          // 70: dsejeh.v1.AlgorithmIdentity
+	(*PhaseMotionEvidence)(nil),                        // 71: dsejeh.v1.PhaseMotionEvidence
+	(*PhaseTransitionState)(nil),                       // 72: dsejeh.v1.PhaseTransitionState
+	(*BoundaryFact)(nil),                               // 73: dsejeh.v1.BoundaryFact
+	(*AllocationCandidate)(nil),                        // 74: dsejeh.v1.AllocationCandidate
+	(*DynamicExecutionContext)(nil),                    // 75: dsejeh.v1.DynamicExecutionContext
+	(*PhaseVelocityRankingEntry)(nil),                  // 76: dsejeh.v1.PhaseVelocityRankingEntry
+	(*StateActionOutcome)(nil),                         // 77: dsejeh.v1.StateActionOutcome
+	(*GovernedExecutionInstruction)(nil),               // 78: dsejeh.v1.GovernedExecutionInstruction
+	(*DynamicExecutionResult)(nil),                     // 79: dsejeh.v1.DynamicExecutionResult
+	(*BoundaryCrossoverEvidence)(nil),                  // 80: dsejeh.v1.BoundaryCrossoverEvidence
+	(*StrategyRegionEvidence)(nil),                     // 81: dsejeh.v1.StrategyRegionEvidence
+	(*DecimalValue)(nil),                               // 82: dsejeh.v1.DecimalValue
+	(*CapacityEvidence)(nil),                           // 83: dsejeh.v1.CapacityEvidence
+	(*EntityUniverseState)(nil),                        // 84: dsejeh.v1.EntityUniverseState
+	(*UniverseStateEvidence)(nil),                      // 85: dsejeh.v1.UniverseStateEvidence
+	(*CandidateRankingEntry)(nil),                      // 86: dsejeh.v1.CandidateRankingEntry
+	(*CandidateRankingEvidence)(nil),                   // 87: dsejeh.v1.CandidateRankingEvidence
+	(*StrategyDecision)(nil),                           // 88: dsejeh.v1.StrategyDecision
+	(*ExecutionIntent)(nil),                            // 89: dsejeh.v1.ExecutionIntent
+	(*ExecutorIdentity)(nil),                           // 90: dsejeh.v1.ExecutorIdentity
+	(*ExecutionEvent)(nil),                             // 91: dsejeh.v1.ExecutionEvent
+	(*ExecutionReconciliationEvidence)(nil),            // 92: dsejeh.v1.ExecutionReconciliationEvidence
+	(*RuntimeActivitySnapshot)(nil),                    // 93: dsejeh.v1.RuntimeActivitySnapshot
+	(*DiagnosticEvidence)(nil),                         // 94: dsejeh.v1.DiagnosticEvidence
+	(*RuntimeStatusEvidence)(nil),                      // 95: dsejeh.v1.RuntimeStatusEvidence
+	(*BarProcessingOutcomeEvidence)(nil),               // 96: dsejeh.v1.BarProcessingOutcomeEvidence
+	(*RuntimeEvidenceEnvelope)(nil),                    // 97: dsejeh.v1.RuntimeEvidenceEnvelope
+	(*GetRuntimeStatusRequest)(nil),                    // 98: dsejeh.v1.GetRuntimeStatusRequest
+	(*GetRuntimeStatusResponse)(nil),                   // 99: dsejeh.v1.GetRuntimeStatusResponse
+	(*SubscribeRuntimeEvidenceRequest)(nil),            // 100: dsejeh.v1.SubscribeRuntimeEvidenceRequest
+	(*SubscribeRuntimeEvidenceResponse)(nil),           // 101: dsejeh.v1.SubscribeRuntimeEvidenceResponse
+	(*SubmitExecutionIntentRequest)(nil),               // 102: dsejeh.v1.SubmitExecutionIntentRequest
+	(*SubmitExecutionIntentResponse)(nil),              // 103: dsejeh.v1.SubmitExecutionIntentResponse
+	(*StreamExecutionEventsRequest)(nil),               // 104: dsejeh.v1.StreamExecutionEventsRequest
+	(*StreamExecutionEventsResponse)(nil),              // 105: dsejeh.v1.StreamExecutionEventsResponse
+	(*SubmitGovernedExecutionInstructionRequest)(nil),  // 106: dsejeh.v1.SubmitGovernedExecutionInstructionRequest
+	(*SubmitGovernedExecutionInstructionResponse)(nil), // 107: dsejeh.v1.SubmitGovernedExecutionInstructionResponse
+	(*ReceiveBarRequest)(nil),                          // 108: dsejeh.v1.ReceiveBarRequest
+	(*ReceiveBarResponse)(nil),                         // 109: dsejeh.v1.ReceiveBarResponse
+	(*AdmitBarRequest)(nil),                            // 110: dsejeh.v1.AdmitBarRequest
+	(*AdmitBarResponse)(nil),                           // 111: dsejeh.v1.AdmitBarResponse
+	(*UpdateAnalyticalStateRequest)(nil),               // 112: dsejeh.v1.UpdateAnalyticalStateRequest
+	(*UpdateAnalyticalStateResponse)(nil),              // 113: dsejeh.v1.UpdateAnalyticalStateResponse
+	(*UpdateJehPhaseRequest)(nil),                      // 114: dsejeh.v1.UpdateJehPhaseRequest
+	(*UpdateJehPhaseResponse)(nil),                     // 115: dsejeh.v1.UpdateJehPhaseResponse
+	(*EvaluateProductionEligibilityRequest)(nil),       // 116: dsejeh.v1.EvaluateProductionEligibilityRequest
+	(*EvaluateProductionEligibilityResponse)(nil),      // 117: dsejeh.v1.EvaluateProductionEligibilityResponse
+	(*CalculatePhaseTransitionRequest)(nil),            // 118: dsejeh.v1.CalculatePhaseTransitionRequest
+	(*CalculatePhaseTransitionResponse)(nil),           // 119: dsejeh.v1.CalculatePhaseTransitionResponse
+	(*EvaluateDynamicExecutionRequest)(nil),            // 120: dsejeh.v1.EvaluateDynamicExecutionRequest
+	(*EvaluateDynamicExecutionResponse)(nil),           // 121: dsejeh.v1.EvaluateDynamicExecutionResponse
+	(*EvaluatePhaseMotionRequest)(nil),                 // 122: dsejeh.v1.EvaluatePhaseMotionRequest
+	(*EvaluatePhaseMotionResponse)(nil),                // 123: dsejeh.v1.EvaluatePhaseMotionResponse
+	(*DetectBoundaryCrossoverRequest)(nil),             // 124: dsejeh.v1.DetectBoundaryCrossoverRequest
+	(*DetectBoundaryCrossoverResponse)(nil),            // 125: dsejeh.v1.DetectBoundaryCrossoverResponse
+	(*EvaluateStrategyRegionRequest)(nil),              // 126: dsejeh.v1.EvaluateStrategyRegionRequest
+	(*EvaluateStrategyRegionResponse)(nil),             // 127: dsejeh.v1.EvaluateStrategyRegionResponse
+	(*UpdateUniverseStateRequest)(nil),                 // 128: dsejeh.v1.UpdateUniverseStateRequest
+	(*UpdateUniverseStateResponse)(nil),                // 129: dsejeh.v1.UpdateUniverseStateResponse
+	(*RankCandidatesRequest)(nil),                      // 130: dsejeh.v1.RankCandidatesRequest
+	(*RankCandidatesResponse)(nil),                     // 131: dsejeh.v1.RankCandidatesResponse
+	(*GenerateStrategyDecisionRequest)(nil),            // 132: dsejeh.v1.GenerateStrategyDecisionRequest
+	(*GenerateStrategyDecisionResponse)(nil),           // 133: dsejeh.v1.GenerateStrategyDecisionResponse
+	(*GenerateExecutionIntentRequest)(nil),             // 134: dsejeh.v1.GenerateExecutionIntentRequest
+	(*GenerateExecutionIntentResponse)(nil),            // 135: dsejeh.v1.GenerateExecutionIntentResponse
+	(*ValidateRuleSetRequest)(nil),                     // 136: dsejeh.v1.ValidateRuleSetRequest
+	(*ValidateRuleSetResponse)(nil),                    // 137: dsejeh.v1.ValidateRuleSetResponse
+	(*GetActiveRuleSetRequest)(nil),                    // 138: dsejeh.v1.GetActiveRuleSetRequest
+	(*GetActiveRuleSetResponse)(nil),                   // 139: dsejeh.v1.GetActiveRuleSetResponse
 }
 var file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_depIdxs = []int32{
 	0,   // 0: dsejeh.v1.SourceProvenance.source_mode:type_name -> dsejeh.v1.RuntimeMode
-	33,  // 1: dsejeh.v1.BarEvent.provenance:type_name -> dsejeh.v1.SourceProvenance
+	42,  // 1: dsejeh.v1.BarEvent.provenance:type_name -> dsejeh.v1.SourceProvenance
 	2,   // 2: dsejeh.v1.BarAdmissionEvidence.status:type_name -> dsejeh.v1.BarAdmissionStatus
 	6,   // 3: dsejeh.v1.BarAdmissionEvidence.findings:type_name -> dsejeh.v1.BarAdmissionFinding
 	1,   // 4: dsejeh.v1.PhaseEvidence.status:type_name -> dsejeh.v1.PhaseStatus
-	36,  // 5: dsejeh.v1.PhaseEvidence.solver_identity:type_name -> dsejeh.v1.SolverIdentity
-	33,  // 6: dsejeh.v1.PhaseEvidence.source_provenance:type_name -> dsejeh.v1.SourceProvenance
+	45,  // 5: dsejeh.v1.PhaseEvidence.solver_identity:type_name -> dsejeh.v1.SolverIdentity
+	42,  // 6: dsejeh.v1.PhaseEvidence.source_provenance:type_name -> dsejeh.v1.SourceProvenance
 	9,   // 7: dsejeh.v1.RuleIdentity.owning_component:type_name -> dsejeh.v1.RuleOwningComponent
 	11,  // 8: dsejeh.v1.RuleIdentity.expected_result_type:type_name -> dsejeh.v1.RuleRawResultType
 	11,  // 9: dsejeh.v1.AuthorizedDynamicVariable.value_type:type_name -> dsejeh.v1.RuleRawResultType
 	0,   // 10: dsejeh.v1.SourceSubscriptionEvidence.runtime_mode:type_name -> dsejeh.v1.RuntimeMode
 	5,   // 11: dsejeh.v1.SourceSubscriptionEvidence.connection_status:type_name -> dsejeh.v1.SourceConnectionStatus
-	33,  // 12: dsejeh.v1.BarReceptionEvidence.source_provenance:type_name -> dsejeh.v1.SourceProvenance
+	42,  // 12: dsejeh.v1.BarReceptionEvidence.source_provenance:type_name -> dsejeh.v1.SourceProvenance
 	7,   // 13: dsejeh.v1.AnalyticalStateEvidence.sequence_integrity:type_name -> dsejeh.v1.SequenceIntegrityStatus
 	1,   // 14: dsejeh.v1.ProductionEligibilityContext.phase_status:type_name -> dsejeh.v1.PhaseStatus
 	7,   // 15: dsejeh.v1.ProductionEligibilityContext.sequence_integrity:type_name -> dsejeh.v1.SequenceIntegrityStatus
@@ -10855,216 +13314,270 @@ var file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_depIdxs = []int32{
 	7,   // 17: dsejeh.v1.ProductionEligibilityEvidence.sequence_integrity:type_name -> dsejeh.v1.SequenceIntegrityStatus
 	8,   // 18: dsejeh.v1.ProductionEligibilityRuleOutcome.outcome:type_name -> dsejeh.v1.ProductionEligibilityOutcome
 	12,  // 19: dsejeh.v1.PhaseMotionRuleOutcome.status:type_name -> dsejeh.v1.PhaseMotionStatus
-	14,  // 20: dsejeh.v1.BoundaryCrossoverRuleOutcome.status:type_name -> dsejeh.v1.BoundaryCrossoverStatus
-	15,  // 21: dsejeh.v1.BoundaryCrossoverRuleOutcome.crossover_type:type_name -> dsejeh.v1.BoundaryCrossoverType
-	17,  // 22: dsejeh.v1.StrategyRegionRuleOutcome.status:type_name -> dsejeh.v1.StrategyRegionStatus
-	16,  // 23: dsejeh.v1.StrategyRegionRuleOutcome.region:type_name -> dsejeh.v1.StrategyRegion
-	18,  // 24: dsejeh.v1.UniverseEligibilityRuleOutcome.candidate_status:type_name -> dsejeh.v1.CandidateStatus
-	22,  // 25: dsejeh.v1.CandidateRankingRuleOutcome.status:type_name -> dsejeh.v1.CandidateRankingStatus
-	24,  // 26: dsejeh.v1.StrategyDecisionRuleOutcome.status:type_name -> dsejeh.v1.StrategyDecisionStatus
-	23,  // 27: dsejeh.v1.StrategyDecisionRuleOutcome.decision_type:type_name -> dsejeh.v1.StrategyDecisionType
-	27,  // 28: dsejeh.v1.ExecutionIntentRuleOutcome.status:type_name -> dsejeh.v1.ExecutionIntentStatus
-	48,  // 29: dsejeh.v1.RuleOutcomeMapping.production_eligibility_outcome:type_name -> dsejeh.v1.ProductionEligibilityRuleOutcome
-	49,  // 30: dsejeh.v1.RuleOutcomeMapping.phase_motion_outcome:type_name -> dsejeh.v1.PhaseMotionRuleOutcome
-	50,  // 31: dsejeh.v1.RuleOutcomeMapping.boundary_crossover_outcome:type_name -> dsejeh.v1.BoundaryCrossoverRuleOutcome
-	51,  // 32: dsejeh.v1.RuleOutcomeMapping.strategy_region_outcome:type_name -> dsejeh.v1.StrategyRegionRuleOutcome
-	52,  // 33: dsejeh.v1.RuleOutcomeMapping.universe_eligibility_outcome:type_name -> dsejeh.v1.UniverseEligibilityRuleOutcome
-	53,  // 34: dsejeh.v1.RuleOutcomeMapping.candidate_ranking_outcome:type_name -> dsejeh.v1.CandidateRankingRuleOutcome
-	54,  // 35: dsejeh.v1.RuleOutcomeMapping.strategy_decision_outcome:type_name -> dsejeh.v1.StrategyDecisionRuleOutcome
-	55,  // 36: dsejeh.v1.RuleOutcomeMapping.execution_intent_outcome:type_name -> dsejeh.v1.ExecutionIntentRuleOutcome
-	40,  // 37: dsejeh.v1.RuleDefinition.rule_identity:type_name -> dsejeh.v1.RuleIdentity
-	41,  // 38: dsejeh.v1.RuleDefinition.rule_set_identity:type_name -> dsejeh.v1.RuleSetIdentity
-	42,  // 39: dsejeh.v1.RuleDefinition.authorized_dynamic_variables:type_name -> dsejeh.v1.AuthorizedDynamicVariable
-	56,  // 40: dsejeh.v1.RuleDefinition.outcome_mappings:type_name -> dsejeh.v1.RuleOutcomeMapping
-	41,  // 41: dsejeh.v1.RuleSetDefinition.rule_set_identity:type_name -> dsejeh.v1.RuleSetIdentity
-	57,  // 42: dsejeh.v1.RuleSetDefinition.rules:type_name -> dsejeh.v1.RuleDefinition
-	40,  // 43: dsejeh.v1.RuleEvaluationEvidence.rule_identity:type_name -> dsejeh.v1.RuleIdentity
-	41,  // 44: dsejeh.v1.RuleEvaluationEvidence.rule_set_identity:type_name -> dsejeh.v1.RuleSetIdentity
-	10,  // 45: dsejeh.v1.RuleEvaluationEvidence.evaluation_status:type_name -> dsejeh.v1.RuleEvaluationStatus
-	48,  // 46: dsejeh.v1.RuleEvaluationEvidence.production_eligibility_outcome:type_name -> dsejeh.v1.ProductionEligibilityRuleOutcome
-	49,  // 47: dsejeh.v1.RuleEvaluationEvidence.phase_motion_outcome:type_name -> dsejeh.v1.PhaseMotionRuleOutcome
-	50,  // 48: dsejeh.v1.RuleEvaluationEvidence.boundary_crossover_outcome:type_name -> dsejeh.v1.BoundaryCrossoverRuleOutcome
-	51,  // 49: dsejeh.v1.RuleEvaluationEvidence.strategy_region_outcome:type_name -> dsejeh.v1.StrategyRegionRuleOutcome
-	52,  // 50: dsejeh.v1.RuleEvaluationEvidence.universe_eligibility_outcome:type_name -> dsejeh.v1.UniverseEligibilityRuleOutcome
-	53,  // 51: dsejeh.v1.RuleEvaluationEvidence.candidate_ranking_outcome:type_name -> dsejeh.v1.CandidateRankingRuleOutcome
-	54,  // 52: dsejeh.v1.RuleEvaluationEvidence.strategy_decision_outcome:type_name -> dsejeh.v1.StrategyDecisionRuleOutcome
-	55,  // 53: dsejeh.v1.RuleEvaluationEvidence.execution_intent_outcome:type_name -> dsejeh.v1.ExecutionIntentRuleOutcome
-	12,  // 54: dsejeh.v1.PhaseMotionEvidence.status:type_name -> dsejeh.v1.PhaseMotionStatus
-	13,  // 55: dsejeh.v1.PhaseMotionEvidence.direction:type_name -> dsejeh.v1.PhaseMotionDirection
-	60,  // 56: dsejeh.v1.PhaseMotionEvidence.algorithm_identity:type_name -> dsejeh.v1.AlgorithmIdentity
-	14,  // 57: dsejeh.v1.BoundaryCrossoverEvidence.status:type_name -> dsejeh.v1.BoundaryCrossoverStatus
-	15,  // 58: dsejeh.v1.BoundaryCrossoverEvidence.crossover_type:type_name -> dsejeh.v1.BoundaryCrossoverType
-	60,  // 59: dsejeh.v1.BoundaryCrossoverEvidence.algorithm_identity:type_name -> dsejeh.v1.AlgorithmIdentity
-	17,  // 60: dsejeh.v1.StrategyRegionEvidence.status:type_name -> dsejeh.v1.StrategyRegionStatus
-	16,  // 61: dsejeh.v1.StrategyRegionEvidence.previous_region:type_name -> dsejeh.v1.StrategyRegion
-	16,  // 62: dsejeh.v1.StrategyRegionEvidence.current_region:type_name -> dsejeh.v1.StrategyRegion
-	20,  // 63: dsejeh.v1.CapacityEvidence.status:type_name -> dsejeh.v1.CapacityStatus
-	64,  // 64: dsejeh.v1.CapacityEvidence.available_capital:type_name -> dsejeh.v1.DecimalValue
-	16,  // 65: dsejeh.v1.EntityUniverseState.strategy_region:type_name -> dsejeh.v1.StrategyRegion
-	18,  // 66: dsejeh.v1.EntityUniverseState.candidate_status:type_name -> dsejeh.v1.CandidateStatus
-	19,  // 67: dsejeh.v1.EntityUniverseState.holding_status:type_name -> dsejeh.v1.HoldingStatus
-	21,  // 68: dsejeh.v1.EntityUniverseState.freshness_status:type_name -> dsejeh.v1.FreshnessStatus
-	66,  // 69: dsejeh.v1.UniverseStateEvidence.entities:type_name -> dsejeh.v1.EntityUniverseState
-	65,  // 70: dsejeh.v1.UniverseStateEvidence.capacity:type_name -> dsejeh.v1.CapacityEvidence
-	22,  // 71: dsejeh.v1.CandidateRankingEvidence.status:type_name -> dsejeh.v1.CandidateRankingStatus
-	68,  // 72: dsejeh.v1.CandidateRankingEvidence.entries:type_name -> dsejeh.v1.CandidateRankingEntry
-	60,  // 73: dsejeh.v1.CandidateRankingEvidence.ranking_policy_identity:type_name -> dsejeh.v1.AlgorithmIdentity
-	24,  // 74: dsejeh.v1.StrategyDecision.status:type_name -> dsejeh.v1.StrategyDecisionStatus
-	23,  // 75: dsejeh.v1.StrategyDecision.decision_type:type_name -> dsejeh.v1.StrategyDecisionType
-	26,  // 76: dsejeh.v1.ExecutionIntent.requested_action:type_name -> dsejeh.v1.ExecutionIntentAction
-	27,  // 77: dsejeh.v1.ExecutionIntent.status:type_name -> dsejeh.v1.ExecutionIntentStatus
-	64,  // 78: dsejeh.v1.ExecutionIntent.requested_quantity:type_name -> dsejeh.v1.DecimalValue
-	25,  // 79: dsejeh.v1.ExecutorIdentity.execution_mode:type_name -> dsejeh.v1.ExecutionMode
-	28,  // 80: dsejeh.v1.ExecutionEvent.status:type_name -> dsejeh.v1.ExecutionEventStatus
-	72,  // 81: dsejeh.v1.ExecutionEvent.executor_identity:type_name -> dsejeh.v1.ExecutorIdentity
-	64,  // 82: dsejeh.v1.ExecutionEvent.requested_quantity:type_name -> dsejeh.v1.DecimalValue
-	64,  // 83: dsejeh.v1.ExecutionEvent.filled_quantity:type_name -> dsejeh.v1.DecimalValue
-	64,  // 84: dsejeh.v1.ExecutionEvent.fill_price:type_name -> dsejeh.v1.DecimalValue
-	29,  // 85: dsejeh.v1.ExecutionReconciliationEvidence.status:type_name -> dsejeh.v1.ReconciliationStatus
-	31,  // 86: dsejeh.v1.DiagnosticEvidence.severity:type_name -> dsejeh.v1.DiagnosticSeverity
-	32,  // 87: dsejeh.v1.DiagnosticEvidence.error_classification:type_name -> dsejeh.v1.ErrorClassification
-	38,  // 88: dsejeh.v1.RuntimeStatusEvidence.runtime_identity:type_name -> dsejeh.v1.RuntimeIdentity
-	0,   // 89: dsejeh.v1.RuntimeStatusEvidence.runtime_mode:type_name -> dsejeh.v1.RuntimeMode
-	3,   // 90: dsejeh.v1.RuntimeStatusEvidence.lifecycle_status:type_name -> dsejeh.v1.RuntimeLifecycleStatus
-	4,   // 91: dsejeh.v1.RuntimeStatusEvidence.health_status:type_name -> dsejeh.v1.RuntimeHealthStatus
-	43,  // 92: dsejeh.v1.RuntimeStatusEvidence.source_status:type_name -> dsejeh.v1.SourceSubscriptionEvidence
-	39,  // 93: dsejeh.v1.RuntimeStatusEvidence.configuration_identity:type_name -> dsejeh.v1.ConfigurationIdentity
-	41,  // 94: dsejeh.v1.RuntimeStatusEvidence.rule_set_identity:type_name -> dsejeh.v1.RuleSetIdentity
-	36,  // 95: dsejeh.v1.RuntimeStatusEvidence.solver_identity:type_name -> dsejeh.v1.SolverIdentity
-	75,  // 96: dsejeh.v1.RuntimeStatusEvidence.activity:type_name -> dsejeh.v1.RuntimeActivitySnapshot
-	30,  // 97: dsejeh.v1.BarProcessingOutcomeEvidence.outcome_type:type_name -> dsejeh.v1.BarProcessingOutcomeType
-	77,  // 98: dsejeh.v1.RuntimeEvidenceEnvelope.runtime_status:type_name -> dsejeh.v1.RuntimeStatusEvidence
-	43,  // 99: dsejeh.v1.RuntimeEvidenceEnvelope.source_subscription:type_name -> dsejeh.v1.SourceSubscriptionEvidence
-	44,  // 100: dsejeh.v1.RuntimeEvidenceEnvelope.bar_reception:type_name -> dsejeh.v1.BarReceptionEvidence
-	35,  // 101: dsejeh.v1.RuntimeEvidenceEnvelope.bar_admission:type_name -> dsejeh.v1.BarAdmissionEvidence
-	45,  // 102: dsejeh.v1.RuntimeEvidenceEnvelope.analytical_state:type_name -> dsejeh.v1.AnalyticalStateEvidence
-	37,  // 103: dsejeh.v1.RuntimeEvidenceEnvelope.phase:type_name -> dsejeh.v1.PhaseEvidence
-	47,  // 104: dsejeh.v1.RuntimeEvidenceEnvelope.production_eligibility:type_name -> dsejeh.v1.ProductionEligibilityEvidence
-	59,  // 105: dsejeh.v1.RuntimeEvidenceEnvelope.rule_evaluation:type_name -> dsejeh.v1.RuleEvaluationEvidence
-	61,  // 106: dsejeh.v1.RuntimeEvidenceEnvelope.phase_motion:type_name -> dsejeh.v1.PhaseMotionEvidence
-	62,  // 107: dsejeh.v1.RuntimeEvidenceEnvelope.boundary_crossover:type_name -> dsejeh.v1.BoundaryCrossoverEvidence
-	63,  // 108: dsejeh.v1.RuntimeEvidenceEnvelope.strategy_region:type_name -> dsejeh.v1.StrategyRegionEvidence
-	67,  // 109: dsejeh.v1.RuntimeEvidenceEnvelope.universe_state:type_name -> dsejeh.v1.UniverseStateEvidence
-	69,  // 110: dsejeh.v1.RuntimeEvidenceEnvelope.candidate_ranking:type_name -> dsejeh.v1.CandidateRankingEvidence
-	70,  // 111: dsejeh.v1.RuntimeEvidenceEnvelope.strategy_decision:type_name -> dsejeh.v1.StrategyDecision
-	71,  // 112: dsejeh.v1.RuntimeEvidenceEnvelope.execution_intent:type_name -> dsejeh.v1.ExecutionIntent
-	73,  // 113: dsejeh.v1.RuntimeEvidenceEnvelope.execution_event:type_name -> dsejeh.v1.ExecutionEvent
-	74,  // 114: dsejeh.v1.RuntimeEvidenceEnvelope.execution_reconciliation:type_name -> dsejeh.v1.ExecutionReconciliationEvidence
-	75,  // 115: dsejeh.v1.RuntimeEvidenceEnvelope.runtime_activity:type_name -> dsejeh.v1.RuntimeActivitySnapshot
-	78,  // 116: dsejeh.v1.RuntimeEvidenceEnvelope.bar_processing_outcome:type_name -> dsejeh.v1.BarProcessingOutcomeEvidence
-	76,  // 117: dsejeh.v1.RuntimeEvidenceEnvelope.diagnostic:type_name -> dsejeh.v1.DiagnosticEvidence
-	58,  // 118: dsejeh.v1.RuntimeEvidenceEnvelope.rule_set_definition:type_name -> dsejeh.v1.RuleSetDefinition
-	77,  // 119: dsejeh.v1.GetRuntimeStatusResponse.runtime_status:type_name -> dsejeh.v1.RuntimeStatusEvidence
-	79,  // 120: dsejeh.v1.SubscribeRuntimeEvidenceResponse.evidence:type_name -> dsejeh.v1.RuntimeEvidenceEnvelope
-	71,  // 121: dsejeh.v1.SubmitExecutionIntentRequest.execution_intent:type_name -> dsejeh.v1.ExecutionIntent
-	73,  // 122: dsejeh.v1.StreamExecutionEventsResponse.execution_event:type_name -> dsejeh.v1.ExecutionEvent
-	34,  // 123: dsejeh.v1.ReceiveBarRequest.bar_event:type_name -> dsejeh.v1.BarEvent
-	44,  // 124: dsejeh.v1.ReceiveBarResponse.reception_evidence:type_name -> dsejeh.v1.BarReceptionEvidence
-	34,  // 125: dsejeh.v1.AdmitBarRequest.bar_event:type_name -> dsejeh.v1.BarEvent
-	44,  // 126: dsejeh.v1.AdmitBarRequest.reception_evidence:type_name -> dsejeh.v1.BarReceptionEvidence
-	35,  // 127: dsejeh.v1.AdmitBarResponse.admission_evidence:type_name -> dsejeh.v1.BarAdmissionEvidence
-	34,  // 128: dsejeh.v1.UpdateAnalyticalStateRequest.bar_event:type_name -> dsejeh.v1.BarEvent
-	35,  // 129: dsejeh.v1.UpdateAnalyticalStateRequest.admission_evidence:type_name -> dsejeh.v1.BarAdmissionEvidence
-	45,  // 130: dsejeh.v1.UpdateAnalyticalStateRequest.prior_analytical_state_evidence:type_name -> dsejeh.v1.AnalyticalStateEvidence
-	45,  // 131: dsejeh.v1.UpdateAnalyticalStateResponse.analytical_state_evidence:type_name -> dsejeh.v1.AnalyticalStateEvidence
-	34,  // 132: dsejeh.v1.UpdateJehPhaseRequest.bar_event:type_name -> dsejeh.v1.BarEvent
-	35,  // 133: dsejeh.v1.UpdateJehPhaseRequest.admission_evidence:type_name -> dsejeh.v1.BarAdmissionEvidence
-	45,  // 134: dsejeh.v1.UpdateJehPhaseRequest.analytical_state_evidence:type_name -> dsejeh.v1.AnalyticalStateEvidence
-	37,  // 135: dsejeh.v1.UpdateJehPhaseRequest.prior_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
-	37,  // 136: dsejeh.v1.UpdateJehPhaseResponse.phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
-	37,  // 137: dsejeh.v1.EvaluateProductionEligibilityRequest.phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
-	45,  // 138: dsejeh.v1.EvaluateProductionEligibilityRequest.analytical_state_evidence:type_name -> dsejeh.v1.AnalyticalStateEvidence
-	46,  // 139: dsejeh.v1.EvaluateProductionEligibilityRequest.context:type_name -> dsejeh.v1.ProductionEligibilityContext
-	40,  // 140: dsejeh.v1.EvaluateProductionEligibilityRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
-	47,  // 141: dsejeh.v1.EvaluateProductionEligibilityResponse.production_eligibility_evidence:type_name -> dsejeh.v1.ProductionEligibilityEvidence
-	59,  // 142: dsejeh.v1.EvaluateProductionEligibilityResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
-	37,  // 143: dsejeh.v1.EvaluatePhaseMotionRequest.prior_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
-	37,  // 144: dsejeh.v1.EvaluatePhaseMotionRequest.current_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
-	47,  // 145: dsejeh.v1.EvaluatePhaseMotionRequest.production_eligibility_evidence:type_name -> dsejeh.v1.ProductionEligibilityEvidence
-	40,  // 146: dsejeh.v1.EvaluatePhaseMotionRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
-	47,  // 147: dsejeh.v1.EvaluatePhaseMotionRequest.prior_production_eligibility_evidence:type_name -> dsejeh.v1.ProductionEligibilityEvidence
-	61,  // 148: dsejeh.v1.EvaluatePhaseMotionResponse.phase_motion_evidence:type_name -> dsejeh.v1.PhaseMotionEvidence
-	59,  // 149: dsejeh.v1.EvaluatePhaseMotionResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
-	37,  // 150: dsejeh.v1.DetectBoundaryCrossoverRequest.prior_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
-	37,  // 151: dsejeh.v1.DetectBoundaryCrossoverRequest.current_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
-	61,  // 152: dsejeh.v1.DetectBoundaryCrossoverRequest.phase_motion_evidence:type_name -> dsejeh.v1.PhaseMotionEvidence
-	40,  // 153: dsejeh.v1.DetectBoundaryCrossoverRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
-	62,  // 154: dsejeh.v1.DetectBoundaryCrossoverResponse.boundary_crossover_evidence:type_name -> dsejeh.v1.BoundaryCrossoverEvidence
-	59,  // 155: dsejeh.v1.DetectBoundaryCrossoverResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
-	37,  // 156: dsejeh.v1.EvaluateStrategyRegionRequest.phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
-	62,  // 157: dsejeh.v1.EvaluateStrategyRegionRequest.boundary_crossover_evidence:type_name -> dsejeh.v1.BoundaryCrossoverEvidence
-	63,  // 158: dsejeh.v1.EvaluateStrategyRegionRequest.prior_strategy_region_evidence:type_name -> dsejeh.v1.StrategyRegionEvidence
-	40,  // 159: dsejeh.v1.EvaluateStrategyRegionRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
-	63,  // 160: dsejeh.v1.EvaluateStrategyRegionResponse.strategy_region_evidence:type_name -> dsejeh.v1.StrategyRegionEvidence
-	59,  // 161: dsejeh.v1.EvaluateStrategyRegionResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
-	63,  // 162: dsejeh.v1.UpdateUniverseStateRequest.strategy_region_evidence:type_name -> dsejeh.v1.StrategyRegionEvidence
-	67,  // 163: dsejeh.v1.UpdateUniverseStateRequest.prior_universe_state_evidence:type_name -> dsejeh.v1.UniverseStateEvidence
-	73,  // 164: dsejeh.v1.UpdateUniverseStateRequest.latest_execution_event:type_name -> dsejeh.v1.ExecutionEvent
-	40,  // 165: dsejeh.v1.UpdateUniverseStateRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
-	67,  // 166: dsejeh.v1.UpdateUniverseStateResponse.universe_state_evidence:type_name -> dsejeh.v1.UniverseStateEvidence
-	59,  // 167: dsejeh.v1.UpdateUniverseStateResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
-	67,  // 168: dsejeh.v1.RankCandidatesRequest.universe_state_evidence:type_name -> dsejeh.v1.UniverseStateEvidence
-	40,  // 169: dsejeh.v1.RankCandidatesRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
-	61,  // 170: dsejeh.v1.RankCandidatesRequest.phase_motion_evidence:type_name -> dsejeh.v1.PhaseMotionEvidence
-	69,  // 171: dsejeh.v1.RankCandidatesResponse.candidate_ranking_evidence:type_name -> dsejeh.v1.CandidateRankingEvidence
-	59,  // 172: dsejeh.v1.RankCandidatesResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
-	63,  // 173: dsejeh.v1.GenerateStrategyDecisionRequest.strategy_region_evidence:type_name -> dsejeh.v1.StrategyRegionEvidence
-	67,  // 174: dsejeh.v1.GenerateStrategyDecisionRequest.universe_state_evidence:type_name -> dsejeh.v1.UniverseStateEvidence
-	69,  // 175: dsejeh.v1.GenerateStrategyDecisionRequest.candidate_ranking_evidence:type_name -> dsejeh.v1.CandidateRankingEvidence
-	62,  // 176: dsejeh.v1.GenerateStrategyDecisionRequest.boundary_crossover_evidence:type_name -> dsejeh.v1.BoundaryCrossoverEvidence
-	40,  // 177: dsejeh.v1.GenerateStrategyDecisionRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
-	70,  // 178: dsejeh.v1.GenerateStrategyDecisionResponse.strategy_decision:type_name -> dsejeh.v1.StrategyDecision
-	59,  // 179: dsejeh.v1.GenerateStrategyDecisionResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
-	70,  // 180: dsejeh.v1.GenerateExecutionIntentRequest.strategy_decision:type_name -> dsejeh.v1.StrategyDecision
-	67,  // 181: dsejeh.v1.GenerateExecutionIntentRequest.universe_state_evidence:type_name -> dsejeh.v1.UniverseStateEvidence
-	40,  // 182: dsejeh.v1.GenerateExecutionIntentRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
-	71,  // 183: dsejeh.v1.GenerateExecutionIntentResponse.execution_intent:type_name -> dsejeh.v1.ExecutionIntent
-	59,  // 184: dsejeh.v1.GenerateExecutionIntentResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
-	58,  // 185: dsejeh.v1.ValidateRuleSetRequest.rule_set_definition:type_name -> dsejeh.v1.RuleSetDefinition
-	76,  // 186: dsejeh.v1.ValidateRuleSetResponse.diagnostics:type_name -> dsejeh.v1.DiagnosticEvidence
-	41,  // 187: dsejeh.v1.ValidateRuleSetResponse.rule_set_identity:type_name -> dsejeh.v1.RuleSetIdentity
-	58,  // 188: dsejeh.v1.GetActiveRuleSetResponse.rule_set_definition:type_name -> dsejeh.v1.RuleSetDefinition
-	80,  // 189: dsejeh.v1.RuntimeOperationsService.GetRuntimeStatus:input_type -> dsejeh.v1.GetRuntimeStatusRequest
-	82,  // 190: dsejeh.v1.RuntimeEvidenceService.SubscribeRuntimeEvidence:input_type -> dsejeh.v1.SubscribeRuntimeEvidenceRequest
-	88,  // 191: dsejeh.v1.BarReceptionService.ReceiveBar:input_type -> dsejeh.v1.ReceiveBarRequest
-	90,  // 192: dsejeh.v1.BarAdmissionService.AdmitBar:input_type -> dsejeh.v1.AdmitBarRequest
-	92,  // 193: dsejeh.v1.AnalyticalStateService.UpdateAnalyticalState:input_type -> dsejeh.v1.UpdateAnalyticalStateRequest
-	94,  // 194: dsejeh.v1.JehPhaseService.UpdateJehPhase:input_type -> dsejeh.v1.UpdateJehPhaseRequest
-	96,  // 195: dsejeh.v1.ProductionEligibilityService.EvaluateProductionEligibility:input_type -> dsejeh.v1.EvaluateProductionEligibilityRequest
-	98,  // 196: dsejeh.v1.PhaseMotionService.EvaluatePhaseMotion:input_type -> dsejeh.v1.EvaluatePhaseMotionRequest
-	100, // 197: dsejeh.v1.BoundaryCrossoverService.DetectBoundaryCrossover:input_type -> dsejeh.v1.DetectBoundaryCrossoverRequest
-	102, // 198: dsejeh.v1.StrategyRegionService.EvaluateStrategyRegion:input_type -> dsejeh.v1.EvaluateStrategyRegionRequest
-	104, // 199: dsejeh.v1.UniverseStateService.UpdateUniverseState:input_type -> dsejeh.v1.UpdateUniverseStateRequest
-	106, // 200: dsejeh.v1.CandidateRankingService.RankCandidates:input_type -> dsejeh.v1.RankCandidatesRequest
-	108, // 201: dsejeh.v1.StrategyDecisionService.GenerateStrategyDecision:input_type -> dsejeh.v1.GenerateStrategyDecisionRequest
-	110, // 202: dsejeh.v1.ExecutionIntentService.GenerateExecutionIntent:input_type -> dsejeh.v1.GenerateExecutionIntentRequest
-	112, // 203: dsejeh.v1.RuleRegistryService.ValidateRuleSet:input_type -> dsejeh.v1.ValidateRuleSetRequest
-	114, // 204: dsejeh.v1.RuleRegistryService.GetActiveRuleSet:input_type -> dsejeh.v1.GetActiveRuleSetRequest
-	84,  // 205: dsejeh.v1.ExecutorService.SubmitExecutionIntent:input_type -> dsejeh.v1.SubmitExecutionIntentRequest
-	86,  // 206: dsejeh.v1.ExecutorService.StreamExecutionEvents:input_type -> dsejeh.v1.StreamExecutionEventsRequest
-	81,  // 207: dsejeh.v1.RuntimeOperationsService.GetRuntimeStatus:output_type -> dsejeh.v1.GetRuntimeStatusResponse
-	83,  // 208: dsejeh.v1.RuntimeEvidenceService.SubscribeRuntimeEvidence:output_type -> dsejeh.v1.SubscribeRuntimeEvidenceResponse
-	89,  // 209: dsejeh.v1.BarReceptionService.ReceiveBar:output_type -> dsejeh.v1.ReceiveBarResponse
-	91,  // 210: dsejeh.v1.BarAdmissionService.AdmitBar:output_type -> dsejeh.v1.AdmitBarResponse
-	93,  // 211: dsejeh.v1.AnalyticalStateService.UpdateAnalyticalState:output_type -> dsejeh.v1.UpdateAnalyticalStateResponse
-	95,  // 212: dsejeh.v1.JehPhaseService.UpdateJehPhase:output_type -> dsejeh.v1.UpdateJehPhaseResponse
-	97,  // 213: dsejeh.v1.ProductionEligibilityService.EvaluateProductionEligibility:output_type -> dsejeh.v1.EvaluateProductionEligibilityResponse
-	99,  // 214: dsejeh.v1.PhaseMotionService.EvaluatePhaseMotion:output_type -> dsejeh.v1.EvaluatePhaseMotionResponse
-	101, // 215: dsejeh.v1.BoundaryCrossoverService.DetectBoundaryCrossover:output_type -> dsejeh.v1.DetectBoundaryCrossoverResponse
-	103, // 216: dsejeh.v1.StrategyRegionService.EvaluateStrategyRegion:output_type -> dsejeh.v1.EvaluateStrategyRegionResponse
-	105, // 217: dsejeh.v1.UniverseStateService.UpdateUniverseState:output_type -> dsejeh.v1.UpdateUniverseStateResponse
-	107, // 218: dsejeh.v1.CandidateRankingService.RankCandidates:output_type -> dsejeh.v1.RankCandidatesResponse
-	109, // 219: dsejeh.v1.StrategyDecisionService.GenerateStrategyDecision:output_type -> dsejeh.v1.GenerateStrategyDecisionResponse
-	111, // 220: dsejeh.v1.ExecutionIntentService.GenerateExecutionIntent:output_type -> dsejeh.v1.GenerateExecutionIntentResponse
-	113, // 221: dsejeh.v1.RuleRegistryService.ValidateRuleSet:output_type -> dsejeh.v1.ValidateRuleSetResponse
-	115, // 222: dsejeh.v1.RuleRegistryService.GetActiveRuleSet:output_type -> dsejeh.v1.GetActiveRuleSetResponse
-	85,  // 223: dsejeh.v1.ExecutorService.SubmitExecutionIntent:output_type -> dsejeh.v1.SubmitExecutionIntentResponse
-	87,  // 224: dsejeh.v1.ExecutorService.StreamExecutionEvents:output_type -> dsejeh.v1.StreamExecutionEventsResponse
-	207, // [207:225] is the sub-list for method output_type
-	189, // [189:207] is the sub-list for method input_type
-	189, // [189:189] is the sub-list for extension type_name
-	189, // [189:189] is the sub-list for extension extendee
-	0,   // [0:189] is the sub-list for field type_name
+	23,  // 20: dsejeh.v1.BoundaryCrossoverRuleOutcome.status:type_name -> dsejeh.v1.BoundaryCrossoverStatus
+	24,  // 21: dsejeh.v1.BoundaryCrossoverRuleOutcome.crossover_type:type_name -> dsejeh.v1.BoundaryCrossoverType
+	26,  // 22: dsejeh.v1.StrategyRegionRuleOutcome.status:type_name -> dsejeh.v1.StrategyRegionStatus
+	25,  // 23: dsejeh.v1.StrategyRegionRuleOutcome.region:type_name -> dsejeh.v1.StrategyRegion
+	27,  // 24: dsejeh.v1.UniverseEligibilityRuleOutcome.candidate_status:type_name -> dsejeh.v1.CandidateStatus
+	31,  // 25: dsejeh.v1.CandidateRankingRuleOutcome.status:type_name -> dsejeh.v1.CandidateRankingStatus
+	33,  // 26: dsejeh.v1.StrategyDecisionRuleOutcome.status:type_name -> dsejeh.v1.StrategyDecisionStatus
+	32,  // 27: dsejeh.v1.StrategyDecisionRuleOutcome.decision_type:type_name -> dsejeh.v1.StrategyDecisionType
+	36,  // 28: dsejeh.v1.ExecutionIntentRuleOutcome.status:type_name -> dsejeh.v1.ExecutionIntentStatus
+	17,  // 29: dsejeh.v1.BoundaryPolicyRuleOutcome.outcome:type_name -> dsejeh.v1.BoundaryPolicyOutcome
+	16,  // 30: dsejeh.v1.BoundaryPolicyRuleOutcome.resulting_state:type_name -> dsejeh.v1.DynamicExecutionState
+	72,  // 31: dsejeh.v1.BoundaryPolicyRuleOutcome.transition_input:type_name -> dsejeh.v1.PhaseTransitionState
+	57,  // 32: dsejeh.v1.RuleOutcomeMapping.production_eligibility_outcome:type_name -> dsejeh.v1.ProductionEligibilityRuleOutcome
+	58,  // 33: dsejeh.v1.RuleOutcomeMapping.phase_motion_outcome:type_name -> dsejeh.v1.PhaseMotionRuleOutcome
+	59,  // 34: dsejeh.v1.RuleOutcomeMapping.boundary_crossover_outcome:type_name -> dsejeh.v1.BoundaryCrossoverRuleOutcome
+	60,  // 35: dsejeh.v1.RuleOutcomeMapping.strategy_region_outcome:type_name -> dsejeh.v1.StrategyRegionRuleOutcome
+	61,  // 36: dsejeh.v1.RuleOutcomeMapping.universe_eligibility_outcome:type_name -> dsejeh.v1.UniverseEligibilityRuleOutcome
+	62,  // 37: dsejeh.v1.RuleOutcomeMapping.candidate_ranking_outcome:type_name -> dsejeh.v1.CandidateRankingRuleOutcome
+	63,  // 38: dsejeh.v1.RuleOutcomeMapping.strategy_decision_outcome:type_name -> dsejeh.v1.StrategyDecisionRuleOutcome
+	64,  // 39: dsejeh.v1.RuleOutcomeMapping.execution_intent_outcome:type_name -> dsejeh.v1.ExecutionIntentRuleOutcome
+	65,  // 40: dsejeh.v1.RuleOutcomeMapping.boundary_policy_outcome:type_name -> dsejeh.v1.BoundaryPolicyRuleOutcome
+	49,  // 41: dsejeh.v1.RuleDefinition.rule_identity:type_name -> dsejeh.v1.RuleIdentity
+	50,  // 42: dsejeh.v1.RuleDefinition.rule_set_identity:type_name -> dsejeh.v1.RuleSetIdentity
+	51,  // 43: dsejeh.v1.RuleDefinition.authorized_dynamic_variables:type_name -> dsejeh.v1.AuthorizedDynamicVariable
+	66,  // 44: dsejeh.v1.RuleDefinition.outcome_mappings:type_name -> dsejeh.v1.RuleOutcomeMapping
+	50,  // 45: dsejeh.v1.RuleSetDefinition.rule_set_identity:type_name -> dsejeh.v1.RuleSetIdentity
+	67,  // 46: dsejeh.v1.RuleSetDefinition.rules:type_name -> dsejeh.v1.RuleDefinition
+	49,  // 47: dsejeh.v1.RuleEvaluationEvidence.rule_identity:type_name -> dsejeh.v1.RuleIdentity
+	50,  // 48: dsejeh.v1.RuleEvaluationEvidence.rule_set_identity:type_name -> dsejeh.v1.RuleSetIdentity
+	10,  // 49: dsejeh.v1.RuleEvaluationEvidence.evaluation_status:type_name -> dsejeh.v1.RuleEvaluationStatus
+	57,  // 50: dsejeh.v1.RuleEvaluationEvidence.production_eligibility_outcome:type_name -> dsejeh.v1.ProductionEligibilityRuleOutcome
+	58,  // 51: dsejeh.v1.RuleEvaluationEvidence.phase_motion_outcome:type_name -> dsejeh.v1.PhaseMotionRuleOutcome
+	59,  // 52: dsejeh.v1.RuleEvaluationEvidence.boundary_crossover_outcome:type_name -> dsejeh.v1.BoundaryCrossoverRuleOutcome
+	60,  // 53: dsejeh.v1.RuleEvaluationEvidence.strategy_region_outcome:type_name -> dsejeh.v1.StrategyRegionRuleOutcome
+	61,  // 54: dsejeh.v1.RuleEvaluationEvidence.universe_eligibility_outcome:type_name -> dsejeh.v1.UniverseEligibilityRuleOutcome
+	62,  // 55: dsejeh.v1.RuleEvaluationEvidence.candidate_ranking_outcome:type_name -> dsejeh.v1.CandidateRankingRuleOutcome
+	63,  // 56: dsejeh.v1.RuleEvaluationEvidence.strategy_decision_outcome:type_name -> dsejeh.v1.StrategyDecisionRuleOutcome
+	64,  // 57: dsejeh.v1.RuleEvaluationEvidence.execution_intent_outcome:type_name -> dsejeh.v1.ExecutionIntentRuleOutcome
+	65,  // 58: dsejeh.v1.RuleEvaluationEvidence.boundary_policy_outcome:type_name -> dsejeh.v1.BoundaryPolicyRuleOutcome
+	12,  // 59: dsejeh.v1.PhaseMotionEvidence.status:type_name -> dsejeh.v1.PhaseMotionStatus
+	13,  // 60: dsejeh.v1.PhaseMotionEvidence.direction:type_name -> dsejeh.v1.PhaseMotionDirection
+	70,  // 61: dsejeh.v1.PhaseMotionEvidence.algorithm_identity:type_name -> dsejeh.v1.AlgorithmIdentity
+	14,  // 62: dsejeh.v1.PhaseTransitionState.status:type_name -> dsejeh.v1.PhaseTransitionStatus
+	15,  // 63: dsejeh.v1.PhaseTransitionState.direction:type_name -> dsejeh.v1.PhaseTransitionDirection
+	70,  // 64: dsejeh.v1.PhaseTransitionState.algorithm_identity:type_name -> dsejeh.v1.AlgorithmIdentity
+	15,  // 65: dsejeh.v1.BoundaryFact.direction:type_name -> dsejeh.v1.PhaseTransitionDirection
+	27,  // 66: dsejeh.v1.AllocationCandidate.candidate_status:type_name -> dsejeh.v1.CandidateStatus
+	28,  // 67: dsejeh.v1.AllocationCandidate.holding_status:type_name -> dsejeh.v1.HoldingStatus
+	30,  // 68: dsejeh.v1.AllocationCandidate.freshness_status:type_name -> dsejeh.v1.FreshnessStatus
+	74,  // 69: dsejeh.v1.DynamicExecutionContext.allocation_candidates:type_name -> dsejeh.v1.AllocationCandidate
+	83,  // 70: dsejeh.v1.DynamicExecutionContext.capacity:type_name -> dsejeh.v1.CapacityEvidence
+	16,  // 71: dsejeh.v1.StateActionOutcome.state:type_name -> dsejeh.v1.DynamicExecutionState
+	19,  // 72: dsejeh.v1.StateActionOutcome.action_type:type_name -> dsejeh.v1.StateActionType
+	20,  // 73: dsejeh.v1.StateActionOutcome.status:type_name -> dsejeh.v1.StateActionStatus
+	76,  // 74: dsejeh.v1.StateActionOutcome.phase_velocity_ranking:type_name -> dsejeh.v1.PhaseVelocityRankingEntry
+	70,  // 75: dsejeh.v1.StateActionOutcome.action_policy_identity:type_name -> dsejeh.v1.AlgorithmIdentity
+	21,  // 76: dsejeh.v1.GovernedExecutionInstruction.requested_action:type_name -> dsejeh.v1.GovernedExecutionAction
+	22,  // 77: dsejeh.v1.GovernedExecutionInstruction.status:type_name -> dsejeh.v1.GovernedExecutionInstructionStatus
+	82,  // 78: dsejeh.v1.GovernedExecutionInstruction.requested_quantity:type_name -> dsejeh.v1.DecimalValue
+	18,  // 79: dsejeh.v1.DynamicExecutionResult.status:type_name -> dsejeh.v1.DynamicExecutionStateStatus
+	16,  // 80: dsejeh.v1.DynamicExecutionResult.previous_state:type_name -> dsejeh.v1.DynamicExecutionState
+	16,  // 81: dsejeh.v1.DynamicExecutionResult.current_state:type_name -> dsejeh.v1.DynamicExecutionState
+	17,  // 82: dsejeh.v1.DynamicExecutionResult.boundary_policy_outcome:type_name -> dsejeh.v1.BoundaryPolicyOutcome
+	77,  // 83: dsejeh.v1.DynamicExecutionResult.state_action_outcome:type_name -> dsejeh.v1.StateActionOutcome
+	78,  // 84: dsejeh.v1.DynamicExecutionResult.execution_instruction:type_name -> dsejeh.v1.GovernedExecutionInstruction
+	73,  // 85: dsejeh.v1.DynamicExecutionResult.boundary_facts:type_name -> dsejeh.v1.BoundaryFact
+	23,  // 86: dsejeh.v1.BoundaryCrossoverEvidence.status:type_name -> dsejeh.v1.BoundaryCrossoverStatus
+	24,  // 87: dsejeh.v1.BoundaryCrossoverEvidence.crossover_type:type_name -> dsejeh.v1.BoundaryCrossoverType
+	70,  // 88: dsejeh.v1.BoundaryCrossoverEvidence.algorithm_identity:type_name -> dsejeh.v1.AlgorithmIdentity
+	26,  // 89: dsejeh.v1.StrategyRegionEvidence.status:type_name -> dsejeh.v1.StrategyRegionStatus
+	25,  // 90: dsejeh.v1.StrategyRegionEvidence.previous_region:type_name -> dsejeh.v1.StrategyRegion
+	25,  // 91: dsejeh.v1.StrategyRegionEvidence.current_region:type_name -> dsejeh.v1.StrategyRegion
+	29,  // 92: dsejeh.v1.CapacityEvidence.status:type_name -> dsejeh.v1.CapacityStatus
+	82,  // 93: dsejeh.v1.CapacityEvidence.available_capital:type_name -> dsejeh.v1.DecimalValue
+	25,  // 94: dsejeh.v1.EntityUniverseState.strategy_region:type_name -> dsejeh.v1.StrategyRegion
+	27,  // 95: dsejeh.v1.EntityUniverseState.candidate_status:type_name -> dsejeh.v1.CandidateStatus
+	28,  // 96: dsejeh.v1.EntityUniverseState.holding_status:type_name -> dsejeh.v1.HoldingStatus
+	30,  // 97: dsejeh.v1.EntityUniverseState.freshness_status:type_name -> dsejeh.v1.FreshnessStatus
+	84,  // 98: dsejeh.v1.UniverseStateEvidence.entities:type_name -> dsejeh.v1.EntityUniverseState
+	83,  // 99: dsejeh.v1.UniverseStateEvidence.capacity:type_name -> dsejeh.v1.CapacityEvidence
+	31,  // 100: dsejeh.v1.CandidateRankingEvidence.status:type_name -> dsejeh.v1.CandidateRankingStatus
+	86,  // 101: dsejeh.v1.CandidateRankingEvidence.entries:type_name -> dsejeh.v1.CandidateRankingEntry
+	70,  // 102: dsejeh.v1.CandidateRankingEvidence.ranking_policy_identity:type_name -> dsejeh.v1.AlgorithmIdentity
+	33,  // 103: dsejeh.v1.StrategyDecision.status:type_name -> dsejeh.v1.StrategyDecisionStatus
+	32,  // 104: dsejeh.v1.StrategyDecision.decision_type:type_name -> dsejeh.v1.StrategyDecisionType
+	35,  // 105: dsejeh.v1.ExecutionIntent.requested_action:type_name -> dsejeh.v1.ExecutionIntentAction
+	36,  // 106: dsejeh.v1.ExecutionIntent.status:type_name -> dsejeh.v1.ExecutionIntentStatus
+	82,  // 107: dsejeh.v1.ExecutionIntent.requested_quantity:type_name -> dsejeh.v1.DecimalValue
+	34,  // 108: dsejeh.v1.ExecutorIdentity.execution_mode:type_name -> dsejeh.v1.ExecutionMode
+	37,  // 109: dsejeh.v1.ExecutionEvent.status:type_name -> dsejeh.v1.ExecutionEventStatus
+	90,  // 110: dsejeh.v1.ExecutionEvent.executor_identity:type_name -> dsejeh.v1.ExecutorIdentity
+	82,  // 111: dsejeh.v1.ExecutionEvent.requested_quantity:type_name -> dsejeh.v1.DecimalValue
+	82,  // 112: dsejeh.v1.ExecutionEvent.filled_quantity:type_name -> dsejeh.v1.DecimalValue
+	82,  // 113: dsejeh.v1.ExecutionEvent.fill_price:type_name -> dsejeh.v1.DecimalValue
+	38,  // 114: dsejeh.v1.ExecutionReconciliationEvidence.status:type_name -> dsejeh.v1.ReconciliationStatus
+	40,  // 115: dsejeh.v1.DiagnosticEvidence.severity:type_name -> dsejeh.v1.DiagnosticSeverity
+	41,  // 116: dsejeh.v1.DiagnosticEvidence.error_classification:type_name -> dsejeh.v1.ErrorClassification
+	47,  // 117: dsejeh.v1.RuntimeStatusEvidence.runtime_identity:type_name -> dsejeh.v1.RuntimeIdentity
+	0,   // 118: dsejeh.v1.RuntimeStatusEvidence.runtime_mode:type_name -> dsejeh.v1.RuntimeMode
+	3,   // 119: dsejeh.v1.RuntimeStatusEvidence.lifecycle_status:type_name -> dsejeh.v1.RuntimeLifecycleStatus
+	4,   // 120: dsejeh.v1.RuntimeStatusEvidence.health_status:type_name -> dsejeh.v1.RuntimeHealthStatus
+	52,  // 121: dsejeh.v1.RuntimeStatusEvidence.source_status:type_name -> dsejeh.v1.SourceSubscriptionEvidence
+	48,  // 122: dsejeh.v1.RuntimeStatusEvidence.configuration_identity:type_name -> dsejeh.v1.ConfigurationIdentity
+	50,  // 123: dsejeh.v1.RuntimeStatusEvidence.rule_set_identity:type_name -> dsejeh.v1.RuleSetIdentity
+	45,  // 124: dsejeh.v1.RuntimeStatusEvidence.solver_identity:type_name -> dsejeh.v1.SolverIdentity
+	93,  // 125: dsejeh.v1.RuntimeStatusEvidence.activity:type_name -> dsejeh.v1.RuntimeActivitySnapshot
+	39,  // 126: dsejeh.v1.BarProcessingOutcomeEvidence.outcome_type:type_name -> dsejeh.v1.BarProcessingOutcomeType
+	95,  // 127: dsejeh.v1.RuntimeEvidenceEnvelope.runtime_status:type_name -> dsejeh.v1.RuntimeStatusEvidence
+	52,  // 128: dsejeh.v1.RuntimeEvidenceEnvelope.source_subscription:type_name -> dsejeh.v1.SourceSubscriptionEvidence
+	53,  // 129: dsejeh.v1.RuntimeEvidenceEnvelope.bar_reception:type_name -> dsejeh.v1.BarReceptionEvidence
+	44,  // 130: dsejeh.v1.RuntimeEvidenceEnvelope.bar_admission:type_name -> dsejeh.v1.BarAdmissionEvidence
+	54,  // 131: dsejeh.v1.RuntimeEvidenceEnvelope.analytical_state:type_name -> dsejeh.v1.AnalyticalStateEvidence
+	46,  // 132: dsejeh.v1.RuntimeEvidenceEnvelope.phase:type_name -> dsejeh.v1.PhaseEvidence
+	56,  // 133: dsejeh.v1.RuntimeEvidenceEnvelope.production_eligibility:type_name -> dsejeh.v1.ProductionEligibilityEvidence
+	69,  // 134: dsejeh.v1.RuntimeEvidenceEnvelope.rule_evaluation:type_name -> dsejeh.v1.RuleEvaluationEvidence
+	71,  // 135: dsejeh.v1.RuntimeEvidenceEnvelope.phase_motion:type_name -> dsejeh.v1.PhaseMotionEvidence
+	80,  // 136: dsejeh.v1.RuntimeEvidenceEnvelope.boundary_crossover:type_name -> dsejeh.v1.BoundaryCrossoverEvidence
+	81,  // 137: dsejeh.v1.RuntimeEvidenceEnvelope.strategy_region:type_name -> dsejeh.v1.StrategyRegionEvidence
+	85,  // 138: dsejeh.v1.RuntimeEvidenceEnvelope.universe_state:type_name -> dsejeh.v1.UniverseStateEvidence
+	87,  // 139: dsejeh.v1.RuntimeEvidenceEnvelope.candidate_ranking:type_name -> dsejeh.v1.CandidateRankingEvidence
+	88,  // 140: dsejeh.v1.RuntimeEvidenceEnvelope.strategy_decision:type_name -> dsejeh.v1.StrategyDecision
+	89,  // 141: dsejeh.v1.RuntimeEvidenceEnvelope.execution_intent:type_name -> dsejeh.v1.ExecutionIntent
+	91,  // 142: dsejeh.v1.RuntimeEvidenceEnvelope.execution_event:type_name -> dsejeh.v1.ExecutionEvent
+	92,  // 143: dsejeh.v1.RuntimeEvidenceEnvelope.execution_reconciliation:type_name -> dsejeh.v1.ExecutionReconciliationEvidence
+	93,  // 144: dsejeh.v1.RuntimeEvidenceEnvelope.runtime_activity:type_name -> dsejeh.v1.RuntimeActivitySnapshot
+	96,  // 145: dsejeh.v1.RuntimeEvidenceEnvelope.bar_processing_outcome:type_name -> dsejeh.v1.BarProcessingOutcomeEvidence
+	94,  // 146: dsejeh.v1.RuntimeEvidenceEnvelope.diagnostic:type_name -> dsejeh.v1.DiagnosticEvidence
+	68,  // 147: dsejeh.v1.RuntimeEvidenceEnvelope.rule_set_definition:type_name -> dsejeh.v1.RuleSetDefinition
+	72,  // 148: dsejeh.v1.RuntimeEvidenceEnvelope.phase_transition_state:type_name -> dsejeh.v1.PhaseTransitionState
+	79,  // 149: dsejeh.v1.RuntimeEvidenceEnvelope.dynamic_execution_result:type_name -> dsejeh.v1.DynamicExecutionResult
+	77,  // 150: dsejeh.v1.RuntimeEvidenceEnvelope.state_action_outcome:type_name -> dsejeh.v1.StateActionOutcome
+	78,  // 151: dsejeh.v1.RuntimeEvidenceEnvelope.governed_execution_instruction:type_name -> dsejeh.v1.GovernedExecutionInstruction
+	95,  // 152: dsejeh.v1.GetRuntimeStatusResponse.runtime_status:type_name -> dsejeh.v1.RuntimeStatusEvidence
+	97,  // 153: dsejeh.v1.SubscribeRuntimeEvidenceResponse.evidence:type_name -> dsejeh.v1.RuntimeEvidenceEnvelope
+	89,  // 154: dsejeh.v1.SubmitExecutionIntentRequest.execution_intent:type_name -> dsejeh.v1.ExecutionIntent
+	91,  // 155: dsejeh.v1.StreamExecutionEventsResponse.execution_event:type_name -> dsejeh.v1.ExecutionEvent
+	78,  // 156: dsejeh.v1.SubmitGovernedExecutionInstructionRequest.execution_instruction:type_name -> dsejeh.v1.GovernedExecutionInstruction
+	43,  // 157: dsejeh.v1.ReceiveBarRequest.bar_event:type_name -> dsejeh.v1.BarEvent
+	53,  // 158: dsejeh.v1.ReceiveBarResponse.reception_evidence:type_name -> dsejeh.v1.BarReceptionEvidence
+	43,  // 159: dsejeh.v1.AdmitBarRequest.bar_event:type_name -> dsejeh.v1.BarEvent
+	53,  // 160: dsejeh.v1.AdmitBarRequest.reception_evidence:type_name -> dsejeh.v1.BarReceptionEvidence
+	44,  // 161: dsejeh.v1.AdmitBarResponse.admission_evidence:type_name -> dsejeh.v1.BarAdmissionEvidence
+	43,  // 162: dsejeh.v1.UpdateAnalyticalStateRequest.bar_event:type_name -> dsejeh.v1.BarEvent
+	44,  // 163: dsejeh.v1.UpdateAnalyticalStateRequest.admission_evidence:type_name -> dsejeh.v1.BarAdmissionEvidence
+	54,  // 164: dsejeh.v1.UpdateAnalyticalStateRequest.prior_analytical_state_evidence:type_name -> dsejeh.v1.AnalyticalStateEvidence
+	54,  // 165: dsejeh.v1.UpdateAnalyticalStateResponse.analytical_state_evidence:type_name -> dsejeh.v1.AnalyticalStateEvidence
+	43,  // 166: dsejeh.v1.UpdateJehPhaseRequest.bar_event:type_name -> dsejeh.v1.BarEvent
+	44,  // 167: dsejeh.v1.UpdateJehPhaseRequest.admission_evidence:type_name -> dsejeh.v1.BarAdmissionEvidence
+	54,  // 168: dsejeh.v1.UpdateJehPhaseRequest.analytical_state_evidence:type_name -> dsejeh.v1.AnalyticalStateEvidence
+	46,  // 169: dsejeh.v1.UpdateJehPhaseRequest.prior_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
+	46,  // 170: dsejeh.v1.UpdateJehPhaseResponse.phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
+	46,  // 171: dsejeh.v1.EvaluateProductionEligibilityRequest.phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
+	54,  // 172: dsejeh.v1.EvaluateProductionEligibilityRequest.analytical_state_evidence:type_name -> dsejeh.v1.AnalyticalStateEvidence
+	55,  // 173: dsejeh.v1.EvaluateProductionEligibilityRequest.context:type_name -> dsejeh.v1.ProductionEligibilityContext
+	49,  // 174: dsejeh.v1.EvaluateProductionEligibilityRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
+	56,  // 175: dsejeh.v1.EvaluateProductionEligibilityResponse.production_eligibility_evidence:type_name -> dsejeh.v1.ProductionEligibilityEvidence
+	69,  // 176: dsejeh.v1.EvaluateProductionEligibilityResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
+	46,  // 177: dsejeh.v1.CalculatePhaseTransitionRequest.prior_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
+	46,  // 178: dsejeh.v1.CalculatePhaseTransitionRequest.current_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
+	56,  // 179: dsejeh.v1.CalculatePhaseTransitionRequest.production_eligibility_evidence:type_name -> dsejeh.v1.ProductionEligibilityEvidence
+	70,  // 180: dsejeh.v1.CalculatePhaseTransitionRequest.algorithm_identity:type_name -> dsejeh.v1.AlgorithmIdentity
+	72,  // 181: dsejeh.v1.CalculatePhaseTransitionResponse.phase_transition_state:type_name -> dsejeh.v1.PhaseTransitionState
+	46,  // 182: dsejeh.v1.EvaluateDynamicExecutionRequest.current_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
+	72,  // 183: dsejeh.v1.EvaluateDynamicExecutionRequest.phase_transition_state:type_name -> dsejeh.v1.PhaseTransitionState
+	16,  // 184: dsejeh.v1.EvaluateDynamicExecutionRequest.prior_state:type_name -> dsejeh.v1.DynamicExecutionState
+	73,  // 185: dsejeh.v1.EvaluateDynamicExecutionRequest.boundary_facts:type_name -> dsejeh.v1.BoundaryFact
+	75,  // 186: dsejeh.v1.EvaluateDynamicExecutionRequest.context:type_name -> dsejeh.v1.DynamicExecutionContext
+	49,  // 187: dsejeh.v1.EvaluateDynamicExecutionRequest.boundary_policy_rule_identity:type_name -> dsejeh.v1.RuleIdentity
+	79,  // 188: dsejeh.v1.EvaluateDynamicExecutionResponse.dynamic_execution_result:type_name -> dsejeh.v1.DynamicExecutionResult
+	69,  // 189: dsejeh.v1.EvaluateDynamicExecutionResponse.boundary_policy_rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
+	69,  // 190: dsejeh.v1.EvaluateDynamicExecutionResponse.boundary_policy_rule_evaluation_evidences:type_name -> dsejeh.v1.RuleEvaluationEvidence
+	46,  // 191: dsejeh.v1.EvaluatePhaseMotionRequest.prior_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
+	46,  // 192: dsejeh.v1.EvaluatePhaseMotionRequest.current_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
+	56,  // 193: dsejeh.v1.EvaluatePhaseMotionRequest.production_eligibility_evidence:type_name -> dsejeh.v1.ProductionEligibilityEvidence
+	49,  // 194: dsejeh.v1.EvaluatePhaseMotionRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
+	56,  // 195: dsejeh.v1.EvaluatePhaseMotionRequest.prior_production_eligibility_evidence:type_name -> dsejeh.v1.ProductionEligibilityEvidence
+	71,  // 196: dsejeh.v1.EvaluatePhaseMotionResponse.phase_motion_evidence:type_name -> dsejeh.v1.PhaseMotionEvidence
+	69,  // 197: dsejeh.v1.EvaluatePhaseMotionResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
+	46,  // 198: dsejeh.v1.DetectBoundaryCrossoverRequest.prior_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
+	46,  // 199: dsejeh.v1.DetectBoundaryCrossoverRequest.current_phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
+	71,  // 200: dsejeh.v1.DetectBoundaryCrossoverRequest.phase_motion_evidence:type_name -> dsejeh.v1.PhaseMotionEvidence
+	49,  // 201: dsejeh.v1.DetectBoundaryCrossoverRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
+	80,  // 202: dsejeh.v1.DetectBoundaryCrossoverResponse.boundary_crossover_evidence:type_name -> dsejeh.v1.BoundaryCrossoverEvidence
+	69,  // 203: dsejeh.v1.DetectBoundaryCrossoverResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
+	46,  // 204: dsejeh.v1.EvaluateStrategyRegionRequest.phase_evidence:type_name -> dsejeh.v1.PhaseEvidence
+	80,  // 205: dsejeh.v1.EvaluateStrategyRegionRequest.boundary_crossover_evidence:type_name -> dsejeh.v1.BoundaryCrossoverEvidence
+	81,  // 206: dsejeh.v1.EvaluateStrategyRegionRequest.prior_strategy_region_evidence:type_name -> dsejeh.v1.StrategyRegionEvidence
+	49,  // 207: dsejeh.v1.EvaluateStrategyRegionRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
+	81,  // 208: dsejeh.v1.EvaluateStrategyRegionResponse.strategy_region_evidence:type_name -> dsejeh.v1.StrategyRegionEvidence
+	69,  // 209: dsejeh.v1.EvaluateStrategyRegionResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
+	81,  // 210: dsejeh.v1.UpdateUniverseStateRequest.strategy_region_evidence:type_name -> dsejeh.v1.StrategyRegionEvidence
+	85,  // 211: dsejeh.v1.UpdateUniverseStateRequest.prior_universe_state_evidence:type_name -> dsejeh.v1.UniverseStateEvidence
+	91,  // 212: dsejeh.v1.UpdateUniverseStateRequest.latest_execution_event:type_name -> dsejeh.v1.ExecutionEvent
+	49,  // 213: dsejeh.v1.UpdateUniverseStateRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
+	85,  // 214: dsejeh.v1.UpdateUniverseStateResponse.universe_state_evidence:type_name -> dsejeh.v1.UniverseStateEvidence
+	69,  // 215: dsejeh.v1.UpdateUniverseStateResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
+	85,  // 216: dsejeh.v1.RankCandidatesRequest.universe_state_evidence:type_name -> dsejeh.v1.UniverseStateEvidence
+	49,  // 217: dsejeh.v1.RankCandidatesRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
+	71,  // 218: dsejeh.v1.RankCandidatesRequest.phase_motion_evidence:type_name -> dsejeh.v1.PhaseMotionEvidence
+	87,  // 219: dsejeh.v1.RankCandidatesResponse.candidate_ranking_evidence:type_name -> dsejeh.v1.CandidateRankingEvidence
+	69,  // 220: dsejeh.v1.RankCandidatesResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
+	81,  // 221: dsejeh.v1.GenerateStrategyDecisionRequest.strategy_region_evidence:type_name -> dsejeh.v1.StrategyRegionEvidence
+	85,  // 222: dsejeh.v1.GenerateStrategyDecisionRequest.universe_state_evidence:type_name -> dsejeh.v1.UniverseStateEvidence
+	87,  // 223: dsejeh.v1.GenerateStrategyDecisionRequest.candidate_ranking_evidence:type_name -> dsejeh.v1.CandidateRankingEvidence
+	80,  // 224: dsejeh.v1.GenerateStrategyDecisionRequest.boundary_crossover_evidence:type_name -> dsejeh.v1.BoundaryCrossoverEvidence
+	49,  // 225: dsejeh.v1.GenerateStrategyDecisionRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
+	88,  // 226: dsejeh.v1.GenerateStrategyDecisionResponse.strategy_decision:type_name -> dsejeh.v1.StrategyDecision
+	69,  // 227: dsejeh.v1.GenerateStrategyDecisionResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
+	88,  // 228: dsejeh.v1.GenerateExecutionIntentRequest.strategy_decision:type_name -> dsejeh.v1.StrategyDecision
+	85,  // 229: dsejeh.v1.GenerateExecutionIntentRequest.universe_state_evidence:type_name -> dsejeh.v1.UniverseStateEvidence
+	49,  // 230: dsejeh.v1.GenerateExecutionIntentRequest.rule_identity:type_name -> dsejeh.v1.RuleIdentity
+	89,  // 231: dsejeh.v1.GenerateExecutionIntentResponse.execution_intent:type_name -> dsejeh.v1.ExecutionIntent
+	69,  // 232: dsejeh.v1.GenerateExecutionIntentResponse.rule_evaluation_evidence:type_name -> dsejeh.v1.RuleEvaluationEvidence
+	68,  // 233: dsejeh.v1.ValidateRuleSetRequest.rule_set_definition:type_name -> dsejeh.v1.RuleSetDefinition
+	94,  // 234: dsejeh.v1.ValidateRuleSetResponse.diagnostics:type_name -> dsejeh.v1.DiagnosticEvidence
+	50,  // 235: dsejeh.v1.ValidateRuleSetResponse.rule_set_identity:type_name -> dsejeh.v1.RuleSetIdentity
+	68,  // 236: dsejeh.v1.GetActiveRuleSetResponse.rule_set_definition:type_name -> dsejeh.v1.RuleSetDefinition
+	98,  // 237: dsejeh.v1.RuntimeOperationsService.GetRuntimeStatus:input_type -> dsejeh.v1.GetRuntimeStatusRequest
+	100, // 238: dsejeh.v1.RuntimeEvidenceService.SubscribeRuntimeEvidence:input_type -> dsejeh.v1.SubscribeRuntimeEvidenceRequest
+	108, // 239: dsejeh.v1.BarReceptionService.ReceiveBar:input_type -> dsejeh.v1.ReceiveBarRequest
+	110, // 240: dsejeh.v1.BarAdmissionService.AdmitBar:input_type -> dsejeh.v1.AdmitBarRequest
+	112, // 241: dsejeh.v1.AnalyticalStateService.UpdateAnalyticalState:input_type -> dsejeh.v1.UpdateAnalyticalStateRequest
+	114, // 242: dsejeh.v1.JehPhaseService.UpdateJehPhase:input_type -> dsejeh.v1.UpdateJehPhaseRequest
+	116, // 243: dsejeh.v1.ProductionEligibilityService.EvaluateProductionEligibility:input_type -> dsejeh.v1.EvaluateProductionEligibilityRequest
+	118, // 244: dsejeh.v1.DynamicExecutionService.CalculatePhaseTransition:input_type -> dsejeh.v1.CalculatePhaseTransitionRequest
+	120, // 245: dsejeh.v1.DynamicExecutionService.EvaluateDynamicExecution:input_type -> dsejeh.v1.EvaluateDynamicExecutionRequest
+	122, // 246: dsejeh.v1.PhaseMotionService.EvaluatePhaseMotion:input_type -> dsejeh.v1.EvaluatePhaseMotionRequest
+	124, // 247: dsejeh.v1.BoundaryCrossoverService.DetectBoundaryCrossover:input_type -> dsejeh.v1.DetectBoundaryCrossoverRequest
+	126, // 248: dsejeh.v1.StrategyRegionService.EvaluateStrategyRegion:input_type -> dsejeh.v1.EvaluateStrategyRegionRequest
+	128, // 249: dsejeh.v1.UniverseStateService.UpdateUniverseState:input_type -> dsejeh.v1.UpdateUniverseStateRequest
+	130, // 250: dsejeh.v1.CandidateRankingService.RankCandidates:input_type -> dsejeh.v1.RankCandidatesRequest
+	132, // 251: dsejeh.v1.StrategyDecisionService.GenerateStrategyDecision:input_type -> dsejeh.v1.GenerateStrategyDecisionRequest
+	134, // 252: dsejeh.v1.ExecutionIntentService.GenerateExecutionIntent:input_type -> dsejeh.v1.GenerateExecutionIntentRequest
+	136, // 253: dsejeh.v1.RuleRegistryService.ValidateRuleSet:input_type -> dsejeh.v1.ValidateRuleSetRequest
+	138, // 254: dsejeh.v1.RuleRegistryService.GetActiveRuleSet:input_type -> dsejeh.v1.GetActiveRuleSetRequest
+	102, // 255: dsejeh.v1.ExecutorService.SubmitExecutionIntent:input_type -> dsejeh.v1.SubmitExecutionIntentRequest
+	106, // 256: dsejeh.v1.ExecutorService.SubmitGovernedExecutionInstruction:input_type -> dsejeh.v1.SubmitGovernedExecutionInstructionRequest
+	104, // 257: dsejeh.v1.ExecutorService.StreamExecutionEvents:input_type -> dsejeh.v1.StreamExecutionEventsRequest
+	99,  // 258: dsejeh.v1.RuntimeOperationsService.GetRuntimeStatus:output_type -> dsejeh.v1.GetRuntimeStatusResponse
+	101, // 259: dsejeh.v1.RuntimeEvidenceService.SubscribeRuntimeEvidence:output_type -> dsejeh.v1.SubscribeRuntimeEvidenceResponse
+	109, // 260: dsejeh.v1.BarReceptionService.ReceiveBar:output_type -> dsejeh.v1.ReceiveBarResponse
+	111, // 261: dsejeh.v1.BarAdmissionService.AdmitBar:output_type -> dsejeh.v1.AdmitBarResponse
+	113, // 262: dsejeh.v1.AnalyticalStateService.UpdateAnalyticalState:output_type -> dsejeh.v1.UpdateAnalyticalStateResponse
+	115, // 263: dsejeh.v1.JehPhaseService.UpdateJehPhase:output_type -> dsejeh.v1.UpdateJehPhaseResponse
+	117, // 264: dsejeh.v1.ProductionEligibilityService.EvaluateProductionEligibility:output_type -> dsejeh.v1.EvaluateProductionEligibilityResponse
+	119, // 265: dsejeh.v1.DynamicExecutionService.CalculatePhaseTransition:output_type -> dsejeh.v1.CalculatePhaseTransitionResponse
+	121, // 266: dsejeh.v1.DynamicExecutionService.EvaluateDynamicExecution:output_type -> dsejeh.v1.EvaluateDynamicExecutionResponse
+	123, // 267: dsejeh.v1.PhaseMotionService.EvaluatePhaseMotion:output_type -> dsejeh.v1.EvaluatePhaseMotionResponse
+	125, // 268: dsejeh.v1.BoundaryCrossoverService.DetectBoundaryCrossover:output_type -> dsejeh.v1.DetectBoundaryCrossoverResponse
+	127, // 269: dsejeh.v1.StrategyRegionService.EvaluateStrategyRegion:output_type -> dsejeh.v1.EvaluateStrategyRegionResponse
+	129, // 270: dsejeh.v1.UniverseStateService.UpdateUniverseState:output_type -> dsejeh.v1.UpdateUniverseStateResponse
+	131, // 271: dsejeh.v1.CandidateRankingService.RankCandidates:output_type -> dsejeh.v1.RankCandidatesResponse
+	133, // 272: dsejeh.v1.StrategyDecisionService.GenerateStrategyDecision:output_type -> dsejeh.v1.GenerateStrategyDecisionResponse
+	135, // 273: dsejeh.v1.ExecutionIntentService.GenerateExecutionIntent:output_type -> dsejeh.v1.GenerateExecutionIntentResponse
+	137, // 274: dsejeh.v1.RuleRegistryService.ValidateRuleSet:output_type -> dsejeh.v1.ValidateRuleSetResponse
+	139, // 275: dsejeh.v1.RuleRegistryService.GetActiveRuleSet:output_type -> dsejeh.v1.GetActiveRuleSetResponse
+	103, // 276: dsejeh.v1.ExecutorService.SubmitExecutionIntent:output_type -> dsejeh.v1.SubmitExecutionIntentResponse
+	107, // 277: dsejeh.v1.ExecutorService.SubmitGovernedExecutionInstruction:output_type -> dsejeh.v1.SubmitGovernedExecutionInstructionResponse
+	105, // 278: dsejeh.v1.ExecutorService.StreamExecutionEvents:output_type -> dsejeh.v1.StreamExecutionEventsResponse
+	258, // [258:279] is the sub-list for method output_type
+	237, // [237:258] is the sub-list for method input_type
+	237, // [237:237] is the sub-list for extension type_name
+	237, // [237:237] is the sub-list for extension extendee
+	0,   // [0:237] is the sub-list for field type_name
 }
 
 func init() { file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_init() }
@@ -11074,7 +13587,7 @@ func file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_init() {
 	}
 	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[1].OneofWrappers = []any{}
 	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[4].OneofWrappers = []any{}
-	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[23].OneofWrappers = []any{
+	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[24].OneofWrappers = []any{
 		(*RuleOutcomeMapping_ExpectedBooleanResult)(nil),
 		(*RuleOutcomeMapping_ExpectedIntegerResult)(nil),
 		(*RuleOutcomeMapping_ExpectedNumberResult)(nil),
@@ -11087,8 +13600,9 @@ func file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_init() {
 		(*RuleOutcomeMapping_CandidateRankingOutcome)(nil),
 		(*RuleOutcomeMapping_StrategyDecisionOutcome)(nil),
 		(*RuleOutcomeMapping_ExecutionIntentOutcome)(nil),
+		(*RuleOutcomeMapping_BoundaryPolicyOutcome)(nil),
 	}
-	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[26].OneofWrappers = []any{
+	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[27].OneofWrappers = []any{
 		(*RuleEvaluationEvidence_RawBooleanResult)(nil),
 		(*RuleEvaluationEvidence_RawIntegerResult)(nil),
 		(*RuleEvaluationEvidence_RawNumberResult)(nil),
@@ -11101,14 +13615,19 @@ func file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_init() {
 		(*RuleEvaluationEvidence_CandidateRankingOutcome)(nil),
 		(*RuleEvaluationEvidence_StrategyDecisionOutcome)(nil),
 		(*RuleEvaluationEvidence_ExecutionIntentOutcome)(nil),
+		(*RuleEvaluationEvidence_BoundaryPolicyOutcome)(nil),
 	}
-	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[28].OneofWrappers = []any{}
 	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[29].OneofWrappers = []any{}
+	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[30].OneofWrappers = []any{}
 	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[32].OneofWrappers = []any{}
-	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[35].OneofWrappers = []any{}
+	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[34].OneofWrappers = []any{}
+	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[36].OneofWrappers = []any{}
 	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[38].OneofWrappers = []any{}
-	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[40].OneofWrappers = []any{}
-	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[46].OneofWrappers = []any{
+	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[41].OneofWrappers = []any{}
+	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[44].OneofWrappers = []any{}
+	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[47].OneofWrappers = []any{}
+	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[49].OneofWrappers = []any{}
+	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[55].OneofWrappers = []any{
 		(*RuntimeEvidenceEnvelope_RuntimeStatus)(nil),
 		(*RuntimeEvidenceEnvelope_SourceSubscription)(nil),
 		(*RuntimeEvidenceEnvelope_BarReception)(nil),
@@ -11130,18 +13649,22 @@ func file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_init() {
 		(*RuntimeEvidenceEnvelope_BarProcessingOutcome)(nil),
 		(*RuntimeEvidenceEnvelope_Diagnostic)(nil),
 		(*RuntimeEvidenceEnvelope_RuleSetDefinition)(nil),
+		(*RuntimeEvidenceEnvelope_PhaseTransitionState)(nil),
+		(*RuntimeEvidenceEnvelope_DynamicExecutionResult)(nil),
+		(*RuntimeEvidenceEnvelope_StateActionOutcome)(nil),
+		(*RuntimeEvidenceEnvelope_GovernedExecutionInstruction)(nil),
 	}
-	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[49].OneofWrappers = []any{}
-	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[53].OneofWrappers = []any{}
+	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[58].OneofWrappers = []any{}
+	file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_msgTypes[62].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc), len(file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_rawDesc)),
-			NumEnums:      33,
-			NumMessages:   83,
+			NumEnums:      42,
+			NumMessages:   98,
 			NumExtensions: 0,
-			NumServices:   16,
+			NumServices:   17,
 		},
 		GoTypes:           file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_goTypes,
 		DependencyIndexes: file_dse_jeh_v1_DSE_JEH_TransSat_1_proto_depIdxs,
