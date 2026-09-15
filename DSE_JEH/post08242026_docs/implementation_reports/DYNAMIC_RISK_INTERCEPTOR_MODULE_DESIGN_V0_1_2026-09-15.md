@@ -111,9 +111,9 @@ The diagram has two inputs to governance: native DSE-JEH intent and sideways Ris
 ```mermaid
 flowchart LR
   N[Native intended capital response] --> T[Governance wind tunnel]
-  R[Contemporaneous risk factors] --> D[Risk Drag Ds(t)]
+  R[Contemporaneous risk factors] --> D["Risk Drag Ds(t)"]
   D --> T
-  T --> G[Governance gain Gs(t) = 1 - Ds(t)]
+  T --> G["Governance gain Gs(t) = 1 - Ds(t)"]
   G --> A[Governed capital response]
   NOTE[Direction and native event identity remain unchanged] -.-> T
 ```
@@ -125,10 +125,10 @@ Drag is continuous-capable resistance, not a NAND gate, low-pass filter, trading
 ```mermaid
 flowchart LR
   R0[R0 fixed human baseline] --> J[Joined-factor model / minima solver]
-  C[C(t) global Capital Condition] --> J
-  V[AV(s,t) local Volume Alignment] --> J
-  J --> D[Risk Drag Ds(t)]
-  D --> G[Gain Gs(t) = 1 - Ds(t)]
+  C["C(t) global Capital Condition"] --> J
+  V["AV(s,t) local Volume Alignment"] --> J
+  J --> D["Risk Drag Ds(t)"]
+  D --> G["Gain Gs(t) = 1 - Ds(t)"]
   G --> A[Governed allocation]
 ```
 
@@ -625,14 +625,14 @@ Only after model approval and OBSERVE acceptance:
 ```mermaid
 flowchart LR
   subgraph P1[Phase 1]
-    I1[R0 + C(t) + AV(s,t)] --> SAME1[Dynamic Risk Interceptor]
+    I1["R0 + C(t) + AV(s,t)"] --> SAME1[Dynamic Risk Interceptor]
     SAME1 --> D1[Risk Drag]
     D1 --> G1[Consumer Governance]
   end
   subgraph P2[Phase 2]
     INT[Internal known factors] --> SAME2[Same Dynamic Risk Interceptor foundation]
     EXT[External risk factors] --> SAME2
-    HUM[Human R0(t)] --> SAME2
+    HUM["Human R0(t)"] --> SAME2
     SAME2 --> D2[Risk Drag]
     D2 --> G2[Consumer Governance]
   end
