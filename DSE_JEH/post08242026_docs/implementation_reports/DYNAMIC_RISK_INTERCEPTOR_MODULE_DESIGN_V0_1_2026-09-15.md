@@ -140,7 +140,7 @@ sequenceDiagram
   participant INT as Risk Interceptor
   participant GOV as DSE-JEH Governance
   participant EXE as Existing Executor Boundary
-  DSE->>GOV: Native HOP_ON; permitted allocation
+  DSE->>GOV: Native HOP_ON with permitted allocation
   INT->>GOV: Risk Impact Ds(t), causal calculation ID
   GOV->>GOV: Apply approved gain without rewriting HOP_ON
   GOV->>EXE: Governed instruction, possibly allocation = 0
