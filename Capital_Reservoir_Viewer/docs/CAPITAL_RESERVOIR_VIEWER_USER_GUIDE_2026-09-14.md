@@ -98,6 +98,24 @@ While DSE_JEH publishes Capital Reservoir events, LIVE mode updates:
 
 Moving either chart crosshair selects the related event sequence. Selecting a pipe changes the signed-flow chart to that symbol.
 
+### Interpret Capital Movement
+
+The pipe table separates **Capital Deployed**, **Capital Returned**, and **Realized P&L**. Deployed and returned capital are positive magnitudes. An active position can therefore show deployed capital while returned capital and realized P&L remain blank.
+
+The capital summary presents one system relationship:
+
+```text
+Initial Capital = Reservoir Cash + Deployed Marked Capital = Total Marked Capital
+```
+
+**Reservoir Cash** is undeployed common-reservoir cash; a lower value does not by itself indicate a loss. **Capital Currently Deployed** counts symbols holding deployed capital at the selected event. **Symbols Participated** separately counts symbols with confirmed capital movement up to that event.
+
+Deployed marked capital, utilization, total marked capital, and realized/unrealized/total P&L use authoritative `RUN_END` values. Before `RUN_END` is included in the selected replay prefix, these fields remain blank rather than being estimated. The symbol table's **Capital State** is `IDLE` or `DEPLOYED`; Dynamic Execution state is not present in Capital Reservoir events and is not inferred by the viewer.
+
+The selected-symbol chart remains signed from the common reservoir perspective: a BUY is negative outflow and a SELL or liquidation is positive inflow. These signed values describe where capital moved; they are not themselves losses or profits. The event inspector continues to show the authoritative raw `signedFlowAmount`.
+
+At any replay sequence, entry, exit, and result details use only events visible at that sequence. A later exit does not appear while inspecting an earlier active position.
+
 ## Use Replay Mode
 
 After the run has persisted events:

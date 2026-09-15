@@ -29,9 +29,12 @@ export function subscribeToReservoirEvents(
     oneofs: true,
   });
   const root = loadPackageDefinition(definition) as Record<string, unknown>;
-  const dseJeh = root.dse_jeh as Record<string, unknown>;
-  const version = dseJeh.v1 as Record<string, unknown>;
-  const Constructor = version.RuntimeEvidenceService as ServiceClientConstructor;
+  const dseJeh = root.dsejeh as Record<string, unknown> | undefined;
+  const version = dseJeh?.v1 as Record<string, unknown> | undefined;
+  const Constructor = version?.RuntimeEvidenceService as ServiceClientConstructor | undefined;
+  if (!Constructor) {
+    throw new Error("DSE_JEH proto does not define dsejeh.v1.RuntimeEvidenceService");
+  }
   const address = process.env.DSE_JEH_SERVER_ADDRESS?.trim() || "127.0.0.1:50052";
   const client = new Constructor(address, credentials.createInsecure()) as RuntimeEvidenceClient;
   const stream = client.SubscribeRuntimeEvidence({

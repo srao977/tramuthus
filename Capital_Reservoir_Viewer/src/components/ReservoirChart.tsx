@@ -78,7 +78,7 @@ export default function ReservoirChart({ events, kind, selectedSymbol, onSequenc
     });
     if (!chart) return;
     chartRef.current = chart;
-    chart.setSymbol({ ticker: kind === "reservoir" ? "COMMON RESERVOIR" : `${selectedSymbol} SIGNED FLOW`, pricePrecision: 2, volumePrecision: 0 });
+    chart.setSymbol({ ticker: kind === "reservoir" ? "COMMON RESERVOIR" : `${selectedSymbol} RESERVOIR FLOW`, pricePrecision: 2, volumePrecision: 0 });
     chart.setPeriod({ type: "minute", span: 1 });
     chart.setOffsetRightDistance(12);
     chart.setDataLoader({
@@ -121,5 +121,5 @@ export default function ReservoirChart({ events, kind, selectedSymbol, onSequenc
     chartRef.current?.resetData();
   }, [events, kind, selectedSymbol]);
 
-  return <div className="chart-host" ref={hostRef} role="img" aria-label={kind === "reservoir" ? "Common reservoir by event sequence" : `${selectedSymbol} signed flow by event sequence`} />;
+  return <div className="chart-host" ref={hostRef} role="img" aria-label={kind === "reservoir" ? "Common reservoir by event sequence" : `${selectedSymbol} signed reservoir flow by event sequence; BUY outflow is negative and SELL inflow is positive`} />;
 }

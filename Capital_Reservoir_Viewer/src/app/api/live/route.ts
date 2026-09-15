@@ -6,19 +6,28 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const encoder = new TextEncoder();
   let stop = () => {};
+  let closed = false;
+  const stopLiveStream = () => {
+    if (closed) return;
+    closed = true;
+    stop();
+  };
   const stream = new ReadableStream({
     start(controller) {
-      const send = (event: string, value: unknown) => controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(value)}\n\n`));
+      const send = (event: string, value: unknown) => {
+        if (closed) return;
+        controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(value)}\n\n`));
+      };
       stop = subscribeToReservoirEvents(undefined, (event) => send("reservoir", event), (error) => {
         send("fault", { message: error.message });
       });
       send("ready", { transport: "grpc-sse" });
       request.signal.addEventListener("abort", () => {
-        stop();
+        stopLiveStream();
         controller.close();
       }, { once: true });
     },
-    cancel() { stop(); },
+    cancel() { stopLiveStream(); },
   });
   return new Response(stream, {
     headers: {

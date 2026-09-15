@@ -35,11 +35,44 @@ export type CapitalReservoirEvent = {
 export type PipeState = {
   symbol: string;
   activeQuantity: number;
-  deployedCapital: number;
+  capitalDeployed: number | null;
+  capitalReturned: number | null;
+  realizedPnl: number | null;
   lastExecutionPrice: number | null;
-  netFlow: number;
+  cumulativeReservoirFlow: number;
   lastCause: ReservoirCause | null;
   lastEventSequence: number;
+  currentCycle: PipeCycle | null;
+  completedCycles: PipeCycle[];
+};
+
+export type PipeCycle = {
+  entryCause: "HOP_ON";
+  quantity: number;
+  capitalDeployed: number;
+  entryPrice: number | null;
+  entryEventSequence: number;
+  triggerTime: string | null;
+  entryExecutionTime: string | null;
+  capitalReturned: number | null;
+  realizedPnl: number | null;
+  exitCause: "HOP_OFF" | "SAFETY_LIQUIDATION" | null;
+  exitEventSequence: number | null;
+  exitExecutionTime: string | null;
+};
+
+export type CapitalSummary = {
+  initialCapital: number | null;
+  reservoirCash: number | null;
+  deployedMarkedCapital: number | null;
+  totalMarkedCapital: number | null;
+  realizedPnl: number | null;
+  unrealizedPnl: number | null;
+  totalPnl: number | null;
+  activeSymbols: number;
+  participatingSymbols: number;
+  utilizationPct: number | null;
+  availablePct: number | null;
 };
 
 export const GOVERNED_SYMBOLS = [
@@ -137,21 +170,95 @@ export function mergeReservoirEvents(events: CapitalReservoirEvent[]): CapitalRe
   return [...keyed.values()].sort((left, right) => left.eventSequence - right.eventSequence);
 }
 
+export function deriveCapitalSummary(events: CapitalReservoirEvent[], symbols: string[] = []): CapitalSummary {
+  const ordered = mergeReservoirEvents(events);
+  const start = ordered.find((event) => event.eventType === "RUN_START");
+  const end = [...ordered].reverse().find((event) => event.eventType === "RUN_END");
+  const initialCapital = start?.initialReservoir ?? null;
+  const reservoirCash = ordered.at(-1)?.reservoirAfter ?? null;
+  const pipeStates = derivePipeStates(ordered, symbols);
+  const participatingSymbols = new Set(
+    ordered.filter((event) => event.symbol && (event.eventType === "OUTFLOW" || event.eventType === "INFLOW")).map((event) => event.symbol),
+  ).size;
+  return {
+    initialCapital,
+    reservoirCash,
+    deployedMarkedCapital: end?.totalDeployedAfter ?? null,
+    totalMarkedCapital: end?.totalMarkedCapitalAfter ?? null,
+    realizedPnl: end?.realizedPnl ?? null,
+    unrealizedPnl: end?.unrealizedPnl ?? null,
+    totalPnl: end?.totalPnl ?? null,
+    activeSymbols: pipeStates.filter((pipe) => pipe.activeQuantity > 0).length,
+    participatingSymbols,
+    utilizationPct: initialCapital && end?.totalDeployedAfter !== null && end?.totalDeployedAfter !== undefined
+      ? (end.totalDeployedAfter / initialCapital) * 100
+      : null,
+    availablePct: initialCapital && reservoirCash !== null ? (reservoirCash / initialCapital) * 100 : null,
+  };
+}
+
 export function derivePipeStates(events: CapitalReservoirEvent[], symbols: string[] = []): PipeState[] {
   const states = new Map<string, PipeState>();
   for (const symbol of symbols) {
-    states.set(symbol, { symbol, activeQuantity: 0, deployedCapital: 0, lastExecutionPrice: null, netFlow: 0, lastCause: null, lastEventSequence: 0 });
+    states.set(symbol, emptyPipeState(symbol));
   }
   for (const event of mergeReservoirEvents(events)) {
     if (!event.symbol || (event.eventType !== "OUTFLOW" && event.eventType !== "INFLOW")) continue;
-    const current = states.get(event.symbol) ?? { symbol: event.symbol, activeQuantity: 0, deployedCapital: 0, lastExecutionPrice: null, netFlow: 0, lastCause: null, lastEventSequence: 0 };
+    const current = states.get(event.symbol) ?? emptyPipeState(event.symbol);
     current.activeQuantity = event.activeQuantityAfter ?? current.activeQuantity;
-    current.deployedCapital = event.eventType === "OUTFLOW" ? Math.abs(event.signedFlowAmount ?? 0) : 0;
     current.lastExecutionPrice = event.executionPrice;
-    current.netFlow += event.signedFlowAmount ?? 0;
+    current.cumulativeReservoirFlow += event.signedFlowAmount ?? 0;
     current.lastCause = event.cause;
     current.lastEventSequence = event.eventSequence;
+    if (event.eventType === "OUTFLOW") {
+      current.currentCycle = {
+        entryCause: "HOP_ON",
+        quantity: event.quantity ?? current.activeQuantity,
+        capitalDeployed: Math.abs(event.signedFlowAmount ?? 0),
+        entryPrice: event.executionPrice,
+        entryEventSequence: event.eventSequence,
+        triggerTime: event.triggerEventTime,
+        entryExecutionTime: event.executionEventTime,
+        capitalReturned: null,
+        realizedPnl: null,
+        exitCause: null,
+        exitEventSequence: null,
+        exitExecutionTime: null,
+      };
+    } else if (current.currentCycle) {
+      const capitalReturned = Math.abs(event.signedFlowAmount ?? 0);
+      const completedCycle: PipeCycle = {
+        ...current.currentCycle,
+        capitalReturned,
+        realizedPnl: capitalReturned - current.currentCycle.capitalDeployed,
+        exitCause: event.cause === "HOP_OFF" || event.cause === "SAFETY_LIQUIDATION" ? event.cause : null,
+        exitEventSequence: event.eventSequence,
+        exitExecutionTime: event.executionEventTime,
+      };
+      current.completedCycles.push(completedCycle);
+      current.currentCycle = null;
+    }
+    const latestCycle = current.currentCycle ?? current.completedCycles.at(-1) ?? null;
+    current.capitalDeployed = latestCycle?.capitalDeployed ?? null;
+    current.capitalReturned = latestCycle?.capitalReturned ?? null;
+    current.realizedPnl = latestCycle?.realizedPnl ?? null;
     states.set(event.symbol, current);
   }
   return [...states.values()].sort((left, right) => left.symbol.localeCompare(right.symbol));
+}
+
+function emptyPipeState(symbol: string): PipeState {
+  return {
+    symbol,
+    activeQuantity: 0,
+    capitalDeployed: null,
+    capitalReturned: null,
+    realizedPnl: null,
+    lastExecutionPrice: null,
+    cumulativeReservoirFlow: 0,
+    lastCause: null,
+    lastEventSequence: 0,
+    currentCycle: null,
+    completedCycles: [],
+  };
 }
